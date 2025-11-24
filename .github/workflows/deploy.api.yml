@@ -2,7 +2,7 @@ name: Deploy Workflow With Integration Test
 
 on:
   push:
-    branches: [alpha]
+    branches: [main]
     paths:
       - 'packages/api/**'
   workflow_dispatch:
