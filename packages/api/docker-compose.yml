@@ -23,7 +23,7 @@ services:
     build:
       context: ../../
       dockerfile: ./packages/api/Dockerfile
-    container_name: api_test
+    container_name: api
     depends_on:
       mongo:
         condition: service_healthy
