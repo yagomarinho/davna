@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
+  },
+  "include": ["packages", "config"],
+  "exclude": ["node_modules", "coverage"]
+}

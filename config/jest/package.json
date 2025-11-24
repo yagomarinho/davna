@@ -1,0 +1,19 @@
+{
+  "name": "@davna/jest",
+  "private": true,
+  "version": "0.1.0",
+  "main": "jest.config.ts",
+  "author": {
+    "name": "Yago Marinho",
+    "email": "marinho.rj2@hotmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yagomarinho/davna.git"
+  },
+  "dependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.4"
+  }
+}

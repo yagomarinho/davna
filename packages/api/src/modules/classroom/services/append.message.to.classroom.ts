@@ -1,0 +1,99 @@
+import { Left, Right } from '../../../shared/core/either'
+import { Repository } from '../../../shared/core/repository'
+import { Service } from '../../../shared/core/service'
+import { Audio } from '../entities/audio'
+
+import { Classroom } from '../entities/classroom'
+import { Message } from '../entities/message'
+
+import { MessageHandler } from '../providers/message.handler'
+import { StorageConstructor } from '../../../shared/providers/storage/storage'
+
+interface Request {
+  classroom_id: string
+  participant_id: string
+  message_type: string
+  transcription: string
+  translation: string
+  data: unknown
+}
+
+interface Env {
+  audios: Repository<Audio>
+  classrooms: Repository<Classroom>
+  messages: Repository<Message>
+  messageHandler: MessageHandler
+  storage: StorageConstructor
+}
+
+export const appendMessageToClassroom = Service<
+  Request,
+  Env,
+  { classroom: Classroom; message: Message }
+>(
+  ({
+    classroom_id,
+    participant_id,
+    message_type,
+    transcription,
+    translation,
+    data,
+  }) =>
+    async ({ audios, classrooms, messages, messageHandler, storage }) => {
+      let classroom = await classrooms.get(classroom_id)
+
+      if (!classroom)
+        return Left({ status: 'error', message: 'No founded classroom' })
+
+      if (
+        !classroom.participants
+          .map(participant => participant.participant_id)
+          .includes(participant_id)
+      )
+        return Left({
+          status: 'error',
+          message: `This classroom doesn't contains this participant: ${participant_id}`,
+        })
+
+      let message = await messageHandler({
+        classroom_id,
+        participant_id,
+        message_type,
+        transcription,
+        translation,
+      })(data)
+
+      // verificar se o áudio realmente existe
+      const dataExists = await audios.get(message.data.id)
+
+      if (!dataExists)
+        return Left({
+          status: 'error',
+          message: `This data with id "${message.data.id}" doesn't exists`,
+        })
+
+      const bufferExists = await storage({
+        driver: message.data.internal_ref.storage,
+      }).check(message.data.internal_ref.identifier)
+
+      if (!bufferExists)
+        return Left({
+          status: 'error',
+          message: `This file with id "${message.data.internal_ref.identifier}" doesn't exists`,
+        })
+
+      // Aqui é hora de construir uma transaction
+      message = await messages.set(message)
+      classroom = await classrooms.set(
+        Classroom.create({
+          ...classroom,
+          history: classroom.history.concat(message.id),
+        }),
+      )
+
+      return Right({
+        classroom,
+        message,
+      })
+    },
+)

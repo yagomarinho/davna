@@ -1,0 +1,28 @@
+{
+  "name": "@davna/davna",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "config/*",
+      "packages/*"
+    ]
+  },
+  "scripts": {
+    "test:api-tsc": "node scripts/api.tsc.monitor.js"
+  },
+  "author": {
+    "name": "Yago Marinho",
+    "email": "marinho.rj2@hotmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yagomarinho/davna.git"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@davna/eslint": "*",
+    "@davna/jest": "*",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5"
+  }
+}

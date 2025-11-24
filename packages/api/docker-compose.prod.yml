@@ -1,0 +1,39 @@
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_LOG_LEVEL: warning
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'echo "db.adminCommand("ping")" | mongosh --quiet localhost:27017 || exit 1',
+        ]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 10
+
+  api:
+    image: yagomarinho/api:latest
+    container_name: api
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - '3333:3333'
+    env_file:
+      - ./.env
+    entrypoint:
+      ['/usr/local/bin/wait-for.sh', 'mongo:27017', '--', 'yarn', 'start']
+
+volumes:
+  mongo_data:
+#
