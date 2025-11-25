@@ -7,7 +7,7 @@ import { MessageRepository } from './modules/classroom/repositories/message.repo
 
 import { Auth } from './modules/account/helpers/auth'
 import { Signer } from './modules/account/helpers/signer'
-import { Repository } from './shared/core/repository'
+import { Repository, Writable } from './shared/core/repository'
 import { Account } from './modules/account/entities/account'
 import { Session } from './modules/account/entities/session'
 
@@ -18,14 +18,17 @@ import { MessageHandler } from './modules/classroom/providers/message.handler'
 import { AudioRepository } from './modules/classroom/repositories/audio.repository'
 import { Audio } from './modules/classroom/entities/audio'
 import { Storage, StorageConstructor } from './shared/providers/storage/storage'
+import { Lead } from './modules/lead/entities/lead'
+import { LeadRepository } from './modules/lead/repositories/lead.repository'
 
 export interface Env {
   repositories: {
     accounts: Repository<Account>
     audios: Repository<Audio>
-    sessions: Repository<Session>
     classrooms: Repository<Classroom>
+    leads: Writable<Repository<Lead>>
     messages: Repository<Message>
+    sessions: Repository<Session>
   }
   providers: {
     auth: Auth
@@ -49,6 +52,8 @@ export const Env = async (): Promise<Env> => {
   const messages = MessageRepository({ client })
   const sessions = SessionRepository({ client })
 
+  const leads = LeadRepository()
+
   await Promise.all([
     accounts.connect(),
     audios.connect(),
@@ -61,6 +66,7 @@ export const Env = async (): Promise<Env> => {
     accounts,
     audios,
     classrooms,
+    leads,
     messages,
     sessions,
   }

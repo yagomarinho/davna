@@ -11,11 +11,20 @@ import { ensureAuthenticated } from './shared/middlewares/ensure.authenticated'
 import { revokeSessionHandler } from './modules/account/handlers/revoke.session.handler'
 import { uploadAudioHandler } from './modules/classroom/handlers/upload.audio.handler'
 import { downloadAudioHandler } from './modules/classroom/handlers/download.audio.handler'
+import { appendLeadHandler } from './modules/lead/handlers/append.lead.handler'
 
 export const routes = ({
-  repositories: { accounts, audios, sessions },
+  repositories: { accounts, leads, audios, sessions },
   providers: { auth, signer, storage },
 }: Env): Route[] => [
+  Route({
+    method: 'post',
+    path: '/lead',
+    handler: handlerPipe(apiKeyAuthorization, appendLeadHandler),
+    env: {
+      leads,
+    },
+  }),
   Route({
     path: '/session',
     handler: handlerPipe(apiKeyAuthorization, verifySessionHandler),

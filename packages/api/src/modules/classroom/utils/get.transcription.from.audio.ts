@@ -33,7 +33,8 @@ export function getTranscriptionFromAudio(audio_id: string) {
       if (!buffer) throw new Error('No audio founded on storage')
 
       const path = resolve(
-        '/home/ndwin/development/davna/packages/api/temp',
+        __dirname,
+        '../../../../temp',
         `${audio.name}.${audio.mime.replace('audio/', '')}`,
       )
 
