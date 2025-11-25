@@ -6,7 +6,7 @@
     "build": "rimraf ./dist && npm run typecheck && esbuild src/index.ts --bundle --platform=node --outdir=dist --minify",
     "dev": "tsnd --respawn --transpile-only --ignore-watch node_modules src/index.ts",
     "start": "node ./dist/index.js",
-    "test": "jest",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --detectOpenHandles",
     "test:unit": "jest --testPathPatterns=\"src/modules/.*/__tests__/.*.spec.ts$\"",
     "typecheck": "tsc --noEmit --project ./tsconfig.build.json"
   },

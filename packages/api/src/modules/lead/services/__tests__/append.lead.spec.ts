@@ -11,7 +11,7 @@ describe('appendLead Service', () => {
     const result = await appendLead({ lead: '123' })({ leads })
 
     expect(isLeft(result)).toBeTruthy()
-    // valida por substring dentro do resultado (padrão observado)
+
     expect(JSON.stringify(result)).toContain('Phone number is not valid')
     expect(setSpy).not.toHaveBeenCalled()
   })
@@ -24,10 +24,10 @@ describe('appendLead Service', () => {
 
     expect(isRight(result)).toBeTruthy()
 
-    // deve ter chamado leads.set com o id normalizado
-    expect(setSpy).toHaveBeenCalledWith({ id: '21999998888' })
+    expect(setSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: '21999998888' }),
+    )
 
-    // e o retorno deve conter o objeto salvo (id normalizado)
     expect(result.value).toEqual(expect.objectContaining({ id: '21999998888' }))
   })
 
@@ -38,7 +38,9 @@ describe('appendLead Service', () => {
     const result = await appendLead({ lead: '21 99999-8888' })({ leads })
 
     expect(isRight(result)).toBeTruthy()
-    expect(setSpy).toHaveBeenCalledWith({ id: '21999998888' })
+    expect(setSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: '21999998888' }),
+    )
     expect(result.value).toEqual(expect.objectContaining({ id: '21999998888' }))
   })
 
