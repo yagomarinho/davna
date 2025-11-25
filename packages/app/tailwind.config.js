@@ -8,7 +8,8 @@ module.exports = {
     extend: {
       fontFamily: {
         roboto: ['var(--font-roboto)', 'sans-serif'],
-        inter: ['var(--font-inter)', 'sans-serif'],
+        sora: ['var(--font-sora)', 'sans-serif'],
+        grotesk: ['var(--font-grotesk)', 'sans-serif'],
       },
     },
   },

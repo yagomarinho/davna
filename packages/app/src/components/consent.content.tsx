@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export const ConsentContent = () => (
   <div className="flex flex-col gap-3 w-full">
-    <span className="font-inter font-medium text-base text-white">
+    <span className="font-sora font-medium text-base text-white">
       Cookies & privacidade
     </span>
     <p className="font-roboto text-sm text-[#A2A2A2]">

@@ -11,9 +11,9 @@ export const Input = ({
   value,
   onChange,
 }: InputProps) => (
-  <div className="border border-[#404040] rounded px-4 py-3 bg-[#2c2c2c] w-full">
+  <div className="flex flex-row justify-center items-center gap-0 w-full max-w-sm md:max-w-lg max-h-11 bg-[#121212] rounded-full border border-[#2c2c2c]">
     <input
-      className="outline-none placeholder:text-[#C2C2C2] text-sm bg-transparent w-full"
+      className="px-4 md:px-6 py-3 md:py-4 font-roboto text-xs md:text-base w-full bg-transparent placeholder:text-[#727272] outline-none"
       placeholder={placeholder}
       type={type}
       value={value}

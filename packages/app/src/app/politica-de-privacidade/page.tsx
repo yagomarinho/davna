@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { FiArrowLeft } from 'react-icons/fi'
 
 const PrivacyPolitics = () => (
-  <div className="flex flex-col justify-start items-center w-full">
+  <div className="flex flex-col justify-start items-center w-full pb-80">
     <header className="w-full p-8 md:p-16 h-16 flex justify-start items-center">
       <Link href="/">
         <FiArrowLeft />

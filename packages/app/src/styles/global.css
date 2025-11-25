@@ -1,26 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-.notion-page {
-  @apply flex flex-col justify-start items-center gap-2 md:gap-4 w-full;
-}
-
-.notion-h-title,
-.notion-link,
-.notion-table-of-contents-item {
-  @apply !text-white;
-}
-
-.notion-h-title {
-  @apply !font-inter;
-}
-
-.notion,
-.notion.notion-table-of-contents-item {
-  @apply !text-[#A2A2A2] !font-roboto !leading-[1.5];
-}
-
-.notion-table-of-contents-item {
-  @apply !font-inter !text-sm !py-1;
-}

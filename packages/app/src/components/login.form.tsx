@@ -62,7 +62,7 @@ export const LoginForm = () => {
 
   return (
     <div className="flex justify-center items-center p-4 md:p-16 w-full">
-      <form className="flex flex-col gap-4 items-center w-full max-w-96 border border-[#2C2C2C] bg-[#101010] rounded py-16 px-8">
+      <form className="flex flex-col gap-4 md:gap-6 items-center w-full max-w-96 border border-[#2C2C2C]/35 rounded py-32 px-8">
         <Input placeholder="Email" value={email} onChange={setEmail} />
         <Input
           placeholder="Senha"

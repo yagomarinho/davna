@@ -18,7 +18,7 @@ const Dashboard = () => (
           className="flex flex-row items-center gap-8 px-16 py-8 rounded-[64px] w-full max-w-96 border border-[#404040] bg-[#202020]"
         >
           <MicIcon />
-          <span className="font-inter font-medium text-sm text-center">
+          <span className="font-sora font-medium text-sm text-center">
             Aprender Inglês Conversando
           </span>
         </Link>

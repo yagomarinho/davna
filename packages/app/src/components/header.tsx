@@ -3,6 +3,7 @@ import { Button } from './button'
 import { PropsWithChildren } from 'react'
 import { logout } from '@/actions/logout'
 import { FiLogOut } from 'react-icons/fi'
+import Image from 'next/image'
 
 export interface HeaderProps {
   type?: 'home' | 'login' | 'dashboard' | 'classroom'
@@ -14,14 +15,26 @@ const BaseHeader = ({ children }: PropsWithChildren<{}>) => (
   </header>
 )
 
+const Logo = () => (
+  <div className="relative w-[60px] md:w-[100px] aspect-[5/1]">
+    <Image
+      src="/logo.png"
+      alt="Logomarca Davna representada por 3 waves seguidas do nome Davna"
+      fill
+    />
+  </div>
+)
+
 const HomeHeader = () => (
   <BaseHeader>
     <div className="flex flex-row justify-between items-center w-full max-w-screen-md">
       <Link href="/">
-        <span className="font-inter font-bold">Davna</span>
+        <Logo />
       </Link>
       <Link href="/login">
-        <Button type="primary">Membros</Button>
+        <Button type="primary" style="outlined">
+          Entrar
+        </Button>
       </Link>
     </div>
   </BaseHeader>
@@ -31,7 +44,7 @@ const LoginHeader = () => (
   <BaseHeader>
     <div className="flex flex-row justify-start items-center w-full max-w-screen-md">
       <Link href="/">
-        <span className="font-inter font-bold">Davna</span>
+        <Logo />
       </Link>
     </div>
   </BaseHeader>
@@ -41,10 +54,11 @@ const DashboardHeader = () => (
   <BaseHeader>
     <form
       action={logout}
-      className="flex flex-row justify-end items-center w-full max-w-screen-md"
+      className="flex flex-row justify-between items-center w-full max-w-screen-md"
     >
+      <Logo />
       <Button type="ghost" role="submit">
-        <span className="font-inter font-medium text-sm mr-2">Deslogar</span>
+        <span className="font-sora font-medium text-sm mr-2">Deslogar</span>
         <FiLogOut size={18} strokeWidth={2} />
       </Button>
     </form>
@@ -58,7 +72,7 @@ const ClassroomHeader = () => (
         <Link href="/dashboard">
           <Button type="ghost">
             <FiLogOut size={18} strokeWidth={2} />
-            <span className="font-inter font-medium text-sm ml-2">
+            <span className="font-sora font-medium text-sm ml-2">
               Sair da Classe
             </span>
           </Button>

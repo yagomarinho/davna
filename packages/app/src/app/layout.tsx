@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import React from 'react'
 import Script from 'next/script'
-import { Roboto, Inter } from 'next/font/google'
+import { Roboto, Space_Grotesk, Sora } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 
 import config from '@/config'
@@ -19,10 +19,16 @@ const roboto = Roboto({
   weight: ['300', '400', '500'],
 })
 
-const inter = Inter({
+const sora = Sora({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-sora',
   weight: ['400', '500', '700'],
+})
+
+const grotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-grotesk',
+  weight: ['300', '400', '500', '600', '700'],
 })
 
 export const metadata: Metadata = {
@@ -75,9 +81,10 @@ const RootLayout = async ({
       </head>
       <body
         className={mergeNames(
-          `bg-[#080808] text-white w-screen h-<1> min-h-screen`,
+          `bg-[#080808] text-white w-screen min-w-[100vw] h-full min-h-[vh]`,
           roboto.variable,
-          inter.variable,
+          sora.variable,
+          grotesk.variable,
         )}
       >
         {/*<!-- Google Tag Manager (noscript) -->*/}
