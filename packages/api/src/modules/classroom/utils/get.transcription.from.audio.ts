@@ -32,9 +32,11 @@ export function getTranscriptionFromAudio(audio_id: string) {
 
       if (!buffer) throw new Error('No audio founded on storage')
 
+      const relativeTempPath = process.env.RELATIVE_TMP_DIR_PATH || ''
+      const dirPath = resolve(__dirname, relativeTempPath)
+
       const path = resolve(
-        __dirname,
-        '../../../../temp',
+        dirPath,
         `${audio.name}.${audio.mime.replace('audio/', '')}`,
       )
 
