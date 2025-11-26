@@ -192,6 +192,7 @@ describe('initializeClassroomHandler', () => {
     )
 
     const teacherResult = Right({
+      consume: 40,
       classroom: classroomWithTeacher,
       message: null,
     })

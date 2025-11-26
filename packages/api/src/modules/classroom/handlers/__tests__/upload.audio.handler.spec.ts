@@ -1,11 +1,12 @@
 import { Repository } from '../../../../shared/core/repository'
-import { Audio } from '../../entities/audio'
-import { uploadAudio as service } from '../../services/upload.audio'
-import { uploadAudioHandler } from '../upload.audio.handler'
 import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
 import { Request } from '../../../../shared/core/request'
 import { StorageConstructor } from '../../../../shared/providers/storage/storage'
 import { Left, Right } from '../../../../shared/core/either'
+
+import { Audio } from '../../entities/audio'
+import { uploadAudio as service } from '../../services/upload.audio'
+import { uploadAudioHandler } from '../upload.audio.handler'
 
 jest.mock('../../services/upload.audio', () => ({
   uploadAudio: jest.fn(),
@@ -17,7 +18,6 @@ describe('uploadAudioHandler', () => {
   const owner_id = 'owner-1'
   const filename = 'recording.mp3'
   const mime = 'audio/mpeg'
-  const durationHeader = '120'
 
   let audios: Repository<Audio>
   let storage: jest.Mocked<StorageConstructor>
@@ -47,7 +47,6 @@ describe('uploadAudioHandler', () => {
     const req = Request.metadata({
       file,
       account: { id: owner_id },
-      headers: { 'x-duration': durationHeader },
     })
 
     const result = await uploadAudioHandler(req)({
@@ -78,7 +77,6 @@ describe('uploadAudioHandler', () => {
     const req = Request.metadata({
       file,
       account: { id: owner_id },
-      headers: { 'x-duration': durationHeader },
     })
 
     const result = await uploadAudioHandler(req)({
@@ -109,7 +107,6 @@ describe('uploadAudioHandler', () => {
     const req = Request.metadata({
       file,
       account: { id: owner_id },
-      headers: { 'x-duration': durationHeader },
     })
 
     const errorPayload = { message: 'storage failure' }
@@ -153,7 +150,6 @@ describe('uploadAudioHandler', () => {
     const req = Request.metadata({
       file,
       account: { id: owner_id },
-      headers: { 'x-duration': durationHeader },
     })
 
     const servicePayload = {
@@ -161,7 +157,7 @@ describe('uploadAudioHandler', () => {
       owner_id,
       name: filename,
       mime,
-      duration: Number(durationHeader),
+      duration: 120,
       url: 'https://cdn.example/audio-1.mp3',
     }
 

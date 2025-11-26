@@ -7,11 +7,18 @@ import { Converter } from '../../../shared/types'
 import { Classroom } from '../entities/classroom'
 
 const converter: Converter<Classroom> = {
-  to: ({ id, ...props }: any) => ({
-    ...props,
-    _id: id ? ObjectId.createFromHexString(id) : new ObjectId(),
+  to: ({ id, ...props }) => ({
+    _id: id ? new ObjectId(id) : new ObjectId(),
+    history: props.history,
+    participants: props.participants,
+    created_at: props.created_at,
+    updated_at: new Date(),
   }),
-  from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
+  from: ({ _id, ...props }) =>
+    Classroom.create({
+      id: _id?.toString() ?? '',
+      ...props,
+    }),
 }
 
 export interface Config {

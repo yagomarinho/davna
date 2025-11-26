@@ -10,13 +10,14 @@ import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
 import { MessageHandler } from '../providers/message.handler'
 import { StorageConstructor } from '../../../shared/providers/storage/storage'
 
-import { appendMessageToClassroom } from '../services/append.message.to.classroom'
 import { teacherGeneratesResponse } from '../services/teacher.generates.response'
 
 import { Emitter } from '../helpers/emitter'
-import { getTranscriptionFromAudio } from '../utils/get.transcription.from.audio'
+
 import { Response } from '../../../shared/core/response'
 import { Identifier } from '../../../shared/core/entity'
+import { transcribeAndAppend } from '../services/transcribe.and.append'
+import { remaningConsumption } from '../utils/remaining.consumption'
 
 interface Metadata {
   account: Identifier
@@ -47,37 +48,16 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       messages,
       storage,
     }) => {
-      const { classroom_id, participant_id, type, data } =
+      const { classroom_id, participant_id, data } =
         await messageSchema.validate({
           ...request.data,
           participant_id: request.metadata.account.id,
         })
 
-      const transcriptionResult = await getTranscriptionFromAudio(
-        (data as any).id,
-      )({
-        audios,
-        storage,
-      })
-
-      if (!transcriptionResult) {
-        emitter.emit('error:service', {
-          status: 'error',
-          message: 'Invalid Audio Id',
-        })
-
-        return Response.metadata({ status: 'error' })
-      }
-
-      const { transcription, translation } = transcriptionResult
-
-      const result = await appendMessageToClassroom({
+      const result = await transcribeAndAppend({
+        audio: data as Audio,
         classroom_id,
         participant_id,
-        message_type: type,
-        transcription,
-        translation,
-        data,
       })({
         audios,
         classrooms,
@@ -98,6 +78,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       const { classroom, message } = result.value
 
       emitter.emit('classroom:updated', {
+        remainingConsumption: remaningConsumption(result.value.consume),
         classroom,
         message,
       })
@@ -143,6 +124,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       const { classroom: updatedClassroom, message: IAMessage } = result2.value
 
       emitter.emit('classroom:updated', {
+        remainingConsumption: remaningConsumption(result2.value.consume),
         classroom: updatedClassroom,
         message: IAMessage,
       })

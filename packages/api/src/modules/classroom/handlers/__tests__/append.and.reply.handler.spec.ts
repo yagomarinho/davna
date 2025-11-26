@@ -97,35 +97,6 @@ describe('appendAndReply handler', () => {
     return Request({ data, metadata })
   }
 
-  it('should emit error:service and return failed when transcription result is falsy', async () => {
-    const req = makeReq()
-    getTranscriptionFromAudio.mockImplementationOnce(() => async () => null)
-
-    const result = await appendAndReplyHandler(req)({
-      audios,
-      classrooms,
-      emitter,
-      messageHandler,
-      messages,
-      storage,
-    } as any)
-
-    expect(getTranscriptionFromAudio).toHaveBeenCalledTimes(1)
-    const calledWith = getTranscriptionFromAudio.mock.calls[0][0]
-    expect(calledWith).toEqual(audio_id)
-
-    expect(emitter.emit).toHaveBeenCalledWith('error:service', {
-      status: 'error',
-      message: 'Invalid Audio Id',
-    })
-
-    expect(result).toEqual(
-      expect.objectContaining({
-        metadata: expect.objectContaining({ status: 'error' }),
-      }),
-    )
-  })
-
   it('should emit error:service and return failed when appendMessageToClassroom returns Left', async () => {
     const req = makeReq()
     const transcription = { transcription: 't', translation: 'tr' }
@@ -295,7 +266,11 @@ describe('appendAndReply handler', () => {
       () => async () => Right({ classroom: classroomWithTeacher, message }),
     )
 
-    const teacherResult = Right({ classroom: classroomWithTeacher, message })
+    const teacherResult = Right({
+      consume: 40 * 60 * 1000, // 40 minutes
+      classroom: classroomWithTeacher,
+      message,
+    })
     teacherGeneratesResponse.mockImplementationOnce(
       () => async () => teacherResult,
     )
@@ -318,6 +293,12 @@ describe('appendAndReply handler', () => {
     expect(emitter.emit).not.toHaveBeenCalledWith(
       'error:internal',
       expect.anything(),
+    )
+
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      3,
+      'classroom:updated',
+      expect.objectContaining({ remainingConsumption: 20 * 60 * 1000 }), // 20 minutes
     )
 
     expect(result).toEqual(

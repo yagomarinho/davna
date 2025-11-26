@@ -15,6 +15,7 @@ export const openClassroom = Service<Request, Env, Classroom>(
   ({ participant_id }) =>
     async ({ classrooms }) => {
       let classroom = Classroom.create({
+        owner_id: participant_id,
         participants: [
           {
             participant_id: 'agent',

@@ -11,6 +11,7 @@ import { Audio } from '../entities/audio'
 import { Message } from '../entities/message'
 import { MessageHandler } from '../providers/message.handler'
 import { StorageConstructor } from '../../../shared/providers/storage/storage'
+import { remaningConsumption } from '../utils/remaining.consumption'
 
 interface Metadata {
   account: Identifier
@@ -92,9 +93,10 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         return Response.metadata({ status: 'error' })
       }
 
-      const { classroom: updatedClassroom, message } = result2.value
+      const { consume, classroom: updatedClassroom, message } = result2.value
 
       emitter.emit('classroom:updated', {
+        remainingConsumption: remaningConsumption(consume),
         classroom: updatedClassroom,
         message,
       })

@@ -18,66 +18,60 @@ export function getTranscriptionFromAudio(audio_id: string) {
       apiKey: process.env.OPENAI_API_KEY,
     })
 
-    try {
-      // O servidor precisa gerar a transcrição e a tradução do áudio para o português
-      const audio = await audios.get(audio_id)
+    // O servidor precisa gerar a transcrição e a tradução do áudio para o português
+    const audio = await audios.get(audio_id)
 
-      if (!audio) throw new Error('No audio founded')
+    if (!audio) throw new Error('No audio founded')
 
-      const buffer = await storage({
-        driver: audio.internal_ref.storage,
-      }).download({
-        identifier: audio.internal_ref.identifier,
-      })
+    const buffer = await storage({
+      driver: audio.internal_ref.storage,
+    }).download({
+      identifier: audio.internal_ref.identifier,
+    })
 
-      if (!buffer) throw new Error('No audio founded on storage')
+    if (!buffer) throw new Error('No audio founded on storage')
 
-      const relativeTempPath = process.env.RELATIVE_TMP_DIR_PATH || ''
-      const dirPath = resolve(__dirname, relativeTempPath)
+    const relativeTempPath = process.env.RELATIVE_TMP_DIR_PATH || ''
+    const dirPath = resolve(__dirname, relativeTempPath)
 
-      const path = resolve(
-        dirPath,
-        `${audio.name}.${audio.mime.replace('audio/', '')}`,
-      )
+    const path = resolve(
+      dirPath,
+      `${audio.name}.${audio.mime.replace('audio/', '')}`,
+    )
 
-      await writeFile(path, buffer, { flag: 'w' })
+    await writeFile(path, buffer, { flag: 'w' })
 
-      const transcript = await openai.audio.transcriptions.create({
-        file: createReadStream(path),
-        model: 'gpt-4o-transcribe',
-      })
+    const transcript = await openai.audio.transcriptions.create({
+      file: createReadStream(path),
+      model: 'gpt-4o-transcribe',
+    })
 
-      const response = await openai.responses.create({
-        metadata: { topic: 'demo' },
-        model: 'o4-mini',
-        input: [
-          {
-            role: 'developer',
-            content:
-              'Você é um assistente que faz tradução de textos em inglês para textos em português BR, faça uma tradução fiel ao idioma nativo com uma linguagem mais neutra possível',
-          },
-          {
-            role: 'user',
-            content: `traduza o seguinte texto: \n${transcript.text}`,
-          },
-        ],
-      })
+    const response = await openai.responses.create({
+      metadata: { topic: 'demo' },
+      model: 'o4-mini',
+      input: [
+        {
+          role: 'developer',
+          content:
+            'Você é um assistente que faz tradução de textos em inglês para textos em português BR, faça uma tradução fiel ao idioma nativo com uma linguagem mais neutra possível',
+        },
+        {
+          role: 'user',
+          content: `traduza o seguinte texto: \n${transcript.text}`,
+        },
+      ],
+    })
 
-      // apagar o arquivo temp
-      rm(path)
+    // apagar o arquivo temp
+    rm(path)
 
-      const transcription = transcript.text
-      const translation = response.output_text
+    const transcription = transcript.text
+    const translation = response.output_text
 
-      return {
-        buffer,
-        transcription,
-        translation,
-      }
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e)
-      return
+    return {
+      buffer,
+      transcription,
+      translation,
     }
   }
 }

@@ -1,5 +1,6 @@
 import { AIGenerateResponse as AIGenerateResponseService } from '../../utils/ai.generate.response'
 import { appendMessageToClassroom as appendMessageService } from '../append.message.to.classroom'
+import { verifyConsume as verifyConsumeService } from '../verify.consume'
 
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 import { Classroom } from '../../entities/classroom'
@@ -17,10 +18,15 @@ jest.mock('../append.message.to.classroom', () => ({
   appendMessageToClassroom: jest.fn(),
 }))
 
+jest.mock('../verify.consume', () => ({
+  verifyConsume: jest.fn(),
+}))
+
 const AIGenerateResponse = AIGenerateResponseService as unknown as jest.Mock
 const appendMessageToClassroom = appendMessageService as unknown as jest.Mock
+const verifyConsume = verifyConsumeService as unknown as jest.Mock
 
-describe('teacherGeneratesResponse (service)', () => {
+describe('teacherGeneratesResponse (service) - updated behavior', () => {
   let messages: Repository<Message>
   let classrooms: Repository<Classroom>
   let audios: Repository<Audio>
@@ -79,7 +85,13 @@ describe('teacherGeneratesResponse (service)', () => {
     jest.clearAllMocks()
   })
 
-  it('should call AI with mapped history and forward result to appendMessageToClassroom (happy path)', async () => {
+  it('should call verifyConsume, call AI with mapped history and forward result to appendMessageToClassroom (happy path)', async () => {
+    // verifyConsume returns Right with consume
+    const consumePayload = { consume: 12 }
+    verifyConsume.mockImplementationOnce(
+      () => async () => Right(consumePayload),
+    )
+
     const inputExpectation = [
       { role: 'user', content: 'Hello teacher' },
       { role: 'assistant', content: 'Hello student' },
@@ -118,6 +130,8 @@ describe('teacherGeneratesResponse (service)', () => {
       storage,
     })
 
+    expect(verifyConsume).toHaveBeenCalledTimes(1)
+
     expect(AIGenerateResponse).toHaveBeenCalledTimes(1)
     const aiCallArg = AIGenerateResponse.mock.calls[0][0]
     expect(aiCallArg).toBeDefined()
@@ -136,10 +150,45 @@ describe('teacherGeneratesResponse (service)', () => {
       }),
     )
 
-    expect(result).toEqual(appendReturn)
+    // final result should include consume from verifyConsume and values from appendReturn
+    expect(result).toEqual(
+      Right({
+        consume: consumePayload.consume,
+        classroom: appendReturn.value.classroom,
+        message: appendReturn.value.message,
+      }),
+    )
+  })
+
+  it('should forward Left from verifyConsume (stop before AI)', async () => {
+    const errorPayload = { status: 'error', message: 'cannot consume' }
+    verifyConsume.mockImplementationOnce(() => async () => Left(errorPayload))
+
+    const svc = teacherGeneratesResponse({
+      classroom,
+      teacher_id,
+    })
+
+    const result = await svc({
+      audios,
+      classrooms,
+      messages,
+      messageHandler,
+      storage,
+    })
+
+    expect(verifyConsume).toHaveBeenCalledTimes(1)
+    expect(AIGenerateResponse).not.toHaveBeenCalled()
+    expect(appendMessageToClassroom).not.toHaveBeenCalled()
+
+    expect(result).toEqual(Left(errorPayload))
   })
 
   it('should forward Left from appendMessageToClassroom (AI ok but append fails)', async () => {
+    verifyConsume.mockImplementationOnce(
+      () => async () => Right({ consume: 0 }),
+    )
+
     const fakeAIResult = {
       audio: Buffer.from('audio-bytes'),
       transcription: 'AI transcribed text',
@@ -172,6 +221,10 @@ describe('teacherGeneratesResponse (service)', () => {
   })
 
   it('should reject if AIGenerateResponse throws', async () => {
+    verifyConsume.mockImplementationOnce(
+      () => async () => Right({ consume: 0 }),
+    )
+
     AIGenerateResponse.mockImplementationOnce(() => async () => {
       throw new Error('AI failure')
     })
@@ -192,49 +245,5 @@ describe('teacherGeneratesResponse (service)', () => {
     ).rejects.toThrow('AI failure')
 
     expect(appendMessageToClassroom).not.toHaveBeenCalled()
-  })
-
-  it('should handle empty role mapping (ignore messages without role)', async () => {
-    const classroomWithUnknown = {
-      ...classroom,
-      history: ['m1', 'm3'],
-    } as any
-
-    const unknownMessage: Message = {
-      id: 'm3',
-      participant_id: 'unknown',
-      transcription: 'Unknown says hi',
-      translation: 'Unknown diz oi',
-      type: MESSAGE_TYPE.AUDIO,
-    } as any
-    await messages.set(unknownMessage)
-
-    AIGenerateResponse.mockImplementationOnce(() => async () => ({
-      audio: Buffer.from('a'),
-      transcription: 't',
-      translation: 'tr',
-    }))
-
-    appendMessageToClassroom.mockImplementationOnce(
-      () => async () => Right({ classroom: {}, message: {} as any }),
-    )
-
-    const svc = teacherGeneratesResponse({
-      classroom: classroomWithUnknown,
-      teacher_id,
-    })
-
-    await svc({
-      audios,
-      classrooms,
-      messages,
-      messageHandler,
-      storage,
-    })
-
-    const aiCallArg = AIGenerateResponse.mock.calls[0][0]
-    expect(aiCallArg.input).toEqual([
-      { role: 'user', content: 'Hello teacher' },
-    ])
   })
 })

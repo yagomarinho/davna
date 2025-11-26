@@ -6,6 +6,7 @@ import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { StorageConstructor } from '../../../shared/providers/storage/storage'
 import { uploadAudio } from '../services/upload.audio'
 import { isLeft } from '../../../shared/core/either'
+import { getDuration } from '../../../shared/utils/get.duration'
 
 interface Env {
   audios: Repository<Audio>
@@ -16,14 +17,13 @@ export const uploadAudioHandler = Handler(request => async (env: Env) => {
   const {
     file,
     account: { id: owner_id },
-    headers,
   } = request.metadata
 
   let name: string, mime: string, duration: number
 
   name = file.originalname
   mime = file.mimetype
-  duration = headers['x-duration'] as any as number
+  duration = await getDuration({ buffer: file })
 
   try {
     name = await string().required().validate(name)

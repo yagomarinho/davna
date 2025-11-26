@@ -16,7 +16,7 @@ export interface AudioMessageProps {
   classroom_id: string
   participant_id: string
   type: MESSAGE_TYPE.AUDIO
-  data: Audio
+  data: Audio // duplicação de dados (resolver no futuro)
   transcription: string
   translation: string
 }

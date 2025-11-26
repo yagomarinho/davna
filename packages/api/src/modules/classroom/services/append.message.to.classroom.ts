@@ -55,6 +55,8 @@ export const appendMessageToClassroom = Service<
           message: `This classroom doesn't contains this participant: ${participant_id}`,
         })
 
+      // Verificar os gastos do participant aqui ?
+
       let message = await messageHandler({
         classroom_id,
         participant_id,

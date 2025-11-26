@@ -1,4 +1,4 @@
-import { Query, Repository } from '../../../shared/core/repository'
+import { Repository } from '../../../shared/core/repository'
 
 import { Message, MESSAGE_TYPE } from '../entities/message'
 import { Classroom } from '../entities/classroom'
@@ -7,15 +7,16 @@ import { Audio } from '../entities/audio'
 import { MessageHandler } from '../providers/message.handler'
 import { StorageConstructor } from '../../../shared/providers/storage/storage'
 
-import { AIGenerateResponse } from '../utils/ai.generate.response'
 import { appendMessageToClassroom } from './append.message.to.classroom'
 import { Service } from '../../../shared/core/service'
-import { isLeft, Right } from '../../../shared/core/either'
+import { getTranscriptionFromAudio } from '../utils/get.transcription.from.audio'
 import { verifyConsume } from './verify.consume'
+import { isLeft, Left, Right } from '../../../shared/core/either'
 
 interface Data {
-  classroom: Classroom
-  teacher_id: string
+  audio: Audio
+  classroom_id: string
+  participant_id: string
 }
 
 interface Env {
@@ -32,9 +33,14 @@ interface Response {
   message: Message
 }
 
-export const teacherGeneratesResponse = Service<Data, Env, Response>(
-  ({ classroom, teacher_id }) =>
+export const transcribeAndAppend = Service<Data, Env, Response>(
+  ({ audio, classroom_id, participant_id }) =>
     async ({ audios, classrooms, messages, messageHandler, storage }) => {
+      const classroom = await classrooms.get(classroom_id)
+
+      if (!classroom)
+        return Left({ status: 'error', message: 'Invalid classroom id' })
+
       const result = await verifyConsume({ classroom })({
         classrooms,
         messages,
@@ -42,42 +48,20 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
 
       if (isLeft(result)) return result
 
-      // pegar o histórico e montar o input do GPT
-      const { history, participants } = classroom
-
-      const h = await messages.query(Query.where('id', 'in', history))
-
-      const input = h
-        .map(m => {
-          let role: string | undefined = participants.find(
-            p => p.participant_id === m.participant_id,
-          )?.role
-
-          if (!role) return
-
-          role = role === 'student' ? 'user' : 'assistant'
-
-          return {
-            role,
-            content: m.transcription,
-          }
-        })
-        .filter(Boolean) as any
-
-      const AIResult = await AIGenerateResponse({ input })({
-        storage,
+      const transcriptionResult = await getTranscriptionFromAudio(audio.id)({
         audios,
+        storage,
       })
 
-      const { audio: data, transcription, translation } = AIResult
+      const { transcription, translation } = transcriptionResult
 
       const result2 = await appendMessageToClassroom({
-        classroom_id: classroom.id,
-        participant_id: teacher_id,
+        classroom_id: classroom_id,
+        participant_id,
         message_type: MESSAGE_TYPE.AUDIO,
         transcription,
         translation,
-        data,
+        data: audio,
       })({
         audios,
         classrooms,
@@ -88,12 +72,10 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
 
       if (isLeft(result2)) return result2
 
-      const { classroom: c, message: m } = result2.value
-
       return Right({
         consume: result.value.consume,
-        classroom: c,
-        message: m,
+        classroom: result2.value.classroom,
+        message: result2.value.message,
       })
     },
 )

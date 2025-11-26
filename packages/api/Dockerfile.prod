@@ -19,6 +19,7 @@ COPY --from=build /app/packages/api/package.json ./
 RUN yarn install --frozen-lockfile --production
 
 RUN addgroup -S app && adduser -S app -G app
+RUN chown app:app /app/temp
 USER app
 
 ENV NODE_ENV=production

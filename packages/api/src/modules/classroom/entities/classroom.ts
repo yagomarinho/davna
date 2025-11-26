@@ -15,6 +15,7 @@ interface Participant {
 }
 
 export interface ClassroomProps {
+  owner_id: string
   participants: Participant[]
   history: string[]
 }
@@ -25,6 +26,7 @@ export interface CreateClassroom extends ClassroomProps, Partial<Entity> {}
 
 export function Classroom(
   id: string,
+  owner_id: string,
   participants: Participant[],
   history: string[],
   created_at: Date,
@@ -32,6 +34,7 @@ export function Classroom(
 ): Classroom {
   return applyTag('classroom')({
     id,
+    owner_id,
     participants,
     history,
     created_at,
@@ -41,6 +44,7 @@ export function Classroom(
 
 Classroom.create = ({
   id = '',
+  owner_id,
   participants,
   history,
   created_at,
@@ -49,6 +53,7 @@ Classroom.create = ({
   const now = new Date()
   return Classroom(
     id,
+    owner_id,
     participants,
     history,
     created_at ?? now,
