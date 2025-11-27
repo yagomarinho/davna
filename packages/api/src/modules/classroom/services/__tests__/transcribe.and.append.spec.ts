@@ -127,7 +127,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
 
   it('should call getTranscriptionFromAudio, call appendMessageToClassroom and return Right with consume and appended values (happy path)', async () => {
     // verifyConsume returns Right with consume
-    const consumePayload = { consume: 123 }
+    const consumePayload = { consume: 12 }
     verifyConsume.mockImplementationOnce(
       () => async () => Right(consumePayload),
     )
@@ -148,6 +148,9 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
         id: 'm-new',
         participant_id,
         type: MESSAGE_TYPE.AUDIO,
+        data: {
+          duration: 10,
+        },
       } as any,
     })
 
@@ -190,7 +193,8 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
 
     expect(result).toEqual(
       Right({
-        consume: consumePayload.consume,
+        consume:
+          consumePayload.consume + appendReturn.value.message.data.duration,
         classroom: appendReturn.value.classroom,
         message: appendReturn.value.message,
       }),

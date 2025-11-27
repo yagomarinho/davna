@@ -111,6 +111,9 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
         id: 'm-new',
         participant_id: teacher_id,
         type: MESSAGE_TYPE.AUDIO,
+        data: {
+          duration: 10,
+        },
       } as any,
     })
     appendMessageToClassroom.mockImplementationOnce(
@@ -153,7 +156,8 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
     // final result should include consume from verifyConsume and values from appendReturn
     expect(result).toEqual(
       Right({
-        consume: consumePayload.consume,
+        consume:
+          consumePayload.consume + appendReturn.value.message.data.duration,
         classroom: appendReturn.value.classroom,
         message: appendReturn.value.message,
       }),
