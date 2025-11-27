@@ -3,7 +3,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 import config from '../../../config'
 
 import { MongoDBRepository } from '../../../shared/repositories/mongodb.repository'
-import { Converter } from '../../../shared/types'
+import { Converter } from '@davna/types'
 import { Classroom } from '../entities/classroom'
 
 const converter: Converter<Classroom> = {

@@ -3,10 +3,10 @@ import { MongoClient, ObjectId } from 'mongodb'
 import config from '../../../config'
 
 import { MongoDBRepository } from '../../../shared/repositories/mongodb.repository'
-import { Converter } from '../../../shared/types'
-import { Message } from '../entities/message'
+import { Converter } from '@davna/types'
+import { Audio } from '../entities/audio'
 
-const converter: Converter<Message> = {
+const converter: Converter<Audio> = {
   to: ({ id, ...props }: any) => ({
     ...props,
     _id: id ? ObjectId.createFromHexString(id) : new ObjectId(),
@@ -18,9 +18,9 @@ export interface Config {
   client?: MongoClient
 }
 
-export const MessageRepository = ({ client }: Config) =>
-  MongoDBRepository<Message>({
-    ...config.databases.message,
+export const AudioRepository = ({ client }: Config) =>
+  MongoDBRepository<Audio>({
+    ...config.databases.audio,
     client: client as any,
     converter,
   })

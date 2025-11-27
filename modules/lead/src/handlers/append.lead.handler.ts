@@ -1,7 +1,4 @@
-import { isLeft } from '../../../shared/core/either'
-import { Handler } from '../../../shared/core/handler'
-import { Repository, Writable } from '../../../shared/core/repository'
-import { Response } from '../../../shared/core/response'
+import { Handler, isLeft, Repository, Response, Writable } from '@davna/core'
 import { Lead } from '../entities/lead'
 import { appendLead } from '../services/append.lead'
 

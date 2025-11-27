@@ -1,13 +1,9 @@
-import { Query, Repository } from '../../../shared/core/repository'
-import { Left, Right } from '../../../shared/core/either'
+import type { Auth, Signer } from '@davna/providers'
+import { Left, Query, Repository, Right, Service } from '@davna/core'
 
 import { Session } from '../entities/session'
-import { Service } from '../../../shared/core/service'
 import { Account } from '../entities/account'
-
-import config from '../../../config'
-import { Auth } from '../helpers/auth'
-import { Signer } from '../helpers/signer'
+import { ConfigDTO } from '../dtos/config'
 
 interface Request {
   email: string
@@ -30,11 +26,12 @@ interface Env {
   signer: Signer
   sessions: Repository<Session>
   accounts: Repository<Account>
+  config: ConfigDTO
 }
 
 export const loginWithCredentials = Service<Request, Env, TokenResponse>(
   ({ email, password, user_agent }) =>
-    async ({ auth, signer, sessions, accounts }) => {
+    async ({ auth, signer, sessions, accounts, config }) => {
       try {
         const now = new Date()
         const user = await auth.authenticate(email, password)

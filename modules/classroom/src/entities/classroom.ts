@@ -1,5 +1,4 @@
-import { Entity } from '../../../shared/core/entity'
-import { applyTag } from '../../../shared/core/tagged'
+import { applyTag, Entity } from '@davna/core'
 
 const URI = 'classroom'
 type URI = typeof URI

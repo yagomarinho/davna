@@ -1,7 +1,6 @@
 import { date, mixed, number, object, string } from 'yup'
-import { Entity } from '../../../shared/core/entity'
-import { applyTag } from '../../../shared/core/tagged'
-import { STORAGE_TYPE } from '../../../shared/providers/storage/storage'
+import { applyTag, Entity } from '@davna/core'
+import { STORAGE_TYPE } from '@davna/providers'
 
 const URI = 'audio'
 type URI = typeof URI

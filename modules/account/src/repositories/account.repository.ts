@@ -1,9 +1,6 @@
-import { MongoClient, ObjectId } from 'mongodb'
+import type { Converter } from '@davna/types'
+import { MongoDBRepository, MongoClient, ObjectId } from '@davna/repositories'
 
-import config from '../../../config'
-
-import { MongoDBRepository } from '../../../shared/repositories/mongodb.repository'
-import { Converter } from '@davna/types'
 import { Account } from '../entities/account'
 
 const converter: Converter<Account> = {
@@ -20,7 +17,12 @@ export interface Config {
 
 export const AccountRepository = ({ client }: Config) =>
   MongoDBRepository<Account>({
-    ...config.databases.account,
+    ...{
+      uri:
+        process.env.MONGODB_ACCOUNT_CONNECT_URI || 'mongodb://localhost:27017',
+      database: process.env.MONGODB_ACCOUNT_DATABASE || 'db',
+      collection: process.env.MONGODB_ACCOUNT_COLLECTION || 'accounts',
+    },
     client: client as any,
     converter,
   })

@@ -1,21 +1,28 @@
-import { isLeft } from '../../../shared/core/either'
-import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
-import { Handler } from '../../../shared/core/handler'
-import { Emitter } from '../helpers/emitter'
-import { Identifier } from '../../../shared/core/entity'
-import { Response } from '../../../shared/core/response'
-import { openClassroom } from '../services/open.classroom'
-import { Repository } from '../../../shared/core/repository'
-import { teacherGeneratesResponse } from '../services/teacher.generates.response'
+import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
+
 import { Audio } from '../entities/audio'
-import { Message } from '../entities/message'
+import { Message, MESSAGE_TYPE, messageSchema } from '../entities/message'
+import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
+
 import { MessageHandler } from '../providers/message.handler'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
+
+import { teacherGeneratesResponse } from '../services/teacher.generates.response'
+
+import { Emitter } from '../helpers/emitter'
+
+import { transcribeAndAppend } from '../services/transcribe.and.append'
 import { remainingConsumption } from '../utils/remaining.consumption'
+
 import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Metadata {
   account: Identifier
+}
+
+interface Data {
+  classroom_id: string
+  type: MESSAGE_TYPE
+  data: unknown
 }
 
 interface Env {
@@ -28,22 +35,35 @@ interface Env {
   storage: StorageConstructor
 }
 
-export const initializeClassroomHandler = Handler<Env, any, Metadata>(
-  ({ metadata }) =>
+export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
+  request =>
     async ({
-      emitter,
       audios,
       classrooms,
+      emitter,
       messages,
       gpt,
       messageHandler,
       storage,
     }) => {
-      const { account } = metadata
+      const { classroom_id, participant_id, data } =
+        await messageSchema.validate({
+          ...request.data,
+          participant_id: request.metadata.account.id,
+        })
 
-      const result = await openClassroom({
-        participant_id: account.id,
-      })({ classrooms, messages })
+      const result = await transcribeAndAppend({
+        audio: data as Audio,
+        classroom_id,
+        participant_id,
+      })({
+        audios,
+        classrooms,
+        messages,
+        gpt,
+        messageHandler,
+        storage,
+      })
 
       if (isLeft(result)) {
         emitter.emit('error:service', {
@@ -54,11 +74,12 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         return Response.metadata({ status: 'error' })
       }
 
-      const { classroom } = result.value
+      const { classroom, message } = result.value
 
-      emitter.emit('classroom:started', {
+      emitter.emit('classroom:updated', {
         remainingConsumption: remainingConsumption(result.value.consume),
         classroom,
+        message,
       })
 
       const teacher_id = classroom.participants.find(
@@ -100,12 +121,12 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         return Response.metadata({ status: 'error' })
       }
 
-      const { classroom: updatedClassroom, message } = result2.value
+      const { classroom: updatedClassroom, message: IAMessage } = result2.value
 
       emitter.emit('classroom:updated', {
         remainingConsumption: remainingConsumption(result2.value.consume),
         classroom: updatedClassroom,
-        message,
+        message: IAMessage,
       })
 
       return Response.metadata({ status: 'successful' })

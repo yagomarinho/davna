@@ -6,7 +6,7 @@ import { Repository } from '../../../../shared/core/repository'
 import { appendAndReplyHandler } from '../append.and.reply.handler'
 import { appendMessageToClassroom as appendMessageService } from '../../services/append.message.to.classroom'
 import { teacherGeneratesResponse as teacherGeneratesService } from '../../services/teacher.generates.response'
-import { getTranscriptionFromAudio as getTranscription } from '../../utils/get.transcription.from.audio'
+import { getTranscriptionFromAudio as getTranscription } from '../../../utils/get.transcription.from.audio'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'

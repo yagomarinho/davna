@@ -1,22 +1,15 @@
+import type { Signer } from '@davna/providers'
 import { Handler, isLeft, Repository, Response } from '@davna/core'
 import { tokenFromBearer } from '@davna/utils'
 
 import { Session } from '../entities/session'
-import { Signer } from '../helpers/signer'
 import { verifySession } from '../services/verify.session'
+import { ConfigDTO } from '../dtos/config'
 
 interface Env {
   sessions: Repository<Session>
   signer: Signer
-  config: {
-    auth: {
-      jwt: {
-        token: {
-          headerName: string
-        }
-      }
-    }
-  }
+  config: ConfigDTO
 }
 
 export const verifySessionHandler = Handler(
@@ -40,6 +33,7 @@ export const verifySessionHandler = Handler(
       })({
         sessions,
         signer,
+        config,
       })
 
       if (isLeft(result))

@@ -45,6 +45,6 @@ export default defineConfig([
       ],
       'react/react-in-jsx-scope': 'off',
     },
-    ignores: ['**/*.{js,mjs,cjs}'],
+    ignores: ['/**/*.js', '/**/*.mjs'],
   },
 ])

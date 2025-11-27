@@ -1,8 +1,5 @@
-import { MongoClient, ObjectId } from 'mongodb'
+import { MongoClient, MongoDBRepository, ObjectId } from '@davna/repositories'
 
-import config from '../../../config'
-
-import { MongoDBRepository } from '../../../shared/repositories/mongodb.repository'
 import { Converter } from '@davna/types'
 import { Session } from '../entities/session'
 
@@ -20,7 +17,12 @@ export interface Config {
 
 export const SessionRepository = ({ client }: Config) =>
   MongoDBRepository<Session>({
-    ...config.databases.session,
+    ...{
+      uri:
+        process.env.MONGODB_SESSION_CONNECT_URI || 'mongodb://localhost:27017',
+      database: process.env.MONGODB_SESSION_DATABASE || 'db',
+      collection: process.env.MONGODB_SESSION_COLLECTION || 'session',
+    },
     client: client as any,
     converter,
   })

@@ -1,11 +1,8 @@
-import { Repository } from '../../../shared/core/repository'
-import { Left, Right } from '../../../shared/core/either'
+import type { Signer } from '@davna/providers'
 
-import { Session } from '../entities/session'
-import { Service } from '../../../shared/core/service'
-
-import config from '../../../config'
-import { Signer } from '../helpers/signer'
+import { Left, Repository, Right, Service } from '@davna/core'
+import { Session } from '../entities'
+import { ConfigDTO } from '../dtos/config'
 
 interface Token {
   value: string
@@ -32,11 +29,12 @@ interface Request {
 interface Env {
   signer: Signer
   sessions: Repository<Session>
+  config: ConfigDTO
 }
 
 export const verifySession = Service<Request, Env, TokenResponse>(
   ({ signature, user_agent, refresh_strategy = REFRESH_STRATEGY.LAX }) =>
-    async ({ signer, sessions }) => {
+    async ({ signer, sessions, config }) => {
       try {
         const now = new Date()
         const payload = signer.decode(signature)

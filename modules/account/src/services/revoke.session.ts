@@ -1,8 +1,6 @@
-import { Repository } from '../../../shared/core/repository'
-import { Left, Right } from '../../../shared/core/either'
+import { Left, Repository, Right, Service } from '@davna/core'
 
 import { Session } from '../entities/session'
-import { Service } from '../../../shared/core/service'
 
 interface Request {
   session_id: string

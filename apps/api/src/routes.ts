@@ -9,9 +9,9 @@ import { verifySessionHandler } from '../../../modules/account/src/handlers/veri
 import { refreshSessionHandler } from '../../../modules/account/src/handlers/refresh.session.handler'
 import { ensureAuthenticated } from './shared/middlewares/ensure.authenticated'
 import { revokeSessionHandler } from '../../../modules/account/src/handlers/revoke.session.handler'
-import { uploadAudioHandler } from '../../../modules/classroom/handlers/upload.audio.handler'
-import { downloadAudioHandler } from '../../../modules/classroom/handlers/download.audio.handler'
-import { appendLeadHandler } from '../../../modules/lead/handlers/append.lead.handler'
+import { uploadAudioHandler } from '../../../modules/classroom/src/handlers/upload.audio.handler'
+import { downloadAudioHandler } from '../../../modules/classroom/src/handlers/download.audio.handler'
+import { appendLeadHandler } from '../../../modules/lead/src/handlers/append.lead.handler'
 
 export const routes = ({
   repositories: { accounts, leads, audios, sessions },

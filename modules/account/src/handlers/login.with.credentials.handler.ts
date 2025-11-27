@@ -1,23 +1,23 @@
+import type { Auth, Signer } from '@davna/providers'
 import { Handler, isLeft, Repository, Response } from '@davna/core'
 
 import { Account } from '../entities/account'
 import { Session } from '../entities/session'
 
-import { Auth } from '../helpers/auth'
-import { Signer } from '../helpers/signer'
-
 import { loginWithCredentials } from '../services/login.with.credentials'
+import { ConfigDTO } from '../dtos/config'
 
 interface Env {
   auth: Auth
   signer: Signer
   sessions: Repository<Session>
   accounts: Repository<Account>
+  config: ConfigDTO
 }
 
 export const loginWithCredentialsHandler = Handler(
   request =>
-    async ({ accounts, sessions, auth, signer }: Env) => {
+    async ({ accounts, sessions, auth, signer, config }: Env) => {
       const { email, password } = request.data
       const user_agent = request.metadata.headers['user-agent'] ?? ''
 
@@ -30,6 +30,7 @@ export const loginWithCredentialsHandler = Handler(
         sessions,
         auth,
         signer,
+        config,
       })
 
       if (isLeft(result))

@@ -1,4 +1,4 @@
-import { Collection, MongoClient, ObjectId } from 'mongodb'
+import MongoDB from 'mongodb'
 import {
   applyTag,
   Entity,
@@ -11,12 +11,18 @@ import {
 } from '@davna/core'
 import { Converter, OmitEntityProps } from '@davna/types'
 
+export const MongoClient = MongoDB.MongoClient
+export type MongoClient = MongoDB.MongoClient
+
+export const ObjectId = MongoDB.ObjectId
+export type ObjectId = MongoDB.ObjectId
+
 export type ProjectFields<E extends Entity> = {
   [x in keyof OmitEntityProps<E>]?: 0 | 1
 } & { [x: string]: 0 | 1 }
 
 export interface ClientConfig<E extends Entity> {
-  client: MongoClient
+  client: MongoDB.MongoClient
   database: string
   collection: string
   converter: Converter<E>
@@ -56,9 +62,9 @@ export function MongoDBRepository<E extends Entity>({
   projection,
   ...rest
 }: ClientConfig<E> | Config<E>): MongoDBRepository<E> {
-  const client: MongoClient =
-    (rest as any).client ?? new MongoClient((rest as any).uri)
-  let coll: Collection<Document>
+  const client: MongoDB.MongoClient =
+    (rest as any).client ?? new MongoDB.MongoClient((rest as any).uri)
+  let coll: MongoDB.Collection<Document>
   let status = CONNECTION_STATUS.READY
 
   const connect: MongoDBRepository<E>['connect'] = async () => {
@@ -87,7 +93,7 @@ export function MongoDBRepository<E extends Entity>({
 
   const get = verifyConnectionProxy<Repository<E>['get']>(async id => {
     const item = await coll.findOne(
-      { _id: ObjectId.createFromHexString(id) },
+      { _id: MongoDB.ObjectId.createFromHexString(id) },
       { projection },
     )
 
@@ -114,7 +120,7 @@ export function MongoDBRepository<E extends Entity>({
 
   const remove = verifyConnectionProxy<Repository<E>['remove']>(
     async ({ id }) => {
-      await coll.deleteOne({ _id: ObjectId.createFromHexString(id) })
+      await coll.deleteOne({ _id: MongoDB.ObjectId.createFromHexString(id) })
     },
   )
 
@@ -142,7 +148,7 @@ export function MongoDBRepository<E extends Entity>({
       if (item.type === 'remove')
         return {
           deleteOne: {
-            filter: { _id: ObjectId.createFromHexString(item.data.id) },
+            filter: { _id: MongoDB.ObjectId.createFromHexString(item.data.id) },
           },
         }
 
@@ -194,7 +200,7 @@ export function MongoDBRepository<E extends Entity>({
   })
 }
 
-async function isConnected(client?: MongoClient) {
+async function isConnected(client?: MongoDB.MongoClient) {
   if (!client || !client.db()) {
     return false
   }
@@ -232,8 +238,8 @@ function whereLeafAdapter(where: WhereLeaf<any>) {
   if (fieldname === 'id') {
     fieldname = '_id'
 
-    if (value instanceof Array) value = value.map(v => new ObjectId(v))
-    if (typeof value === 'string') value = new ObjectId(value)
+    if (value instanceof Array) value = value.map(v => new MongoDB.ObjectId(v))
+    if (typeof value === 'string') value = new MongoDB.ObjectId(value)
   }
 
   if (operator === 'array-contains') return { [fieldname]: value }

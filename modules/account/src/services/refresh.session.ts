@@ -1,11 +1,8 @@
-import { Query, Repository } from '../../../shared/core/repository'
-import { Left, Right } from '../../../shared/core/either'
+import type { Signer } from '@davna/providers'
+import { Left, Query, Repository, Right, Service } from '@davna/core'
 
 import { Session } from '../entities/session'
-import { Service } from '../../../shared/core/service'
-
-import config from '../../../../apps/api/src/config'
-import { Signer } from '../helpers/signer'
+import { ConfigDTO } from '../dtos/config'
 
 interface Request {
   signature: string
@@ -24,11 +21,12 @@ interface TokenResponse {
 interface Env {
   signer: Signer
   sessions: Repository<Session>
+  config: ConfigDTO
 }
 
 export const refreshSession = Service<Request, Env, TokenResponse>(
   ({ signature, user_agent }: Request) =>
-    async ({ signer, sessions }: Env) => {
+    async ({ signer, sessions, config }: Env) => {
       try {
         const now = new Date()
         let [session] = await sessions.query(
