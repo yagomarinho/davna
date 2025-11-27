@@ -1,6 +1,6 @@
+import type { GPTInput, GPTModel } from '@davna/providers'
 import { isLeft, Repository } from '@davna/core'
-import { GPTInput, GPTModel } from '@davna/providers'
-import { getDuration } from '@davna/utils'
+import { getDuration } from '../utils'
 
 import { uploadAudio } from '../services/upload.audio'
 

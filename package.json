@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@davna/core": "*",
+    "dotenv": "^17.2.3",
     "yup": "^1.7.1"
   },
   "devDependencies": {

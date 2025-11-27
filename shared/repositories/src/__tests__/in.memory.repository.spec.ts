@@ -1,9 +1,8 @@
-import { Entity } from '../../core/entity'
-import { Filter, Query } from '../../core/repository'
-import { applyTag } from '../../core/tagged'
+import { applyTag, Entity, Filter, Query } from '@davna/core'
+
 import { InMemoryRepository } from '../in.memory.repository'
 
-type User = Entity & {
+interface User extends Entity {
   name: string
   age: number
   score: number

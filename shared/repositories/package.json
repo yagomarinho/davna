@@ -3,7 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
+    "test:google": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest src/__tests__/google.sheets.repository.spec.ts",
+    "test:mongo": "jest src/__tests__/mongodb.repository.spec.ts",
+    "test:memory": "jest src/__tests__/in.memory.repository.spec.ts"
+  },
   "author": {
     "name": "Yago Marinho",
     "email": "marinho.rj2@hotmail.com"
@@ -13,6 +18,8 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
+    "@davna/types": "*",
+    "@davna/utils": "*",
     "googleapis": "^166.0.0",
     "mongodb": "^6.20.0"
   }

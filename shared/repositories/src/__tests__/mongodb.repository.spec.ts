@@ -1,11 +1,10 @@
 import { ObjectId } from 'mongodb'
 import { MongoDBRepository } from '../mongodb.repository'
-import { Entity } from '../../core/entity'
-import { applyTag } from '../../core/tagged'
-import { Filter, Query } from '../../core/repository'
-import config from '../../../config'
+import { applyTag, Entity, Filter, Query } from '@davna/core'
 
-interface User extends Entity<'user'> {
+const URI = 'user'
+type URI = typeof URI
+interface User extends Entity<URI> {
   name: string
   age: number
   interests: string[]
@@ -25,7 +24,7 @@ function User(
   created_at: Date,
   updated_at: Date,
 ): User {
-  return applyTag('user')({
+  return applyTag(URI)({
     id,
     name,
     age,
@@ -47,13 +46,13 @@ User.create = ({
 const converter = {
   to: (e: any) => ({
     ...e,
-    _id: e.id ? ObjectId.createFromHexString(e.id) : new ObjectId(),
+    _id: e.id ? new ObjectId(e.id) : new ObjectId(),
   }),
   from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
 }
 
 const baseConfig = {
-  uri: config.databases.default_uri,
+  uri: process.env.MONGODB_DEFAULT_CONNECT_URI || 'mongodb://localhost:27017',
   database: 'db',
   collection: 'col',
   converter,

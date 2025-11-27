@@ -1,9 +1,8 @@
+import type { GPTModel } from '@davna/providers'
 import { resolve } from 'node:path'
 import { rm, writeFile } from 'node:fs/promises'
-
-import { GPTModel } from '@davna/providers'
-
 import { Repository } from '@davna/core'
+
 import { Audio } from '../entities/audio'
 
 interface Env {

@@ -1,4 +1,4 @@
-import MongoDB from 'mongodb'
+import * as MongoDB from 'mongodb'
 import {
   applyTag,
   Entity,

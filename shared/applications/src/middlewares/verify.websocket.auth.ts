@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io'
+import { isLeft, Repository } from '@davna/core'
 
 import { getSessionInfo } from '../services/get.session.info'
-import { isLeft, Repository } from '@davna/core'
 
 type AuthedSocket = Socket & {
   data: {

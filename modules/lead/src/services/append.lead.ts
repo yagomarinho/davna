@@ -1,7 +1,6 @@
 import { string } from 'yup'
-import { Left, Right } from '../../../shared/core/either'
-import { Repository, Writable } from '../../../shared/core/repository'
-import { Service } from '../../../shared/core/service'
+import { Left, Repository, Right, Service, Writable } from '@davna/core'
+
 import { Lead } from '../entities/lead'
 
 interface Request {
@@ -9,7 +8,7 @@ interface Request {
 }
 
 interface Env {
-  leads: Writable<Repository>
+  leads: Writable<Repository<Lead>>
 }
 
 export const appendLead = Service<Request, Env, Lead>(

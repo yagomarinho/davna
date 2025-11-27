@@ -1,3 +1,4 @@
+import type { GPTModel } from '@davna/providers'
 import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
 
 import { Audio } from '../entities/audio'
@@ -12,8 +13,6 @@ import { Emitter } from '../helpers/emitter'
 
 import { transcribeAndAppend } from '../services/transcribe.and.append'
 import { remainingConsumption } from '../helpers/remaining.consumption'
-
-import { GPTModel } from '@davna/providers'
 
 interface Metadata {
   account: Identifier

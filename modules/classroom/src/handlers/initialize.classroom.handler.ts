@@ -1,5 +1,5 @@
+import type { GPTModel } from '@davna/providers'
 import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
-import { GPTModel } from '@davna/providers'
 
 import { Audio, Classroom, Message, PARTICIPANT_ROLE } from '../entities'
 import { Emitter } from '../helpers/emitter'

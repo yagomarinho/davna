@@ -1,12 +1,11 @@
 import { google } from 'googleapis'
+import { applyTag, Entity } from '@davna/core'
+import { OmitEntityProps } from '@davna/types'
 
-import config from '../../../config'
-
-import { GoogleSheetsRepository } from '../google.sheets.repository'
-
-import { Entity } from '../../core/entity'
-import { applyTag } from '../../core/tagged'
-import { OmitEntityProps } from '../../types/omit.entity'
+import {
+  GCPCredentials,
+  GoogleSheetsRepository,
+} from '../google.sheets.repository'
 
 jest.setTimeout(30000)
 
@@ -60,9 +59,25 @@ async function getLastValue(
     : undefined
 }
 
-async function getAuth() {
+function makeCred(): GCPCredentials {
+  return {
+    type: process.env.GCP_TYPE!,
+    project_id: process.env.GCP_PROJECT_ID!,
+    private_key_id: process.env.GCP_PRIVATE_KEY_ID!,
+    private_key: process.env.GCP_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+    client_email: process.env.GCP_CLIENT_EMAIL!,
+    client_id: process.env.GCP_CLIENT_ID!,
+    auth_uri: process.env.GCP_AUTH_URI!,
+    token_uri: process.env.GCP_TOKEN_URI!,
+    auth_provider_x509_cert_url: process.env.GCP_AUTH_PROVIDER_X509_CERT_URL!,
+    client_x509_cert_url: process.env.GCP_CLIENT_X509_CERT_URL!,
+    universe_domain: process.env.GCP_UNIVERSE_DOMAIN!,
+  }
+}
+
+async function getAuth(credentials: GCPCredentials) {
   return new google.auth.GoogleAuth({
-    credentials: config.providers.gcp.credentials,
+    credentials,
     scopes: [
       'https://www.googleapis.com/auth/spreadsheets',
       'https://www.googleapis.com/auth/drive.file',
@@ -72,15 +87,19 @@ async function getAuth() {
 
 describe('GoogleSheetsRepository — integration', () => {
   let auth: Awaited<ReturnType<typeof getAuth>>
+  const credentials = makeCred()
+  const range = process.env.GCP_SPREADSHEET_RANGE!
+  const spreadsheetId = process.env.GCP_SPREADSHEET_ID!
 
   beforeAll(async () => {
-    auth = await getAuth()
+    auth = await getAuth(credentials)
   })
 
   it('should append an entity and then clean it up', async () => {
     const repo = GoogleSheetsRepository<E>({
-      ...config.providers.gcp.sheets,
-      credentials: config.providers.gcp.credentials,
+      credentials,
+      range,
+      spreadsheetId,
     })
 
     const uniqueId = `itest-${Date.now()}}`
@@ -94,8 +113,6 @@ describe('GoogleSheetsRepository — integration', () => {
 
     expect(result).toBeDefined()
     expect(result.id).toBe(uniqueId)
-
-    const { spreadsheetId, range } = config.providers.gcp.sheets
 
     const found = await getLastValue(auth, spreadsheetId, range)
     expect(found).toBeDefined()
