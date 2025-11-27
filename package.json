@@ -3,12 +3,15 @@
   "private": true,
   "workspaces": {
     "packages": [
+      "apps/*",
       "config/*",
-      "packages/*"
+      "modules/*",
+      "shared/*"
     ]
   },
   "scripts": {
-    "test:api-tsc": "node scripts/api.tsc.monitor.js"
+    "test:api-tsc": "node scripts/api.tsc.monitor.js",
+    "typecheck": "tsc --noEmit"
   },
   "author": {
     "name": "Yago Marinho",
@@ -18,10 +21,15 @@
     "type": "git",
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
+  "dependencies": {
+    "@davna/core": "*"
+  },
   "devDependencies": {
-    "@types/node": "^24.5.2",
     "@davna/eslint": "*",
     "@davna/jest": "*",
+    "@types/node": "^24.5.2",
+    "esbuild": "^0.27.0",
+    "rimraf": "^6.1.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5"
   }

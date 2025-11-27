@@ -10,6 +10,12 @@
     "module": "nodenext",
     "moduleResolution": "nodenext"
   },
-  "include": ["packages", "config"],
+  "include": [
+    "apps",
+    "config",
+    "modules/lead",
+    "modules/classroom",
+    "modules/account"
+  ],
   "exclude": ["node_modules", "coverage"]
 }

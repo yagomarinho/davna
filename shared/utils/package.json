@@ -1,0 +1,15 @@
+{
+  "name": "@davna/utils",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.ts",
+  "scripts": {},
+  "author": {
+    "name": "Yago Marinho",
+    "email": "marinho.rj2@hotmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yagomarinho/davna.git"
+  }
+}

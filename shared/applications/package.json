@@ -1,0 +1,25 @@
+{
+  "name": "@davna/applications",
+  "private": true,
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "scripts": {},
+  "author": {
+    "name": "Yago Marinho",
+    "email": "marinho.rj2@hotmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yagomarinho/davna.git"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3"
+  }
+}

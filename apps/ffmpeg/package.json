@@ -1,0 +1,20 @@
+{
+  "name": "@davna/ffmpeg",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "rimraf ./dist && npm run typecheck && esbuild src/index.ts --bundle --platform=node --outdir=dist --minify",
+    "dev": "tsnd --respawn --transpile-only --ignore-watch node_modules src/index.ts",
+    "start": "node ./dist/index.js",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
+    "typecheck": "tsc --noEmit --project ./tsconfig.build.json"
+  },
+  "author": {
+    "name": "Yago Marinho",
+    "email": "marinho.rj2@hotmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yagomarinho/davna.git"
+  }
+}
