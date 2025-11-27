@@ -1,13 +1,14 @@
-import { Left } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import type { Auth, Signer } from '@davna/providers'
+import { Left, Repository, Request } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Account } from '../../entities/account'
 import { Session } from '../../entities/session'
-import { Auth } from '../../helpers/auth'
-import { Signer } from '../../helpers/signer'
+
 import { loginWithCredentials as service } from '../../services/login.with.credentials'
 import { loginWithCredentialsHandler } from '../login.with.credentials.handler'
+
+import { makeConfig } from '../../fakes/make.config'
 
 jest.mock('../../services/login.with.credentials', () => ({
   loginWithCredentials: jest.fn(),
@@ -24,6 +25,7 @@ describe('loginWithCredentialsHandler', () => {
   let sessions: Repository<Session>
   let auth: jest.Mocked<Auth>
   let signer: jest.Mocked<Signer>
+  const config = makeConfig()
 
   beforeEach(() => {
     accounts = InMemoryRepository<Account>()
@@ -61,6 +63,7 @@ describe('loginWithCredentialsHandler', () => {
       sessions,
       auth,
       signer,
+      config,
     })
 
     expect(result).toBeDefined()
@@ -100,6 +103,7 @@ describe('loginWithCredentialsHandler', () => {
       sessions,
       auth,
       signer,
+      config,
     })
 
     expect(result).toBeDefined()

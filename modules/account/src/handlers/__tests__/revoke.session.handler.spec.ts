@@ -1,7 +1,6 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Session } from '../../entities/session'
 import { revokeSession as service } from '../../services/revoke.session'
 import { revokeSessionHandler } from '../revoke.session.handler'

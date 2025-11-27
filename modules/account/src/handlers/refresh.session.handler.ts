@@ -15,18 +15,39 @@ interface Env {
 export const refreshSessionHandler = Handler(
   request =>
     async ({ sessions, signer, config }: Env) => {
-      const user_agent = request.metadata.headers['user-agent'] ?? ''
-      const bearer =
-        (request.metadata.headers[config.auth.jwt.refresh_token.headerName] as
-          | string
-          | undefined) ?? ''
-
-      if (!bearer) throw new Error('Invalid Session')
-
-      let signature: string
-
       try {
-        signature = tokenFromBearer(bearer)
+        const user_agent = request.metadata.headers['user-agent'] ?? ''
+        const bearer =
+          (request.metadata.headers[
+            config.auth.jwt.refresh_token.headerName
+          ] as string | undefined) ?? ''
+
+        if (!bearer) throw new Error('Invalid Session')
+
+        const signature: string = tokenFromBearer(bearer)
+
+        const result = await refreshSession({
+          signature,
+          user_agent,
+        })({
+          sessions,
+          signer,
+          config,
+        })
+
+        if (isLeft(result))
+          return Response({
+            data: {
+              message: 'Invalid Session',
+            },
+            metadata: {
+              headers: {
+                status: 401,
+              },
+            },
+          })
+
+        return Response.data(result.value)
       } catch {
         return Response({
           data: { message: 'Invalid Session' },
@@ -37,28 +58,5 @@ export const refreshSessionHandler = Handler(
           },
         })
       }
-
-      const result = await refreshSession({
-        signature,
-        user_agent,
-      })({
-        sessions,
-        signer,
-        config,
-      })
-
-      if (isLeft(result))
-        return Response({
-          data: {
-            message: 'Invalid Session',
-          },
-          metadata: {
-            headers: {
-              status: 401,
-            },
-          },
-        })
-
-      return Response.data(result.value)
     },
 )

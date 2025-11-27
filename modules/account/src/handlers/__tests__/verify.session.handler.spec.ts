@@ -1,11 +1,10 @@
-import config from '../../../../config'
-import { Left, Right } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Session } from '../../entities/session'
 import { verifySession as service } from '../../services/verify.session'
 import { verifySessionHandler } from '../verify.session.handler'
+import { makeConfig } from '../../fakes/make.config'
 
 jest.mock('../../services/verify.session', () => ({
   verifySession: jest.fn(),
@@ -14,6 +13,8 @@ jest.mock('../../services/verify.session', () => ({
 const verifySession = service as any as jest.Mock
 
 describe('verifySessionHandler', () => {
+  const config = makeConfig()
+
   const tokenHeaderName = config.auth.jwt.token.headerName
   const refreshStrategy = 'rotate'
   const user_agent = 'Mozilla/5.0 (test)'
@@ -50,7 +51,7 @@ describe('verifySessionHandler', () => {
     })
 
     await expect(
-      verifySessionHandler(req)({ sessions, signer }),
+      verifySessionHandler(req)({ sessions, signer, config }),
     ).rejects.toThrow('Invalid Session')
 
     expect(verifySession).not.toHaveBeenCalled()
@@ -72,7 +73,7 @@ describe('verifySessionHandler', () => {
       () => async () => Left({ message: 'invalid' }),
     )
 
-    const result = await verifySessionHandler(req)({ sessions, signer })
+    const result = await verifySessionHandler(req)({ sessions, signer, config })
 
     expect(result).toBeDefined()
     expect(result).toEqual(
@@ -115,7 +116,7 @@ describe('verifySessionHandler', () => {
 
     verifySession.mockImplementationOnce(() => async () => Right(payload))
 
-    const result = await verifySessionHandler(req)({ sessions, signer })
+    const result = await verifySessionHandler(req)({ sessions, signer, config })
 
     expect(result).toBeDefined()
     expect(result).toEqual(

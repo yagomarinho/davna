@@ -1,11 +1,11 @@
-import { isLeft, isRight } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import type { Signer } from '@davna/providers'
+import { isLeft, isRight, Repository } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
 
 import { Session } from '../../entities/session'
-import { Signer } from '../../helpers/signer'
-
 import { REFRESH_STRATEGY, verifySession } from '../verify.session'
+
+import { makeConfig } from '../../fakes/make.config'
 
 const dayTime = 24 * 60 * 60 * 1000
 
@@ -16,6 +16,7 @@ describe('verify session service', () => {
 
   let signer: jest.Mocked<Signer>
   let sessions: Repository<Session>
+  const config = makeConfig()
 
   beforeEach(() => {
     sessions = InMemoryRepository<Session>()
@@ -38,7 +39,7 @@ describe('verify session service', () => {
     const result = await verifySession({
       signature,
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
@@ -53,7 +54,7 @@ describe('verify session service', () => {
     const result = await verifySession({
       signature,
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
@@ -79,7 +80,7 @@ describe('verify session service', () => {
     const result = await verifySession({
       signature: 'any-session-signature',
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(removeSpy).toHaveBeenCalledWith(
       expect.objectContaining({ id: expired.id }),
@@ -114,7 +115,7 @@ describe('verify session service', () => {
       signature,
       user_agent,
       refresh_strategy: REFRESH_STRATEGY.LAX,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(setSpy).not.toHaveBeenCalled()
 
@@ -156,7 +157,7 @@ describe('verify session service', () => {
       signature,
       user_agent,
       refresh_strategy: REFRESH_STRATEGY.LAX,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(setSpy).toHaveBeenCalled()
 
@@ -196,7 +197,7 @@ describe('verify session service', () => {
       signature,
       user_agent,
       refresh_strategy: REFRESH_STRATEGY.FORCE,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(setSpy).toHaveBeenCalled()
 

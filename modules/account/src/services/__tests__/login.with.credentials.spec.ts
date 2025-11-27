@@ -1,11 +1,12 @@
-import { isLeft, isRight } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import type { Auth, Signer } from '@davna/providers'
+import { isLeft, isRight, Repository } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Account } from '../../entities/account'
 import { Session } from '../../entities/session'
-import { Auth } from '../../helpers/auth'
-import { Signer } from '../../helpers/signer'
 import { loginWithCredentials } from '../login.with.credentials'
+
+import { makeConfig } from '../../fakes/make.config'
 
 describe('login with credentials service', () => {
   const signer: Signer = {
@@ -17,6 +18,8 @@ describe('login with credentials service', () => {
     authenticate: jest.fn(),
     getUser: jest.fn(),
   }
+
+  const config = makeConfig()
 
   let accounts: Repository<Account>
   let sessions: Repository<Session>
@@ -49,6 +52,7 @@ describe('login with credentials service', () => {
       auth,
       accounts,
       sessions,
+      config,
     })
 
     expect(isRight(result)).toBeTruthy()
@@ -92,6 +96,7 @@ describe('login with credentials service', () => {
       auth,
       accounts,
       sessions,
+      config,
     })
 
     expect(isRight(result)).toBeTruthy()
@@ -131,6 +136,7 @@ describe('login with credentials service', () => {
       },
       accounts,
       sessions,
+      config,
     })
 
     expect(isLeft(result)).toBeTruthy()

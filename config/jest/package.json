@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "main": "jest.config.ts",
+  "type": "module",
   "author": {
     "name": "Yago Marinho",
     "email": "marinho.rj2@hotmail.com"

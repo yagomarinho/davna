@@ -1,29 +1,25 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import type { Signer } from '@davna/providers'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Session } from '../../entities/session'
-import { Signer } from '../../helpers/signer'
 import { refreshSessionHandler } from '../refresh.session.handler'
+
 import { refreshSession as service } from '../../services/refresh.session'
-import { tokenFromBearer as tokenFromBearerModule } from '../../../../shared/utils/token.from.bearer'
+import { makeConfig } from '../../fakes/make.config'
 
 jest.mock('../../services/refresh.session', () => ({
   refreshSession: jest.fn(),
 }))
 
-jest.mock('../../../../shared/utils/token.from.bearer', () => ({
-  tokenFromBearer: jest.fn(),
-}))
-
 const refreshSession = service as any as jest.Mock
-const tokenFromBearer = tokenFromBearerModule as any as jest.Mock
 
 describe('refreshSessionHandler', () => {
   const user_agent = 'Mozilla/5.0 (test)'
 
   let sessions: Repository<Session>
   let signer: jest.Mocked<Signer>
+  const config = makeConfig()
 
   beforeEach(() => {
     sessions = InMemoryRepository<Session>()
@@ -37,17 +33,23 @@ describe('refreshSessionHandler', () => {
   })
 
   it('should throw when refresh bearer header is missing', async () => {
-    const req = Request({
-      data: {},
-      metadata: { headers: {} },
+    const req = Request.metadata({
+      headers: {},
+    })
+    const result = await refreshSessionHandler(req)({
+      sessions,
+      signer,
+      config,
     })
 
-    await expect(
-      refreshSessionHandler(req)({
-        sessions,
-        signer,
+    expect(result).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({ message: 'Invalid Session' }),
+        metadata: expect.objectContaining({
+          headers: expect.objectContaining({ status: 401 }),
+        }),
       }),
-    ).rejects.toThrow('Invalid Session')
+    )
   })
 
   it('should return 401 Response when tokenFromBearer throws (invalid bearer)', async () => {
@@ -62,13 +64,10 @@ describe('refreshSessionHandler', () => {
       },
     })
 
-    tokenFromBearer.mockImplementationOnce(() => {
-      throw new Error('bad token')
-    })
-
     const result = await refreshSessionHandler(req)({
       sessions,
       signer,
+      config,
     })
 
     expect(result).toBeDefined()
@@ -80,9 +79,6 @@ describe('refreshSessionHandler', () => {
         }),
       }),
     )
-
-    expect(tokenFromBearer).toHaveBeenCalledTimes(1)
-    expect(tokenFromBearer).toHaveBeenCalledWith(bearer)
   })
 
   it('should return 401 Response when refreshSession service returns Left', async () => {
@@ -98,11 +94,6 @@ describe('refreshSessionHandler', () => {
       },
     })
 
-    tokenFromBearer.mockImplementationOnce((b: string) => {
-      if (!b.startsWith('Bearer ')) throw new Error('bad')
-      return b.split(' ')[1]
-    })
-
     refreshSession.mockImplementationOnce(
       () => async () => Left({ status: 'error', message: 'Invalid' }),
     )
@@ -110,6 +101,7 @@ describe('refreshSessionHandler', () => {
     const result = await refreshSessionHandler(req)({
       sessions,
       signer,
+      config,
     })
 
     expect(result).toBeDefined()
@@ -121,9 +113,6 @@ describe('refreshSessionHandler', () => {
         }),
       }),
     )
-
-    expect(tokenFromBearer).toHaveBeenCalledTimes(1)
-    expect(tokenFromBearer).toHaveBeenCalledWith(bearer)
 
     const calledWith = refreshSession.mock.calls[0][0]
     expect(calledWith).toEqual(
@@ -144,11 +133,6 @@ describe('refreshSessionHandler', () => {
       },
     })
 
-    tokenFromBearer.mockImplementationOnce((b: string) => {
-      if (!b.startsWith('Bearer ')) throw new Error('bad')
-      return b.split(' ')[1]
-    })
-
     const servicePayload = {
       token: { value: 'new-access' },
       refresh_token: { value: 'new-refresh' },
@@ -161,6 +145,7 @@ describe('refreshSessionHandler', () => {
     const result = await refreshSessionHandler(req)({
       sessions,
       signer,
+      config,
     })
 
     expect(result).toBeDefined()
@@ -169,9 +154,6 @@ describe('refreshSessionHandler', () => {
         data: servicePayload,
       }),
     )
-
-    expect(tokenFromBearer).toHaveBeenCalledTimes(1)
-    expect(tokenFromBearer).toHaveBeenCalledWith(bearer)
 
     const calledWith = refreshSession.mock.calls[0][0]
     expect(calledWith).toEqual(

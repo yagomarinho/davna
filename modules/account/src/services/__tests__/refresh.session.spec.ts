@@ -1,10 +1,11 @@
-import { isLeft, isRight } from '../../../../shared/core/either'
-import { Query, Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import type { Signer } from '@davna/providers'
+import { isLeft, isRight, Query, Repository } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
 
 import { Session } from '../../entities/session'
-import { Signer } from '../../helpers/signer'
 import { refreshSession } from '../refresh.session'
+
+import { makeConfig } from '../../fakes/make.config'
 
 const dayTime = 24 * 60 * 60 * 1000
 
@@ -15,6 +16,7 @@ describe('refresh session service', () => {
 
   let signer: jest.Mocked<Signer>
   let sessions: Repository<Session>
+  const config = makeConfig()
 
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date('2025-11-07T12:00:00Z'))
@@ -35,7 +37,7 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
@@ -55,7 +57,7 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(removeSpy).toHaveBeenCalledWith(
       expect.objectContaining({ id: expired.id }),
@@ -83,7 +85,7 @@ describe('refresh session service', () => {
     const result: any = await refreshSession({
       signature: stable_refresh,
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(setSpy).not.toHaveBeenCalled()
 
@@ -134,7 +136,7 @@ describe('refresh session service', () => {
     const result: any = await refreshSession({
       signature: 'old.refresh',
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(setSpy).toHaveBeenCalled()
 
@@ -170,7 +172,7 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
-    })({ signer, sessions })
+    })({ signer, sessions, config })
 
     expect(spy).toHaveBeenCalled()
     expect(isLeft(result)).toBeTruthy()

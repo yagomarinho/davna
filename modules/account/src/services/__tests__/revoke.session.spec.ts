@@ -1,6 +1,5 @@
-import { isLeft, isRight } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { isLeft, isRight, Repository } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
 
 import { Session } from '../../entities/session'
 import { revokeSession } from '../revoke.session'
