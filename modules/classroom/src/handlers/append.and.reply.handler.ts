@@ -4,16 +4,16 @@ import { Audio } from '../entities/audio'
 import { Message, MESSAGE_TYPE, messageSchema } from '../entities/message'
 import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
 
-import { MessageHandler } from '../providers/message.handler'
+import { MessageHandler } from '../helpers/message.handler'
 
 import { teacherGeneratesResponse } from '../services/teacher.generates.response'
 
 import { Emitter } from '../helpers/emitter'
 
 import { transcribeAndAppend } from '../services/transcribe.and.append'
-import { remainingConsumption } from '../utils/remaining.consumption'
+import { remainingConsumption } from '../helpers/remaining.consumption'
 
-import { GPTModel } from '../providers/gpt.model/gpt'
+import { GPTModel } from '@davna/providers'
 
 interface Metadata {
   account: Identifier

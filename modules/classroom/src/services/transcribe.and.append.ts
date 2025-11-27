@@ -1,18 +1,15 @@
-import { Repository } from '../../../shared/core/repository'
+import { isLeft, Left, Repository, Right, Service } from '@davna/core'
+import { GPTModel } from '@davna/providers'
 
 import { Message, MESSAGE_TYPE } from '../entities/message'
 import { Classroom } from '../entities/classroom'
 import { Audio } from '../entities/audio'
 
-import { MessageHandler } from '../providers/message.handler'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
+import { MessageHandler } from '../helpers/message.handler'
 
 import { appendMessageToClassroom } from './append.message.to.classroom'
-import { Service } from '../../../shared/core/service'
-import { getTranscriptionFromAudio } from '../utils/get.transcription.from.audio'
+import { getTranscriptionFromAudio } from '../helpers/get.transcription.from.audio'
 import { verifyConsume } from './verify.consume'
-import { isLeft, Left, Right } from '../../../shared/core/either'
-import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Data {
   audio: Audio

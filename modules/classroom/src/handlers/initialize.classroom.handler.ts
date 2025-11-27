@@ -1,18 +1,14 @@
-import { isLeft } from '../../../shared/core/either'
-import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
-import { Handler } from '../../../shared/core/handler'
+import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
+import { GPTModel } from '@davna/providers'
+
+import { Audio, Classroom, Message, PARTICIPANT_ROLE } from '../entities'
 import { Emitter } from '../helpers/emitter'
-import { Identifier } from '../../../shared/core/entity'
-import { Response } from '../../../shared/core/response'
+
 import { openClassroom } from '../services/open.classroom'
-import { Repository } from '../../../shared/core/repository'
 import { teacherGeneratesResponse } from '../services/teacher.generates.response'
-import { Audio } from '../entities/audio'
-import { Message } from '../entities/message'
-import { MessageHandler } from '../providers/message.handler'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
-import { remainingConsumption } from '../../utils/remaining.consumption'
-import { GPTModel } from '../providers/gpt.model/gpt'
+
+import { MessageHandler } from '../helpers/message.handler'
+import { remainingConsumption } from '../helpers/remaining.consumption'
 
 interface Metadata {
   account: Identifier

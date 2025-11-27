@@ -1,8 +1,6 @@
-import { Service } from '../../../shared/core/service'
+import { Left, Repository, Right, Service } from '@davna/core'
+
 import { Audio } from '../entities/audio'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
-import { Repository } from '../../../shared/core/repository'
-import { Left, Right } from '../../../shared/core/either'
 
 interface Request {
   audio_id: string

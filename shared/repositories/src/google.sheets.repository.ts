@@ -2,7 +2,7 @@ import { google } from 'googleapis'
 
 import { applyTag, Entity, Writable, Repository } from '@davna/core'
 
-export interface Credentials {
+export interface GCPCredentials {
   type: string
   project_id: string
   private_key_id: string
@@ -19,7 +19,7 @@ export interface Credentials {
 export interface GCPConfig {
   spreadsheetId: string
   range: string
-  credentials: Credentials
+  credentials: GCPCredentials
 }
 
 export function GoogleSheetsRepository<E extends Entity>({

@@ -23,7 +23,8 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
-    "@davna/core": "*"
+    "@davna/core": "*",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@davna/eslint": "*",

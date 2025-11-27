@@ -1,13 +1,10 @@
-import { Left, Right } from '../../../shared/core/either'
-import { Repository } from '../../../shared/core/repository'
-import { Service } from '../../../shared/core/service'
-import { Audio } from '../entities/audio'
+import { Left, Repository, Right, Service } from '@davna/core'
 
+import { Audio } from '../entities/audio'
 import { Classroom } from '../entities/classroom'
 import { Message } from '../entities/message'
 
-import { MessageHandler } from '../providers/message.handler'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
+import { MessageHandler } from '../helpers/message.handler'
 
 interface Request {
   classroom_id: string

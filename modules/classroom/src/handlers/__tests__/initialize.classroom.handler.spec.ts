@@ -10,7 +10,7 @@ import { teacherGeneratesResponse as teacherGeneratesService } from '../../servi
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Audio } from '../../entities/audio'
 import { Message } from '../../entities/message'
-import { GPT } from '../../providers/gpt.model'
+import { GPT } from '@davna/providers/src/gpt/gpt.model'
 
 jest.mock('../../services/open.classroom', () => ({
   openClassroom: jest.fn(),

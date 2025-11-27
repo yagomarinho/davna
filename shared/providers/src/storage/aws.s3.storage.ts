@@ -9,7 +9,7 @@ import { Storage, STORAGE_TYPE } from './storage'
 export const AWSS3 = 'aws.s3'
 export type AWSS3 = typeof AWSS3
 
-interface Credentials {
+interface AWSCredentials {
   accessKeyId: string
   secretAccessKey: string
 }
@@ -17,7 +17,7 @@ interface Credentials {
 export interface AWSS3Config {
   region: string
   bucket: string
-  credentials: Credentials
+  credentials: AWSCredentials
 }
 
 export function AWSS3Storage({

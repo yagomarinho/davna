@@ -12,7 +12,7 @@ import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 import { STORAGE_TYPE } from '../../../../shared/providers/storage/storage'
-import { GPT } from '../../providers/gpt.model'
+import { GPT } from '@davna/providers/src/gpt/gpt.model'
 
 jest.mock('../../services/append.message.to.classroom', () => ({
   appendMessageToClassroom: jest.fn(),

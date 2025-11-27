@@ -1,9 +1,6 @@
-import { MongoClient, ObjectId } from 'mongodb'
+import type { Converter } from '@davna/types'
+import { MongoClient, MongoDBRepository, ObjectId } from '@davna/repositories'
 
-import config from '../../../config'
-
-import { MongoDBRepository } from '../../../shared/repositories/mongodb.repository'
-import { Converter } from '@davna/types'
 import { Audio } from '../entities/audio'
 
 const converter: Converter<Audio> = {
@@ -20,7 +17,11 @@ export interface Config {
 
 export const AudioRepository = ({ client }: Config) =>
   MongoDBRepository<Audio>({
-    ...config.databases.audio,
+    ...{
+      uri: process.env.MONGODB_AUDIO_CONNECT_URI || 'mongodb://localhost:27017',
+      database: process.env.MONGODB_AUDIO_DATABASE || 'db',
+      collection: process.env.MONGODB_AUDIO_COLLECTION || 'audios',
+    },
     client: client as any,
     converter,
   })

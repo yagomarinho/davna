@@ -1,12 +1,9 @@
 import { number, string } from 'yup'
-import { Handler } from '../../../shared/core/handler'
-import { Repository } from '../../../shared/core/repository'
-import { Response } from '../../../shared/core/response'
+
 import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
+import { Handler, isLeft, Repository, Response } from '@davna/core'
+import { getDuration } from '@davna/utils'
 import { uploadAudio } from '../services/upload.audio'
-import { isLeft } from '../../../shared/core/either'
-import { getDuration } from '../../../shared/utils/get.duration'
 
 interface Env {
   audios: Repository<Audio>

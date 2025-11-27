@@ -1,9 +1,6 @@
-import { MongoClient, ObjectId } from 'mongodb'
+import type { Converter } from '@davna/types'
+import { MongoClient, MongoDBRepository, ObjectId } from '@davna/repositories'
 
-import config from '../../../config'
-
-import { MongoDBRepository } from '../../../shared/repositories/mongodb.repository'
-import { Converter } from '@davna/types'
 import { Message } from '../entities/message'
 
 const converter: Converter<Message> = {
@@ -20,7 +17,12 @@ export interface Config {
 
 export const MessageRepository = ({ client }: Config) =>
   MongoDBRepository<Message>({
-    ...config.databases.message,
+    ...{
+      uri:
+        process.env.MONGODB_MESSAGE_CONNECT_URI || 'mongodb://localhost:27017',
+      database: process.env.MONGODB_MESSAGE_DATABASE || 'db',
+      collection: process.env.MONGODB_MESSAGE_COLLECTION || 'messages',
+    },
     client: client as any,
     converter,
   })

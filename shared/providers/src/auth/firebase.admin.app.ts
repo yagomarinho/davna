@@ -1,6 +1,6 @@
 import * as admin from 'firebase-admin/app'
 
-export interface Credentials {
+export interface FirebaseCredentials {
   type: string
   project_id: string
   private_key_id: string
@@ -30,7 +30,7 @@ const DEFAULT_CREDENTIALS = {
 }
 
 export function firebaseAdmin(
-  credentials: Credentials = DEFAULT_CREDENTIALS,
+  credentials: FirebaseCredentials = DEFAULT_CREDENTIALS,
   name?: string,
 ) {
   try {

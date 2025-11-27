@@ -1,9 +1,10 @@
-import { rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { Repository } from '../../../shared/core/repository'
+import { rm, writeFile } from 'node:fs/promises'
+
+import { GPTModel } from '@davna/providers'
+
+import { Repository } from '@davna/core'
 import { Audio } from '../entities/audio'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
-import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Env {
   audios: Repository<Audio>

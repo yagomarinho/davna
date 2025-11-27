@@ -1,7 +1,7 @@
 import { object, string } from 'yup'
+import { applyTag, Entity } from '@davna/core'
 
 import { Audio, audioSchema } from './audio'
-import { applyTag, Entity } from '@davna/core'
 
 const URI = 'message'
 type URI = typeof URI

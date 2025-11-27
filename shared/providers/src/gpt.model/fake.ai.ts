@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
-import { GPTModel } from './gpt'
+import { GPTModel } from './gpt.model'
 
-export interface Config {
+export interface FakeAIConfig {
   textToRespond: string
   pathToSpeech: string
   textFromSpeech: string
@@ -11,7 +11,7 @@ export function FakeAI({
   textToRespond,
   pathToSpeech,
   textFromSpeech,
-}: Config): GPTModel {
+}: FakeAIConfig): GPTModel {
   const respond: GPTModel['respond'] = async () => textToRespond
 
   const transcribe: GPTModel['transcribe'] = async () =>

@@ -23,7 +23,6 @@
     "dotenv": "^17.2.2",
     "multer": "^2.0.2",
     "music-metadata": "^11.10.2",
-    "openai": "^6.9.1",
     "socket.io": "^4.8.1",
     "yup": "^1.7.1"
   },

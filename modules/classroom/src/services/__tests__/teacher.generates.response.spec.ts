@@ -1,4 +1,4 @@
-import { AIGenerateResponse as AIGenerateResponseService } from '../../utils/ai.generate.response'
+import { AIGenerateResponse as AIGenerateResponseService } from '../../helpers/ai.generate.response'
 import { appendMessageToClassroom as appendMessageService } from '../append.message.to.classroom'
 import { verifyConsume as verifyConsumeService } from '../verify.consume'
 
@@ -9,7 +9,7 @@ import { Repository } from '../../../../shared/core/repository'
 import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
 import { Left, Right } from '../../../../shared/core/either'
 import { teacherGeneratesResponse } from '../teacher.generates.response'
-import { GPT } from '../../providers/gpt.model'
+import { GPT } from '@davna/providers/src/gpt/gpt.model'
 
 jest.mock('../../utils/ai.generate.response', () => ({
   AIGenerateResponse: jest.fn(),

@@ -1,18 +1,15 @@
-import { Query, Repository } from '../../../shared/core/repository'
+import { isLeft, Query, Repository, Right, Service } from '@davna/core'
+import { GPTModel } from '@davna/providers'
 
 import { Message, MESSAGE_TYPE } from '../entities/message'
 import { Classroom } from '../entities/classroom'
 import { Audio } from '../entities/audio'
 
-import { MessageHandler } from '../providers/message.handler'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
+import { MessageHandler } from '../helpers/message.handler'
+import { AIGenerateResponse } from '../helpers/ai.generate.response'
 
-import { AIGenerateResponse } from '../utils/ai.generate.response'
 import { appendMessageToClassroom } from './append.message.to.classroom'
-import { Service } from '../../../shared/core/service'
-import { isLeft, Right } from '../../../shared/core/either'
 import { verifyConsume } from './verify.consume'
-import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Data {
   classroom: Classroom

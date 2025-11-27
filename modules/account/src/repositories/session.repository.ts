@@ -1,6 +1,6 @@
+import type { Converter } from '@davna/types'
 import { MongoClient, MongoDBRepository, ObjectId } from '@davna/repositories'
 
-import { Converter } from '@davna/types'
 import { Session } from '../entities/session'
 
 const converter: Converter<Session> = {

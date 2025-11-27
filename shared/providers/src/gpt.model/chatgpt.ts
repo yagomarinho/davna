@@ -1,14 +1,14 @@
 import OpenAI from 'openai'
-import { GPTModel } from './gpt'
+import { GPTModel } from './gpt.model'
 import { createReadStream } from 'fs'
 
-export interface Config {
+export interface ChatGPTConfig {
   apiKey?: string
 }
 
 export function ChatGPT({
   apiKey = process.env.OPENAI_API_KEY,
-}: Config): GPTModel {
+}: ChatGPTConfig): GPTModel {
   const openai = new OpenAI({
     apiKey,
   })

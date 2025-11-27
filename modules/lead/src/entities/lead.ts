@@ -1,14 +1,13 @@
-import { Entity } from '../../../shared/core/entity'
-import { applyTag } from '../../../shared/core/tagged'
+import { applyTag, Entity } from '@davna/core'
 
 const URI = 'lead'
 type URI = typeof URI
 
-export type Lead = Entity<URI>
-
 export interface CreateLead extends Partial<Entity> {
   id: string
 }
+
+export interface Lead extends Entity<URI> {}
 
 export function Lead(id: string, created_at: Date, updated_at: Date): Lead {
   return applyTag('lead')({

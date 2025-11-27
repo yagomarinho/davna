@@ -1,10 +1,8 @@
 import { Readable } from 'node:stream'
-import { Service } from '../../../shared/core/service'
-import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
-import { StorageConstructor } from '../../../shared/providers/storage/storage'
 import { string } from 'yup'
-import { Left, Right } from '../../../shared/core/either'
-import { Repository } from '../../../shared/core/repository'
+
+import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
+import { Left, Repository, Right, Service } from '@davna/core'
 
 interface Request {
   owner_id: string

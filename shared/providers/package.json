@@ -17,6 +17,7 @@
     "@aws-sdk/lib-storage": "^3.937.0",
     "firebase-admin": "^13.6.0",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.20.0"
+    "mongodb": "^6.20.0",
+    "openai": "^6.9.1"
   }
 }

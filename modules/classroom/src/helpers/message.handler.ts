@@ -1,4 +1,5 @@
-import { Result } from '../../../shared/core/result'
+import { Result } from '@davna/core'
+
 import { Audio, audioSchema } from '../entities/audio'
 import { AudioMessage, Message, MESSAGE_TYPE } from '../entities/message'
 

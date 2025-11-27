@@ -1,8 +1,8 @@
-import { isLeft, Right } from '../../../shared/core/either'
-import { Repository } from '../../../shared/core/repository'
-import { Service } from '../../../shared/core/service'
+import { isLeft, Repository, Right, Service } from '@davna/core'
+
 import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
 import { Message } from '../entities/message'
+
 import { verifyConsume } from './verify.consume'
 
 interface Request {

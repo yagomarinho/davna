@@ -4,11 +4,11 @@ import { InMemoryRepository } from '../../../../shared/repositories/in.memory.re
 import { Audio } from '../../entities/audio'
 import { Classroom } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
-import { getTranscriptionFromAudio as getTranscriptionFromAudioService } from '../../utils/get.transcription.from.audio'
+import { getTranscriptionFromAudio as getTranscriptionFromAudioService } from '../../helpers/get.transcription.from.audio'
 import { appendMessageToClassroom as appendMessageToClassroomService } from '../append.message.to.classroom'
 import { verifyConsume as verifyConsumeService } from '../verify.consume'
 import { transcribeAndAppend } from '../transcribe.and.append'
-import { GPT } from '../../providers/gpt.model'
+import { GPT } from '@davna/providers/src/gpt/gpt.model'
 
 jest.mock('../../utils/get.transcription.from.audio', () => ({
   getTranscriptionFromAudio: jest.fn(),
