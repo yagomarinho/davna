@@ -17,7 +17,7 @@ export function deepClone<T>(value: T, cache = new WeakMap()): T {
 
   // TypedArray (inclui Buffer, Int8Array, Uint8Array, etc.)
   if (ArrayBuffer.isView(value)) {
-    // DataView
+    // DataView (já estava no seu código)
     if (value instanceof DataView) {
       const bufferClone = value.buffer.slice(0)
       const result = new DataView(
@@ -25,16 +25,32 @@ export function deepClone<T>(value: T, cache = new WeakMap()): T {
         value.byteOffset,
         value.byteLength,
       )
+      cache.set(value as any, result)
       return result as any
     }
 
-    // Demais TypedArrays (Uint8Array, Buffer, etc.)
+    if (
+      typeof Buffer !== 'undefined' &&
+      typeof (Buffer as any).isBuffer === 'function' &&
+      (Buffer as any).isBuffer(value)
+    ) {
+      const result = (Buffer as any).from(value)
+      cache.set(value as any, result)
+      return result as any
+    }
+
     const Ctor = (value as any).constructor as {
       new (input: ArrayBufferLike | ArrayLike<number>): any
     }
 
-    const result = new Ctor(value as any)
-    // Se quiser suportar ciclos envolvendo TypedArrays, pode usar cache aqui também:
+    const byteOffset = (value as any).byteOffset ?? 0
+    const byteLength =
+      (value as any).byteLength ??
+      (value as any).length * ((value as any).BYTES_PER_ELEMENT || 1)
+    const bufferSlice = value.buffer.slice(byteOffset, byteOffset + byteLength)
+
+    // Construímos a nova TypedArray a partir do ArrayBuffer recortado
+    const result = new Ctor(bufferSlice)
     cache.set(value as any, result)
     return result as any
   }

@@ -105,7 +105,7 @@ describe('initializeClassroomHandler', () => {
     } as any
 
     openClassroom.mockImplementationOnce(
-      () => async () => Right(classroomNoTeacher),
+      () => async () => Right({ classroom: classroomNoTeacher, consume: 42 }),
     )
 
     const result = await initializeClassroomHandler(req)({
@@ -143,7 +143,7 @@ describe('initializeClassroomHandler', () => {
     } as any
 
     openClassroom.mockImplementationOnce(
-      () => async () => Right(classroomWithTeacher),
+      () => async () => Right({ classroom: classroomWithTeacher, consume: 42 }),
     )
 
     const errorPayload = { message: 'ai failed' }
@@ -188,7 +188,7 @@ describe('initializeClassroomHandler', () => {
     } as any
 
     openClassroom.mockImplementationOnce(
-      () => async () => Right(classroomWithTeacher),
+      () => async () => Right({ classroom: classroomWithTeacher, consume: 42 }),
     )
 
     const teacherResult = Right({

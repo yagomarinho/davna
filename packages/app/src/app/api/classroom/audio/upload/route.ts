@@ -5,15 +5,13 @@ import { NextRequest, NextResponse } from 'next/server'
 
 interface Options {
   data: any
-  duration: string
   token: string
 }
 
-async function uploadAudio({ data, duration, token }: Options) {
+async function uploadAudio({ data, token }: Options) {
   const headers = new Headers()
   headers.set('X-Api-Key', apiKey(process.env.API_ACCESS_TOKEN!))
   headers.set('Authorization', bearer(token))
-  headers.set('X-Duration', duration)
 
   const response = await fetch(`${process.env.API_BASE_URL}/audio/upload`, {
     method: 'POST',
@@ -34,15 +32,9 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData()
 
-  const duration = request.headers.get('X-Duration')
-
-  if (!duration)
-    return NextResponse.json({ message: 'Bad Request' }, { status: 400 })
-
   try {
     const audio = await uploadAudio({
       data: formData,
-      duration,
       token,
     })
 

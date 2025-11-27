@@ -1,5 +1,5 @@
 import { Footer } from '@/components/footer'
-import { Header } from '@/components/header'
+import { Header } from '@/components/headers'
 import { LoginForm } from '@/components/login.form'
 
 const Login = () => (

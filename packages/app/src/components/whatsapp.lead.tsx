@@ -1,13 +1,14 @@
 'use client'
 
 import { whatsappLead } from '@/actions/whatsapp.lead'
-import { useFormState, useFormStatus } from 'react-dom'
+import { useFormStatus } from 'react-dom'
 import { FiSend } from 'react-icons/fi'
 import { InlineNotification } from './inline.notification'
+import { useActionState } from 'react'
 
 export const WhatsAppLead = () => {
   const { pending } = useFormStatus()
-  const [state, formAction] = useFormState(whatsappLead, undefined)
+  const [state, formAction] = useActionState(whatsappLead, undefined)
 
   return (
     <div className="flex flex-col justify-start items-center w-full max-w-sm md:max-w-lg">

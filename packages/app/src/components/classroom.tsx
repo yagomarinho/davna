@@ -7,6 +7,7 @@ import { io } from 'socket.io-client'
 import { Socket } from 'socket.io-client'
 import { AudioCapture } from './audio.capture'
 import config from '@/config'
+import { useClassroom } from '@/contexts/classroom.context'
 
 interface Participant {
   participant_id: string
@@ -31,8 +32,12 @@ interface Message {
   }
 }
 
-interface Update {
+interface Started {
   classroom: Classroom
+  remainingConsumption: number
+}
+
+interface Updated extends Started {
   message: Message
 }
 
@@ -40,6 +45,7 @@ export const Classroom = () => {
   const socketRef = useRef<Socket>(null)
   const classroomIdRef = useRef('')
   const participantsRef = useRef<Participant[]>([])
+  const { setRemaining } = useClassroom()
 
   const [audios, setAudios] = useState<Audio[]>([])
 
@@ -69,37 +75,47 @@ export const Classroom = () => {
 
       const s = socketRef.current
 
-      s.on('classroom:started', (classroom: Classroom) => {
-        classroomIdRef.current = classroom.id
-        participantsRef.current = classroom.participants
+      s.on(
+        'classroom:started',
+        ({ classroom, remainingConsumption }: Started) => {
+          classroomIdRef.current = classroom.id
+          participantsRef.current = classroom.participants
 
-        // recuperar o histórico quando for possível reiniciar uma conversa já iniciada
-      })
+          setRemaining(remainingConsumption)
 
-      s.on('classroom:updated', ({ classroom, message }: Update) => {
-        // comparar para ver se a mensagem pertence a classroom correta
-        if (classroom.id !== classroomIdRef.current) return
+          // recuperar o histórico quando for possível reiniciar uma conversa já iniciada
+        },
+      )
 
-        const role = participantsRef.current.find(
-          participant => participant.participant_id === message.data.owner_id,
-        )?.role
+      s.on(
+        'classroom:updated',
+        ({ classroom, message, remainingConsumption }: Updated) => {
+          // comparar para ver se a mensagem pertence a classroom correta
+          if (classroom.id !== classroomIdRef.current) return
 
-        if (!role) return
+          const role = participantsRef.current.find(
+            participant => participant.participant_id === message.data.owner_id,
+          )?.role
 
-        const exists = audios.find(audio => audio.id === message.id)
+          if (!role) return
 
-        if (exists) return
+          const exists = audios.find(audio => audio.id === message.id)
 
-        const audio: Audio = {
-          id: message.id,
-          role,
-          audio_id: message.data.id,
-          transcription: message.transcription,
-          translation: message.translation,
-        }
+          if (exists) return
 
-        setAudios(previous => [...previous, audio])
-      })
+          setRemaining(remainingConsumption)
+
+          const audio: Audio = {
+            id: message.id,
+            role,
+            audio_id: message.data.id,
+            transcription: message.transcription,
+            translation: message.translation,
+          }
+
+          setAudios(previous => [...previous, audio])
+        },
+      )
 
       s.on('classroom:replying', msg => {
         console.log(msg)

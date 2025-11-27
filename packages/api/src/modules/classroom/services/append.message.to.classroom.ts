@@ -26,11 +26,12 @@ interface Env {
   storage: StorageConstructor
 }
 
-export const appendMessageToClassroom = Service<
-  Request,
-  Env,
-  { classroom: Classroom; message: Message }
->(
+interface Response {
+  classroom: Classroom
+  message: Message
+}
+
+export const appendMessageToClassroom = Service<Request, Env, Response>(
   ({
     classroom_id,
     participant_id,

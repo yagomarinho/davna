@@ -17,7 +17,7 @@ import { Emitter } from '../helpers/emitter'
 import { Response } from '../../../shared/core/response'
 import { Identifier } from '../../../shared/core/entity'
 import { transcribeAndAppend } from '../services/transcribe.and.append'
-import { remaningConsumption } from '../utils/remaining.consumption'
+import { remainingConsumption } from '../utils/remaining.consumption'
 
 interface Metadata {
   account: Identifier
@@ -78,7 +78,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       const { classroom, message } = result.value
 
       emitter.emit('classroom:updated', {
-        remainingConsumption: remaningConsumption(result.value.consume),
+        remainingConsumption: remainingConsumption(result.value.consume),
         classroom,
         message,
       })
@@ -124,7 +124,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       const { classroom: updatedClassroom, message: IAMessage } = result2.value
 
       emitter.emit('classroom:updated', {
-        remainingConsumption: remaningConsumption(result2.value.consume),
+        remainingConsumption: remainingConsumption(result2.value.consume),
         classroom: updatedClassroom,
         message: IAMessage,
       })

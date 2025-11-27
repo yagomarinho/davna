@@ -73,7 +73,7 @@ export const transcribeAndAppend = Service<Data, Env, Response>(
       if (isLeft(result2)) return result2
 
       return Right({
-        consume: result.value.consume,
+        consume: result.value.consume + result2.value.message.data.duration,
         classroom: result2.value.classroom,
         message: result2.value.message,
       })

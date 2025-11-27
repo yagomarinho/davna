@@ -11,7 +11,7 @@ import { Audio } from '../entities/audio'
 import { Message } from '../entities/message'
 import { MessageHandler } from '../providers/message.handler'
 import { StorageConstructor } from '../../../shared/providers/storage/storage'
-import { remaningConsumption } from '../utils/remaining.consumption'
+import { remainingConsumption } from '../utils/remaining.consumption'
 
 interface Metadata {
   account: Identifier
@@ -40,7 +40,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
 
       const result = await openClassroom({
         participant_id: account.id,
-      })({ classrooms })
+      })({ classrooms, messages })
 
       if (isLeft(result)) {
         emitter.emit('error:service', {
@@ -51,9 +51,12 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         return Response.metadata({ status: 'error' })
       }
 
-      const classroom = result.value
+      const { classroom } = result.value
 
-      emitter.emit('classroom:started', classroom)
+      emitter.emit('classroom:started', {
+        remainingConsumption: remainingConsumption(result.value.consume),
+        classroom,
+      })
 
       const teacher_id = classroom.participants.find(
         p => p.role === PARTICIPANT_ROLE.TEACHER,
@@ -96,7 +99,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
       const { consume, classroom: updatedClassroom, message } = result2.value
 
       emitter.emit('classroom:updated', {
-        remainingConsumption: remaningConsumption(consume),
+        remainingConsumption: remainingConsumption(consume),
         classroom: updatedClassroom,
         message,
       })

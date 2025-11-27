@@ -188,9 +188,6 @@ export const AudioCapture = ({ afterUpload }: AudioCapture) => {
       // send raw bytes to your endpoint (example: /api/upload-audio)
       const res = await fetch('/api/classroom/audio/upload', {
         method: 'POST',
-        headers: {
-          'X-Duration': (seconds * 1000).toString(),
-        },
         body: formData,
       })
 

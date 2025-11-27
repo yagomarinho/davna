@@ -91,7 +91,7 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
       const { classroom: c, message: m } = result2.value
 
       return Right({
-        consume: result.value.consume,
+        consume: result.value.consume + result2.value.message.data.duration,
         classroom: c,
         message: m,
       })

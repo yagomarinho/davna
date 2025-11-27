@@ -1,11 +1,14 @@
 import { Classroom } from '@/components/classroom'
-import { Header } from '@/components/header'
+import { Header } from '@/components/headers'
+import { ClassroomProvider } from '@/contexts/classroom.context'
 
 const English = () => (
-  <div className="w-full">
-    <Header type="classroom" />
-    <Classroom />
-  </div>
+  <ClassroomProvider>
+    <div className="w-full">
+      <Header type="classroom" />
+      <Classroom />
+    </div>
+  </ClassroomProvider>
 )
 
 export default English

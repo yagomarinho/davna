@@ -1,5 +1,5 @@
 import { Footer } from '@/components/footer'
-import { Header } from '@/components/header'
+import { Header } from '@/components/headers'
 import { WhatsAppLead } from '@/components/whatsapp.lead'
 import { PropsWithChildren } from 'react'
 import { FiZap } from 'react-icons/fi'

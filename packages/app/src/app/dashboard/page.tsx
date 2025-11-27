@@ -1,4 +1,4 @@
-import { Header } from '@/components/header'
+import { Header } from '@/components/headers'
 import Link from 'next/link'
 import { FiMic } from 'react-icons/fi'
 

@@ -23,7 +23,7 @@ export const uploadAudioHandler = Handler(request => async (env: Env) => {
 
   name = file.originalname
   mime = file.mimetype
-  duration = await getDuration({ buffer: file })
+  duration = await getDuration({ buffer: file.buffer })
 
   try {
     name = await string().required().validate(name)
