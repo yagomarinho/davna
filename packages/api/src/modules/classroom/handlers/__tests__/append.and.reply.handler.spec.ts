@@ -12,6 +12,7 @@ import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 import { STORAGE_TYPE } from '../../../../shared/providers/storage/storage'
+import { GPT } from '../../providers/gpt.model'
 
 jest.mock('../../services/append.message.to.classroom', () => ({
   appendMessageToClassroom: jest.fn(),
@@ -42,6 +43,13 @@ describe('appendAndReply handler', () => {
   let storage: any
   let messageHandler: any
   let emitter: { emit: jest.Mock }
+  const gpt = GPT({
+    options: {
+      textToRespond: 'to respond',
+      pathToSpeech: '/path',
+      transcribe: 'from speech',
+    },
+  })
 
   beforeEach(async () => {
     audios = InMemoryRepository<Audio>()
@@ -113,6 +121,7 @@ describe('appendAndReply handler', () => {
       audios,
       classrooms,
       emitter,
+      gpt,
       messageHandler,
       messages,
       storage,
@@ -163,6 +172,7 @@ describe('appendAndReply handler', () => {
       audios,
       classrooms,
       emitter,
+      gpt,
       messageHandler,
       messages,
       storage,
@@ -219,6 +229,7 @@ describe('appendAndReply handler', () => {
       audios,
       classrooms,
       emitter,
+      gpt,
       messageHandler,
       messages,
       storage,
@@ -279,6 +290,7 @@ describe('appendAndReply handler', () => {
       audios,
       classrooms,
       emitter,
+      gpt,
       messageHandler,
       messages,
       storage,

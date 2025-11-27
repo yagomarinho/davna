@@ -1,3 +1,5 @@
+import { resolve } from 'node:path'
+
 export default {
   databases: {
     default_uri:
@@ -108,6 +110,18 @@ export default {
           'mongodb://localhost:27017',
         database: process.env.MONGODB_STORAGE_DATABASE || 'storage',
         bucket: process.env.MONGODB_STORAGE_BUCKET || 'storage',
+      },
+    },
+    gpt: {
+      default_driver:
+        process.env.NODE_ENV === 'production' ? 'chatgpt' : 'fake.ai',
+      chatgpt: {
+        apiKey: process.env.OPENAI_API_KEY,
+      },
+      'fake.ai': {
+        textToRespond: 'this is a simple response',
+        textFromSpeech: 'this is a simple transcription',
+        pathToSpeech: resolve(__dirname, '../../temp/audiotest.m4a'),
       },
     },
   },

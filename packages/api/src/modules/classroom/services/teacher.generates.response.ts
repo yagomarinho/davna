@@ -12,6 +12,7 @@ import { appendMessageToClassroom } from './append.message.to.classroom'
 import { Service } from '../../../shared/core/service'
 import { isLeft, Right } from '../../../shared/core/either'
 import { verifyConsume } from './verify.consume'
+import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Data {
   classroom: Classroom
@@ -22,6 +23,7 @@ interface Env {
   audios: Repository<Audio>
   classrooms: Repository<Classroom>
   messages: Repository<Message>
+  gpt: GPTModel
   messageHandler: MessageHandler
   storage: StorageConstructor
 }
@@ -34,7 +36,7 @@ interface Response {
 
 export const teacherGeneratesResponse = Service<Data, Env, Response>(
   ({ classroom, teacher_id }) =>
-    async ({ audios, classrooms, messages, messageHandler, storage }) => {
+    async ({ audios, classrooms, messages, gpt, messageHandler, storage }) => {
       const result = await verifyConsume({ classroom })({
         classrooms,
         messages,
@@ -67,6 +69,7 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
       const AIResult = await AIGenerateResponse({ input })({
         storage,
         audios,
+        gpt,
       })
 
       const { audio: data, transcription, translation } = AIResult

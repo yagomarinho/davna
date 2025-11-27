@@ -8,6 +8,7 @@ import { Socket } from 'socket.io-client'
 import { AudioCapture } from './audio.capture'
 import config from '@/config'
 import { useClassroom } from '@/contexts/classroom.context'
+import { remainingConsumptionFormat } from '@/utils/remaining.consumption.format'
 
 interface Participant {
   participant_id: string
@@ -103,6 +104,7 @@ export const Classroom = () => {
 
           if (exists) return
 
+          console.log(remainingConsumptionFormat(remainingConsumption))
           setRemaining(remainingConsumption)
 
           const audio: Audio = {

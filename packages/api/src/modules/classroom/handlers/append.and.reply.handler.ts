@@ -18,6 +18,7 @@ import { Response } from '../../../shared/core/response'
 import { Identifier } from '../../../shared/core/entity'
 import { transcribeAndAppend } from '../services/transcribe.and.append'
 import { remainingConsumption } from '../utils/remaining.consumption'
+import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Metadata {
   account: Identifier
@@ -34,6 +35,7 @@ interface Env {
   audios: Repository<Audio>
   classrooms: Repository<Classroom>
   messages: Repository<Message>
+  gpt: GPTModel
   messageHandler: MessageHandler
   storage: StorageConstructor
 }
@@ -44,8 +46,9 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       audios,
       classrooms,
       emitter,
-      messageHandler,
       messages,
+      gpt,
+      messageHandler,
       storage,
     }) => {
       const { classroom_id, participant_id, data } =
@@ -62,6 +65,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
         audios,
         classrooms,
         messages,
+        gpt,
         messageHandler,
         storage,
       })
@@ -108,6 +112,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
         audios,
         classrooms,
         messages,
+        gpt,
         messageHandler,
         storage,
       })

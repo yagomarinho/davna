@@ -20,6 +20,8 @@ import { Audio } from './modules/classroom/entities/audio'
 import { Storage, StorageConstructor } from './shared/providers/storage/storage'
 import { Lead } from './modules/lead/entities/lead'
 import { LeadRepository } from './modules/lead/repositories/lead.repository'
+import { GPTModel } from './modules/classroom/providers/gpt.model/gpt'
+import { GPT } from './modules/classroom/providers/gpt.model'
 
 export interface Env {
   repositories: {
@@ -32,6 +34,7 @@ export interface Env {
   }
   providers: {
     auth: Auth
+    gpt: GPTModel
     signer: Signer
     messageHandler: MessageHandler
     storage: StorageConstructor
@@ -40,6 +43,7 @@ export interface Env {
 
 export const Env = async (): Promise<Env> => {
   const auth = Auth()
+  const gpt = GPT()
   const signer = Signer({
     secret: config.auth.jwt.secret,
   })
@@ -73,6 +77,7 @@ export const Env = async (): Promise<Env> => {
 
   const providers = {
     auth,
+    gpt,
     signer,
     messageHandler: MessageHandler,
     storage: Storage,

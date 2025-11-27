@@ -15,7 +15,7 @@ export function createWsServer(server: HTTPServer, env: Env) {
 
   const {
     repositories: { audios, classrooms, messages },
-    providers: { messageHandler, storage },
+    providers: { gpt, messageHandler, storage },
   } = env
 
   io.on('connection', async socket => {
@@ -28,6 +28,7 @@ export function createWsServer(server: HTTPServer, env: Env) {
         emitter: socket,
         audios,
         classrooms,
+        gpt,
         messages,
         messageHandler,
         storage,
@@ -57,6 +58,7 @@ export function createWsServer(server: HTTPServer, env: Env) {
           emitter: socket,
           audios,
           classrooms,
+          gpt,
           messageHandler,
           messages,
           storage,

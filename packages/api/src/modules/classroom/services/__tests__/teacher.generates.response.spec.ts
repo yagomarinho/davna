@@ -9,6 +9,7 @@ import { Repository } from '../../../../shared/core/repository'
 import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
 import { Left, Right } from '../../../../shared/core/either'
 import { teacherGeneratesResponse } from '../teacher.generates.response'
+import { GPT } from '../../providers/gpt.model'
 
 jest.mock('../../utils/ai.generate.response', () => ({
   AIGenerateResponse: jest.fn(),
@@ -32,6 +33,13 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
   let audios: Repository<Audio>
   let storage: any
   let messageHandler: any
+  const gpt = GPT({
+    options: {
+      textToRespond: 'to respond',
+      pathToSpeech: '/path',
+      transcribe: 'from speech',
+    },
+  })
 
   const teacher_id = 'teacher-1'
   const student_id = 'student-1'
@@ -129,6 +137,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     })
@@ -177,6 +186,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     })
@@ -215,6 +225,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     })
@@ -243,6 +254,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
         audios,
         classrooms,
         messages,
+        gpt,
         messageHandler,
         storage,
       }),

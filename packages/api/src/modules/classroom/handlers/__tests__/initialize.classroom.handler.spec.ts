@@ -10,6 +10,7 @@ import { teacherGeneratesResponse as teacherGeneratesService } from '../../servi
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Audio } from '../../entities/audio'
 import { Message } from '../../entities/message'
+import { GPT } from '../../providers/gpt.model'
 
 jest.mock('../../services/open.classroom', () => ({
   openClassroom: jest.fn(),
@@ -32,6 +33,7 @@ describe('initializeClassroomHandler', () => {
   let storage: any
   let messageHandler: any
   let emitter: { emit: jest.Mock }
+  const gpt = GPT()
 
   beforeEach(() => {
     audios = InMemoryRepository<Audio>()
@@ -73,6 +75,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      gpt,
     } as any)
 
     expect(openClassroom).toHaveBeenCalledTimes(1)
@@ -115,6 +118,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      gpt,
     } as any)
 
     expect(openClassroom).toHaveBeenCalledTimes(1)
@@ -158,6 +162,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      gpt,
     } as any)
 
     expect(openClassroom).toHaveBeenCalledTimes(1)
@@ -207,6 +212,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      gpt,
     } as any)
 
     expect(openClassroom).toHaveBeenCalledTimes(1)

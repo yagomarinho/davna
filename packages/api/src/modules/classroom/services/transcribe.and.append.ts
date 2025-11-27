@@ -12,6 +12,7 @@ import { Service } from '../../../shared/core/service'
 import { getTranscriptionFromAudio } from '../utils/get.transcription.from.audio'
 import { verifyConsume } from './verify.consume'
 import { isLeft, Left, Right } from '../../../shared/core/either'
+import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Data {
   audio: Audio
@@ -23,6 +24,7 @@ interface Env {
   audios: Repository<Audio>
   classrooms: Repository<Classroom>
   messages: Repository<Message>
+  gpt: GPTModel
   messageHandler: MessageHandler
   storage: StorageConstructor
 }
@@ -35,7 +37,7 @@ interface Response {
 
 export const transcribeAndAppend = Service<Data, Env, Response>(
   ({ audio, classroom_id, participant_id }) =>
-    async ({ audios, classrooms, messages, messageHandler, storage }) => {
+    async ({ audios, classrooms, messages, gpt, messageHandler, storage }) => {
       const classroom = await classrooms.get(classroom_id)
 
       if (!classroom)
@@ -51,6 +53,7 @@ export const transcribeAndAppend = Service<Data, Env, Response>(
       const transcriptionResult = await getTranscriptionFromAudio(audio.id)({
         audios,
         storage,
+        gpt,
       })
 
       const { transcription, translation } = transcriptionResult

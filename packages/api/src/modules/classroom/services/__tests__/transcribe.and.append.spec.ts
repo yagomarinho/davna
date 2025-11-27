@@ -8,6 +8,7 @@ import { getTranscriptionFromAudio as getTranscriptionFromAudioService } from '.
 import { appendMessageToClassroom as appendMessageToClassroomService } from '../append.message.to.classroom'
 import { verifyConsume as verifyConsumeService } from '../verify.consume'
 import { transcribeAndAppend } from '../transcribe.and.append'
+import { GPT } from '../../providers/gpt.model'
 
 jest.mock('../../utils/get.transcription.from.audio', () => ({
   getTranscriptionFromAudio: jest.fn(),
@@ -33,6 +34,13 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
   let messages: Repository<Message>
   let storage: any
   let messageHandler: any
+  const gpt = GPT({
+    options: {
+      textToRespond: 'to respond',
+      pathToSpeech: '/path',
+      transcribe: 'from speech',
+    },
+  })
 
   const classroom_id = 'class-1'
   const participant_id = 'participant-1'
@@ -86,6 +94,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     })
@@ -114,6 +123,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     })
@@ -168,6 +178,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     })
@@ -230,6 +241,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     })
@@ -260,6 +272,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
         audios,
         classrooms,
         messages,
+        gpt,
         messageHandler,
         storage,
       }),

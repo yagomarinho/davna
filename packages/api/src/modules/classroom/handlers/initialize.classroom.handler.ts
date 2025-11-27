@@ -12,6 +12,7 @@ import { Message } from '../entities/message'
 import { MessageHandler } from '../providers/message.handler'
 import { StorageConstructor } from '../../../shared/providers/storage/storage'
 import { remainingConsumption } from '../utils/remaining.consumption'
+import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Metadata {
   account: Identifier
@@ -22,6 +23,7 @@ interface Env {
   audios: Repository<Audio>
   classrooms: Repository<Classroom>
   messages: Repository<Message>
+  gpt: GPTModel
   messageHandler: MessageHandler
   storage: StorageConstructor
 }
@@ -33,6 +35,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
       audios,
       classrooms,
       messages,
+      gpt,
       messageHandler,
       storage,
     }) => {
@@ -83,6 +86,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         audios,
         classrooms,
         messages,
+        gpt,
         messageHandler,
         storage,
       })
@@ -96,10 +100,10 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         return Response.metadata({ status: 'error' })
       }
 
-      const { consume, classroom: updatedClassroom, message } = result2.value
+      const { classroom: updatedClassroom, message } = result2.value
 
       emitter.emit('classroom:updated', {
-        remainingConsumption: remainingConsumption(consume),
+        remainingConsumption: remainingConsumption(result2.value.consume),
         classroom: updatedClassroom,
         message,
       })

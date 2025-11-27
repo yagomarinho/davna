@@ -1,24 +1,18 @@
-import OpenAI from 'openai'
-
-import { createReadStream } from 'node:fs'
 import { rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { Repository } from '../../../shared/core/repository'
 import { Audio } from '../entities/audio'
 import { StorageConstructor } from '../../../shared/providers/storage/storage'
+import { GPTModel } from '../providers/gpt.model/gpt'
 
 interface Env {
   audios: Repository<Audio>
   storage: StorageConstructor
+  gpt: GPTModel
 }
 
 export function getTranscriptionFromAudio(audio_id: string) {
-  return async ({ audios, storage }: Env) => {
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-
-    // O servidor precisa gerar a transcrição e a tradução do áudio para o português
+  return async ({ audios, storage, gpt }: Env) => {
     const audio = await audios.get(audio_id)
 
     if (!audio) throw new Error('No audio founded')
@@ -41,32 +35,23 @@ export function getTranscriptionFromAudio(audio_id: string) {
 
     await writeFile(path, buffer, { flag: 'w' })
 
-    const transcript = await openai.audio.transcriptions.create({
-      file: createReadStream(path),
-      model: 'gpt-4o-transcribe',
+    const transcription = await gpt.synthesize({
+      path,
     })
 
-    const response = await openai.responses.create({
-      metadata: { topic: 'demo' },
-      model: 'o4-mini',
+    const translation = await gpt.respond({
+      instruction:
+        'Você é um assistente que faz tradução de textos em inglês para textos em português BR, faça uma tradução fiel ao idioma nativo com uma linguagem mais neutra possível',
       input: [
         {
-          role: 'developer',
-          content:
-            'Você é um assistente que faz tradução de textos em inglês para textos em português BR, faça uma tradução fiel ao idioma nativo com uma linguagem mais neutra possível',
-        },
-        {
           role: 'user',
-          content: `traduza o seguinte texto: \n${transcript.text}`,
+          content: `traduza o seguinte texto: \n${transcription}`,
         },
       ],
     })
 
     // apagar o arquivo temp
     rm(path)
-
-    const transcription = transcript.text
-    const translation = response.output_text
 
     return {
       buffer,
