@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "allowJs": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
+    "allowJs": false,
     "noEmit": true,
-    "esModuleInterop": true,
-    "noImplicitAny": false,
-    "module": "nodenext",
-    "moduleResolution": "nodenext"
+    "noImplicitAny": false
   },
   "include": ["apps", "config", "modules", "shared"],
   "exclude": ["node_modules", "coverage", "**/*.js", "*.js", "scrips"]

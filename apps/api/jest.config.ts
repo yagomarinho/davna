@@ -1,5 +1,5 @@
-import config from '@davna/jest'
+const config = require('@davna/jest')
 
-export default {
+module.exports = {
   ...config,
 }

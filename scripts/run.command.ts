@@ -1,10 +1,24 @@
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-require-imports */
-const { spawn } = require('node:child_process')
-const { readFileSync, readdirSync, existsSync } = require('node:fs')
-const { resolve, join } = require('node:path')
+import { spawn } from 'node:child_process'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
+import { resolve, join } from 'node:path'
 
-function readPackageJson(dirPath) {
+type Workspaces =
+  | {
+      packages: string[]
+    }
+  | string[]
+type Pkg =
+  | {
+      name?: string
+      scripts?: Record<string, string>
+      type?: string
+      workspaces?: Workspaces
+    }
+  | undefined
+type FoundPkg = { name?: string; dir: string; pkg?: Pkg }
+
+function readPackageJson(dirPath: string): Pkg {
   try {
     return JSON.parse(
       readFileSync(resolve(dirPath, 'package.json'), {
@@ -13,15 +27,12 @@ function readPackageJson(dirPath) {
       }),
     )
   } catch {
-    return
+    return undefined
   }
 }
 
-function expandWorkspacePattern(rootDir, pattern) {
-  // exemplo pattern: "modules/*" -> pega pasta modules e lista subdirs
-  if (!pattern.includes('*')) {
-    return [resolve(rootDir, pattern)]
-  }
+function expandWorkspacePattern(rootDir: string, pattern: string): string[] {
+  if (!pattern.includes('*')) return [resolve(rootDir, pattern)]
 
   const base = pattern.replace(/\*.*$/, '').replace(/\/$/, '')
   const basePath = resolve(rootDir, base)
@@ -36,12 +47,16 @@ function expandWorkspacePattern(rootDir, pattern) {
   }
 }
 
-function findPackages(rootDir, workspacePatterns, modulesRequested, command) {
+function findPackages(
+  rootDir: string,
+  workspacePatterns: string[],
+  modulesRequested: string[],
+  command: string,
+): FoundPkg[] {
   const pkgDirs = workspacePatterns.flatMap(pat =>
     expandWorkspacePattern(rootDir, pat),
   )
-
-  const matched = []
+  const matched: FoundPkg[] = []
 
   for (const pkgDir of pkgDirs) {
     if (!existsSync(join(pkgDir, 'package.json'))) continue
@@ -54,7 +69,7 @@ function findPackages(rootDir, workspacePatterns, modulesRequested, command) {
         m =>
           pkgDir.includes(join('/', m)) ||
           pkgDir.endsWith(m) ||
-          pkg.name.endsWith(m),
+          (pkg.name && pkg.name.endsWith(m)),
       )
       if (!matchesModule) continue
     }
@@ -63,47 +78,42 @@ function findPackages(rootDir, workspacePatterns, modulesRequested, command) {
       pkg.scripts &&
       Object.prototype.hasOwnProperty.call(pkg.scripts, command)
     ) {
-      matched.push({ name: pkg.name, dir: pkgDir })
+      matched.push({ name: pkg.name, dir: pkgDir, pkg })
     }
   }
 
   return matched
 }
 
-function runInParallel(packages, command) {
+function runInParallel(packages: FoundPkg[], command: string) {
   const proms = packages.map(
     p =>
-      new Promise(resolvePromise => {
-        const args = ['workspace', p.name, 'run', command]
-        const child = spawn('yarn', args, {
-          cwd: p.dir,
-          stdio: ['ignore', 'pipe', 'pipe'],
-          shell: false,
-        })
+      new Promise<{ name?: string; code?: number; error?: any }>(
+        resolvePromise => {
+          const args = ['workspace', p.name || '', 'run', command]
 
-        const prefix = `[${p.name}] `
+          const env = process.env
 
-        child.stdout.on('data', chunk => {
-          process.stdout.write(
-            prefix + chunk.toString().replace(/\n$/, '\n' + prefix),
-          )
-        })
+          const child = spawn('yarn', args, {
+            cwd: p.dir,
+            stdio: ['ignore', 'ignore', 'ignore'],
+            shell: process.platform === 'win32',
+            env,
+          })
 
-        child.stderr.on('data', chunk => {
-          process.stderr.write(
-            prefix + chunk.toString().replace(/\n$/, '\n' + prefix),
-          )
-        })
+          const prefix = `[${p.name}] `
 
-        child.on('close', code => {
-          resolvePromise({ name: p.name, code })
-        })
+          console.log(prefix + `start running command: ${command}`)
 
-        child.on('error', err => {
-          // spawn error (ex: yarn não encontrado)
-          resolvePromise({ name: p.name, code: 1, error: err })
-        })
-      }),
+          child.on('close', code => {
+            resolvePromise({ name: p.name, code: code || 0 })
+          })
+
+          child.on('error', err => {
+            resolvePromise({ name: p.name, code: 1, error: err })
+          })
+        },
+      ),
   )
 
   return Promise.all(proms)
@@ -112,7 +122,7 @@ function runInParallel(packages, command) {
 async function main() {
   if (process.argv.length < 4) {
     console.error(
-      'Usage: node scripts/run.command.js <moduleFolderName...> <scriptName>',
+      'Usage: node scripts/run.command.ts <moduleFolderName...> <scriptName>',
     )
     return process.exit(2)
   }
@@ -129,10 +139,13 @@ async function main() {
     process.exit(2)
   }
 
-  let workspacePatterns = []
+  let workspacePatterns: string[] = []
   if (Array.isArray(rootPkg.workspaces)) workspacePatterns = rootPkg.workspaces
-  else if (rootPkg.workspaces && Array.isArray(rootPkg.workspaces.packages))
-    workspacePatterns = rootPkg.workspaces.packages
+  else if (
+    rootPkg.workspaces &&
+    Array.isArray((rootPkg.workspaces as any).packages)
+  )
+    workspacePatterns = (rootPkg.workspaces as any).packages
   else {
     console.error('Unsupported workspaces configuration in root package.json')
     process.exit(2)

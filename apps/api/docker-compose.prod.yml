@@ -32,7 +32,13 @@ services:
     env_file:
       - ./.env
     entrypoint:
-      ['/usr/local/bin/wait-for.sh', 'mongo:27017', '--', 'yarn', 'start']
+      [
+        '/usr/local/bin/wait-for.sh',
+        'mongo:27017',
+        '--',
+        'node',
+        './dist/index.js',
+      ]
 
 volumes:
   mongo_data:

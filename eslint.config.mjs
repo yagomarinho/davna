@@ -3,6 +3,6 @@ import config from '@davna/eslint'
 export default [
   ...config,
   {
-    ignores: ['/**/*.js', '/**/*.mjs'],
+    ignores: ['/**/*.js', '/**/*.mjs', '*.js'],
   },
 ]

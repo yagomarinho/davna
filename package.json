@@ -12,7 +12,7 @@
   "scripts": {
     "rm:node_modules": "node scripts/rm.node_modules.js",
     "test:api-tsc": "node scripts/api.tsc.monitor.js",
-    "test:modules": "node scripts/run.command.js modules test",
+    "test:modules": "tsnd --respawn=false --no-watch scripts/run.command.ts modules test",
     "typecheck": "tsc --noEmit"
   },
   "author": {
