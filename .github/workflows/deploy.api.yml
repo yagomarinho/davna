@@ -31,7 +31,7 @@ jobs:
         env:
           IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE_NAME }}
         run: |
-          docker build -t "$IMAGE_NAME" -f apps/api/Dockerfile.prod .
+          docker build -t "$IMAGE_NAME" -f apps/api/Dockerfile .
           docker compose -f apps/api/docker-compose.yml up --abort-on-container-exit --exit-code-from api
           EXIT_CODE=$?
           docker compose -f apps/api/docker-compose.yml down --volumes --remove-orphans
