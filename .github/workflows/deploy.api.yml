@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'packages/api/**'
+      - 'apps/api/**'
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+  test-and-build:
     name: Build, test
     runs-on: ubuntu-latest
     defaults:
@@ -24,32 +24,18 @@ jobs:
         run: |
           set -e
           if [ -z "$ENV_B64" ]; then echo "ENV_B64 empty"; exit 1; fi
-          # decode base64 into the file inside packages/api directly
-          echo "$ENV_B64" | base64 --decode > packages/api/.env
-          chmod 600 packages/api/.env
+          echo "$ENV_B64" | base64 --decode > ./.env.dev
+          chmod 600 ./.env.dev
 
       - name: Start docker-compose for integration tests and stop when api exits
+        env:
+          IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE_NAME }}
         run: |
-          docker compose -f packages/api/docker-compose.yml up --build --abort-on-container-exit --exit-code-from api
+          docker build -t "$IMAGE_NAME" -f packages/api/Dockerfile.prod .
+          docker compose -f apps/api/docker-compose.yml up --abort-on-container-exit --exit-code-from api
           EXIT_CODE=$?
-          docker compose -f packages/api/docker-compose.yml down --volumes --remove-orphans
+          docker compose -f apps/api/docker-compose.yml down --volumes --remove-orphans
           if [ $EXIT_CODE -ne 0 ]; then exit $EXIT_CODE; fi
-
-      - name: Remove .env
-        if: always()
-        run: |
-          rm -f packages/api/.env || true
-
-  push-hub:
-    name: Push Production Image to Hub
-    runs-on: ubuntu-latest
-    needs: [build-and-test]
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         env:
@@ -58,26 +44,30 @@ jobs:
         run: |
           echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
 
-      - name: Build and Push
+      - name: Push to Registry
         env:
           IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE_NAME }}
         run: |
-          docker build -t "$IMAGE_NAME" -f packages/api/Dockerfile.prod .
           docker push "$IMAGE_NAME"
 
       - name: Logout Docker Hub
         run: docker logout
 
+      - name: Remove .env
+        if: always()
+        run: |
+          rm -f ./.env.dev || true
+
   deploy-on-server:
     runs-on: [self-hosted, prod-runner]
-    needs: [push-hub]
+    needs: [test-and-build]
     steps:
       - name: Checkout only docker-compose.prod.yml
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           sparse-checkout: |
-            packages/api/docker-compose.prod.yml
+            apps/api/docker-compose.prod.yml
           sparse-checkout-cone-mode: false
 
       - name: Show the file
@@ -106,8 +96,8 @@ jobs:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
         run: |
           mkdir -p "$TARGET_DIR"
-          # copy and rename to docker-compose.yml in target dir
-          cp packages/api/docker-compose.prod.yml "$TARGET_DIR/docker-compose.yml"
+          # copy and rename to docker-compose.prod.yml in target dir
+          cp apps/api/docker-compose.prod.yml "$TARGET_DIR/docker-compose.yml"
           ls -la "$TARGET_DIR"
           sed -n '1,200p' "$TARGET_DIR/docker-compose.yml"
 
