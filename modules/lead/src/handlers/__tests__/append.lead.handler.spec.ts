@@ -1,10 +1,9 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Lead } from '../../entities/lead'
-import { appendLead as service } from '../../services/append.lead'
 import { appendLeadHandler } from '../append.lead.handler'
+import { appendLead as service } from '../../services/append.lead'
 
 jest.mock('../../services/append.lead', () => ({
   appendLead: jest.fn(),

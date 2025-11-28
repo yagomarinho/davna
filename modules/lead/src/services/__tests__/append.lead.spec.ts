@@ -1,5 +1,6 @@
-import { isLeft, isRight } from '../../../../shared/core/either'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { isLeft, isRight } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Lead } from '../../entities/lead'
 import { appendLead } from '../append.lead'
 
