@@ -19,8 +19,16 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
+    "@davna/account": "*",
     "@davna/applications": "*",
+    "@davna/classroom": "*",
+    "@davna/lead": "*",
+    "@davna/middlewares": "*",
+    "@davna/repositories": "*",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.2",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
     "multer": "^2.0.2",
     "socket.io": "^4.8.1",
     "yup": "^1.7.1"

@@ -11,11 +11,11 @@ const converter: Converter<Audio> = {
   from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
 }
 
-export interface Config {
+export interface AudioRepositoryConfig {
   client?: MongoClient
 }
 
-export const AudioRepository = ({ client }: Config) =>
+export const AudioRepository = ({ client }: AudioRepositoryConfig) =>
   MongoDBRepository<Audio>({
     ...{
       uri: process.env.MONGODB_AUDIO_CONNECT_URI || 'mongodb://localhost:27017',

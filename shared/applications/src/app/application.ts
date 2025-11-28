@@ -1,13 +1,8 @@
-import type { Server } from 'http'
+import type { Server } from 'node:http'
+import express from 'express'
+
 import { Route } from '@davna/core'
 
-import express from 'express'
-import { rateLimit } from 'express-rate-limit'
-import helmet from 'helmet'
-import cors from 'cors'
-import multer from 'multer'
-
-/* Adapters */
 import { expressHandlerAdapter } from './express.handler.adapter'
 
 const DEFAULT_PORT = Number(process.env.PORT) || 3333
@@ -23,33 +18,18 @@ export function Application({
 }: Options = {}) {
   let server: Server
   const app = express()
-  const upload = multer({ storage: multer.memoryStorage() })
-
-  app.use(
-    cors({
-      origin: '*',
-    }),
-  )
-  app.use(limiter())
-  app.use(helmet())
   app.use(express.json())
 
-  app.post('/audio/upload', upload.single('file'), (req, res, next) => {
-    if (!req.file)
-      return res.status(400).json({ message: 'Audio file is missing' })
-    ;(req as any).ctx = { file: req.file }
-
-    return next()
-  })
-
-  routes.reduce(
-    (acc, curr) =>
-      acc[curr.method](
-        curr.path,
-        expressHandlerAdapter(curr.handler, curr.env ?? {}),
-      ),
-    app,
-  )
+  function mount() {
+    routes.reduce(
+      (acc, curr) =>
+        acc[curr.method](
+          curr.path,
+          expressHandlerAdapter(curr.handler, curr.env ?? {}),
+        ),
+      app,
+    )
+  }
 
   function start(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -74,23 +54,9 @@ export function Application({
   }
 
   return {
+    mount,
     start,
     stop,
     exposeApp,
   }
-}
-
-function limiter() {
-  return rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 25,
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (_, response) => {
-      response.status(429).json({
-        status: 'error',
-        message: 'To many requests. Please try again later',
-      })
-    },
-  })
 }

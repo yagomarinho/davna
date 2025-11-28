@@ -1,17 +1,19 @@
-import { apiKeyAuthorization } from './shared/middlewares/api.key.authorization'
+import { Route } from '@davna/core'
+import { handlerPipe } from '@davna/applications'
+import { apiKeyAuthorization } from '@davna/middlewares'
 
-import { handlerPipe } from './shared/helpers/handler.pipe'
-import { Route } from './shared/core/route'
+import {
+  ensureAuthenticated,
+  loginWithCredentialsHandler,
+  refreshSessionHandler,
+  revokeSessionHandler,
+  verifySessionHandler,
+} from '@davna/account'
+import { downloadAudioHandler, uploadAudioHandler } from '@davna/classroom'
+import { appendLeadHandler } from '@davna/lead'
 
-import { loginWithCredentialsHandler } from '../../../modules/account/src/handlers/login.with.credentials.handler'
 import { Env } from './env'
-import { verifySessionHandler } from '../../../modules/account/src/handlers/verify.session.handler'
-import { refreshSessionHandler } from '../../../modules/account/src/handlers/refresh.session.handler'
-import { ensureAuthenticated } from './shared/middlewares/ensure.authenticated'
-import { revokeSessionHandler } from '../../../modules/account/src/handlers/revoke.session.handler'
-import { uploadAudioHandler } from '../../../modules/classroom/src/handlers/upload.audio.handler'
-import { downloadAudioHandler } from '../../../modules/classroom/src/handlers/download.audio.handler'
-import { appendLeadHandler } from '../../../modules/lead/src/handlers/append.lead.handler'
+import config from './config'
 
 export const routes = ({
   repositories: { accounts, leads, audios, sessions },
@@ -20,44 +22,50 @@ export const routes = ({
   Route({
     method: 'post',
     path: '/lead',
-    handler: handlerPipe(apiKeyAuthorization, appendLeadHandler),
+    handler: handlerPipe(apiKeyAuthorization as any, appendLeadHandler),
     env: {
       leads,
     },
   }),
   Route({
     path: '/session',
-    handler: handlerPipe(apiKeyAuthorization, verifySessionHandler),
+    handler: handlerPipe(apiKeyAuthorization as any, verifySessionHandler),
     env: {
       sessions,
       signer,
+      config,
     },
   }),
   Route({
     path: '/session/refresh',
-    handler: handlerPipe(apiKeyAuthorization, refreshSessionHandler),
+    handler: handlerPipe(apiKeyAuthorization as any, refreshSessionHandler),
     env: {
       sessions,
       signer,
+      config,
     },
   }),
   Route({
     method: 'post',
     path: '/session',
-    handler: handlerPipe(apiKeyAuthorization, loginWithCredentialsHandler),
+    handler: handlerPipe(
+      apiKeyAuthorization as any,
+      loginWithCredentialsHandler,
+    ),
     env: {
       accounts,
       sessions,
       auth,
       signer,
+      config,
     },
   }),
   Route({
     method: 'delete',
     path: '/session',
     handler: handlerPipe(
-      apiKeyAuthorization,
-      ensureAuthenticated,
+      apiKeyAuthorization as any,
+      ensureAuthenticated as any,
       revokeSessionHandler,
     ),
     env: {
@@ -69,7 +77,7 @@ export const routes = ({
   Route({
     path: '/audio/download/:id',
     handler: handlerPipe(
-      apiKeyAuthorization,
+      apiKeyAuthorization as any,
       ensureAuthenticated as any,
       downloadAudioHandler,
     ),
@@ -85,7 +93,7 @@ export const routes = ({
     method: 'post',
     path: '/audio/upload',
     handler: handlerPipe(
-      apiKeyAuthorization,
+      apiKeyAuthorization as any,
       ensureAuthenticated as any,
       uploadAudioHandler,
     ),

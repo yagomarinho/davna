@@ -1,3 +1,4 @@
+import type { Signer } from '@davna/providers'
 import {
   isLeft,
   Middleware,
@@ -8,9 +9,7 @@ import {
 } from '@davna/core'
 import { tokenFromBearer } from '@davna/utils'
 
-import { Account } from '../../modules/account/entities/account'
-import { Session } from '../../modules/account/entities/session'
-import { Signer } from '../../modules/account/helpers/signer'
+import { Account, Session } from '../entities'
 import { getSessionInfo } from '../services/get.session.info'
 
 interface Env {

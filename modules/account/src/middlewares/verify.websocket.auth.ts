@@ -1,7 +1,10 @@
+import type { Signer } from '@davna/providers'
+
 import { Socket } from 'socket.io'
 import { isLeft, Repository } from '@davna/core'
 
 import { getSessionInfo } from '../services/get.session.info'
+import { Account, Session } from '../entities'
 
 type AuthedSocket = Socket & {
   data: {

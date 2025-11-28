@@ -1,7 +1,7 @@
 import { GCPCredentials, GoogleSheetsRepository } from '@davna/repositories'
 import { Lead } from '../entities/lead'
 
-interface Config {
+interface LeadRepositoryConfig {
   credentials?: GCPCredentials
   range?: string
   spreadsheetId?: string
@@ -25,7 +25,7 @@ export const LeadRepository = ({
   credentials = DEFAULT_CREDENTIALS,
   spreadsheetId = process.env.GCP_SPREADSHEET_ID!,
   range = process.env.GCP_SPREADSHEET_RANGE!,
-}: Config = {}) =>
+}: LeadRepositoryConfig = {}) =>
   GoogleSheetsRepository<Lead>({
     credentials,
     range,

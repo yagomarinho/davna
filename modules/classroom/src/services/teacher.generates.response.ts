@@ -5,7 +5,7 @@ import { Message, MESSAGE_TYPE } from '../entities/message'
 import { Classroom } from '../entities/classroom'
 import { Audio } from '../entities/audio'
 
-import { MessageHandler } from '../helpers/message.handler'
+import { MessageHandler } from '../utils/message.handler'
 import { AIGenerateResponse } from '../helpers/ai.generate.response'
 
 import { appendMessageToClassroom } from './append.message.to.classroom'

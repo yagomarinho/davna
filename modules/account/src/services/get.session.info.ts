@@ -1,8 +1,7 @@
+import type { Signer } from '@davna/providers'
 import { Left, Readable, Repository, Right, Service } from '@davna/core'
 
-import { Account } from '../../modules/account/entities/account'
-import { Session } from '../../modules/account/entities/session'
-import { Signer } from '../../modules/account/helpers/signer'
+import { Account, Session } from '../entities'
 
 interface Env {
   signer: Signer

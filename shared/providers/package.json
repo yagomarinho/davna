@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "test": "jest"
+  },
   "author": {
     "name": "Yago Marinho",
     "email": "marinho.rj2@hotmail.com"

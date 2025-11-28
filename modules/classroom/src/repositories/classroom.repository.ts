@@ -18,11 +18,11 @@ const converter: Converter<Classroom> = {
     }),
 }
 
-export interface Config {
+export interface ClassroomRepositoryConfig {
   client?: MongoClient
 }
 
-export const ClassroomRepository = ({ client }: Config) =>
+export const ClassroomRepository = ({ client }: ClassroomRepositoryConfig) =>
   MongoDBRepository<Classroom>({
     ...{
       uri:

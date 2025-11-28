@@ -5,7 +5,7 @@ import { Audio } from '../entities/audio'
 import { Message, MESSAGE_TYPE, messageSchema } from '../entities/message'
 import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
 
-import { MessageHandler } from '../helpers/message.handler'
+import { MessageHandler, StorageConstructor } from '../utils'
 
 import { teacherGeneratesResponse } from '../services/teacher.generates.response'
 
@@ -13,7 +13,6 @@ import { Emitter } from '../helpers/emitter'
 
 import { transcribeAndAppend } from '../services/transcribe.and.append'
 import { remainingConsumption } from '../helpers/remaining.consumption'
-import { StorageConstructor } from '../utils/storage'
 
 interface Metadata {
   account: Identifier

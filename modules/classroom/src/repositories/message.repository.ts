@@ -11,11 +11,11 @@ const converter: Converter<Message> = {
   from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
 }
 
-export interface Config {
+export interface MessageRepositoryConfig {
   client?: MongoClient
 }
 
-export const MessageRepository = ({ client }: Config) =>
+export const MessageRepository = ({ client }: MessageRepositoryConfig) =>
   MongoDBRepository<Message>({
     ...{
       uri:

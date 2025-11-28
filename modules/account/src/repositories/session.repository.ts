@@ -11,11 +11,11 @@ const converter: Converter<Session> = {
   from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
 }
 
-export interface Config {
+export interface SessionRepositoryConfig {
   client?: MongoClient
 }
 
-export const SessionRepository = ({ client }: Config) =>
+export const SessionRepository = ({ client }: SessionRepositoryConfig) =>
   MongoDBRepository<Session>({
     ...{
       uri:

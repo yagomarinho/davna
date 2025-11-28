@@ -1,12 +1,15 @@
 /* eslint-disable no-console */
 import type { Server as HTTPServer } from 'node:http'
 import { Server } from 'socket.io'
-import { verifyWebsocketAuth } from '../middlewares/verify.websocket.auth'
-import { Env } from '../../env'
-import { initializeClassroomHandler } from '../../modules/classroom/handlers/initialize.classroom.handler'
-import { appendAndReplyHandler } from '../../modules/classroom/handlers/append.and.reply.handler'
-import { Request } from '../core/request'
-import { isLeft } from '../core/either'
+
+import { isLeft, Request } from '@davna/core'
+
+import { Env } from './env'
+import { verifyWebsocketAuth } from '@davna/account'
+import {
+  appendAndReplyHandler,
+  initializeClassroomHandler,
+} from '@davna/classroom'
 
 export function createWsServer(server: HTTPServer, env: Env) {
   const io = new Server(server)

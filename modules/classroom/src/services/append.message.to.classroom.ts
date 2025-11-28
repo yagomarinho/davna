@@ -4,7 +4,7 @@ import { Audio } from '../entities/audio'
 import { Classroom } from '../entities/classroom'
 import { Message } from '../entities/message'
 
-import { MessageHandler } from '../helpers/message.handler'
+import { MessageHandler } from '../utils/message.handler'
 import { StorageConstructor } from '../utils/storage'
 
 interface Request {

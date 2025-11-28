@@ -1,27 +1,34 @@
-import { MongoClient } from 'mongodb'
+import {
+  Auth,
+  ChatGPT,
+  FirebaseAdminAuth,
+  GPTModel,
+  JWTSigner,
+  Signer,
+} from '@davna/providers'
+import { Repository, Writable } from '@davna/core'
+import { MongoClient } from '@davna/repositories'
 
-import { AccountRepository } from '../../../modules/account/src/repositories/account.repository'
-import { SessionRepository } from '../../../modules/account/src/repositories/session.repository'
-import { ClassroomRepository } from '../../../modules/classroom/src/repositories/classroom.repository'
-import { MessageRepository } from '../../../modules/classroom/src/repositories/message.repository'
-
-import { Auth } from '../../../modules/account/src/helpers/auth'
-import { Signer } from '../../../modules/account/src/helpers/signer'
-import { Repository, Writable } from './shared/core/repository'
-import { Account } from '../../../modules/account/src/entities/account'
-import { Session } from '../../../modules/account/src/entities/session'
+import {
+  Account,
+  AccountRepository,
+  Session,
+  SessionRepository,
+} from '@davna/account'
+import {
+  Audio,
+  AudioRepository,
+  Classroom,
+  ClassroomRepository,
+  Message,
+  MessageHandler,
+  MessageRepository,
+  Storage,
+  StorageConstructor,
+} from '@davna/classroom'
+import { Lead, LeadRepository } from '@davna/lead'
 
 import config from './config'
-import { Classroom } from '../../../modules/classroom/entities/classroom'
-import { Message } from '../../../modules/classroom/entities/message'
-import { MessageHandler } from '../../../modules/classroom/providers/message.handler'
-import { AudioRepository } from '../../../modules/classroom/src/repositories/audio.repository'
-import { Audio } from '../../../modules/classroom/entities/audio'
-import { Storage, StorageConstructor } from './shared/providers/storage/storage'
-import { Lead } from '../../../modules/lead/src/entities/lead'
-import { LeadRepository } from '../../../modules/lead/src/repositories/lead.repository'
-import { GPTModel } from '../../../modules/classroom/providers/gpt.model/gpt'
-import { GPT } from '../../../modules/classroom/providers/gpt.model'
 
 export interface Env {
   repositories: {
@@ -42,9 +49,9 @@ export interface Env {
 }
 
 export const Env = async (): Promise<Env> => {
-  const auth = Auth()
-  const gpt = GPT()
-  const signer = Signer({
+  const auth = FirebaseAdminAuth({ config })
+  const gpt = ChatGPT({ apiKey: process.env.OPENAI_API_KEY })
+  const signer = JWTSigner({
     secret: config.auth.jwt.secret,
   })
 
@@ -81,6 +88,7 @@ export const Env = async (): Promise<Env> => {
     signer,
     messageHandler: MessageHandler,
     storage: Storage,
+    config,
   }
 
   return {

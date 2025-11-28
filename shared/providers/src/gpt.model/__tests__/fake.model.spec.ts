@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { FakeAI } from '../gpt.model/fake.ai'
+import { FakeAI } from '../fake.ai'
 
 jest.mock('node:fs/promises', () => ({
   readFile: jest.fn(),

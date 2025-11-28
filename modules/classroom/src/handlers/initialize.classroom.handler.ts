@@ -7,7 +7,7 @@ import { Emitter } from '../helpers/emitter'
 import { openClassroom } from '../services/open.classroom'
 import { teacherGeneratesResponse } from '../services/teacher.generates.response'
 
-import { MessageHandler } from '../helpers/message.handler'
+import { MessageHandler } from '../utils/message.handler'
 import { remainingConsumption } from '../helpers/remaining.consumption'
 import { StorageConstructor } from '../utils/storage'
 
