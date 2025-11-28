@@ -1,6 +1,6 @@
 import { number, string } from 'yup'
 import { Handler, isLeft, Repository, Response } from '@davna/core'
-import { getDuration } from '../utils'
+import { getDuration } from '../utils/get.duration'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { uploadAudio } from '../services/upload.audio'

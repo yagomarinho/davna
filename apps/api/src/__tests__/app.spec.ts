@@ -1,11 +1,9 @@
-import { Application } from '../shared/app/application'
-
 import { routes } from '../routes'
-
-import { InMemoryRepository } from '../shared/repositories/in.memory.repository'
 
 import { Account } from '../../../../modules/account/src/entities/account'
 import { Session } from '../../../../modules/account/src/entities/session'
+import { InMemoryRepository } from '@davna/repositories'
+import { Application } from '@davna/applications'
 
 describe('application tests', () => {
   const env = {

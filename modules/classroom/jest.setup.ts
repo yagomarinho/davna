@@ -1,4 +1,4 @@
-import { getDuration as getDurationUtil } from './src/utils'
+import { getDuration as getDurationUtil } from './src/utils/get.duration'
 
 jest.mock('./src/utils', () => ({
   getDuration: jest.fn(() => 12 * 1000),
