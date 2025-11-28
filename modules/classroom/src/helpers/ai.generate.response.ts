@@ -1,10 +1,10 @@
 import type { GPTInput, GPTModel } from '@davna/providers'
 import { isLeft, Repository } from '@davna/core'
-import { getDuration } from '../utils/get.duration'
 
 import { uploadAudio } from '../services/upload.audio'
 
 import { Audio } from '../entities/audio'
+import { getDuration } from '../utils/get.duration'
 import { StorageConstructor } from '../utils/storage'
 
 interface Request {
