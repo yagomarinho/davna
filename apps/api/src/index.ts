@@ -1,4 +1,10 @@
-import 'dotenv/config'
+import { resolve } from 'node:path'
+import dotenv from 'dotenv'
+
+const path = resolve(__dirname, '../../../.env')
+dotenv.config({ path, quiet: true })
+
+/* --------------------------------------------- */
 
 import http from 'node:http'
 import cors from 'cors'

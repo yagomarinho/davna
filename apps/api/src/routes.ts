@@ -25,6 +25,7 @@ export const routes = ({
     handler: handlerPipe(apiKeyAuthorization as any, appendLeadHandler),
     env: {
       leads,
+      config,
     },
   }),
   Route({
@@ -72,6 +73,8 @@ export const routes = ({
       accounts,
       sessions,
       signer,
+      auth,
+      config,
     },
   }),
   Route({
@@ -87,6 +90,7 @@ export const routes = ({
       audios,
       signer,
       storage,
+      config,
     },
   }),
   Route({
@@ -103,6 +107,7 @@ export const routes = ({
       audios,
       signer,
       storage,
+      config,
     },
   }),
 ]
