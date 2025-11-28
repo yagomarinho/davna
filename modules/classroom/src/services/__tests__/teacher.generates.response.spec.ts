@@ -1,3 +1,7 @@
+import { Left, Repository, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+import { FakeAI } from '@davna/providers'
+
 import { AIGenerateResponse as AIGenerateResponseService } from '../../helpers/ai.generate.response'
 import { appendMessageToClassroom as appendMessageService } from '../append.message.to.classroom'
 import { verifyConsume as verifyConsumeService } from '../verify.consume'
@@ -5,13 +9,9 @@ import { verifyConsume as verifyConsumeService } from '../verify.consume'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 import { Classroom } from '../../entities/classroom'
 import { Audio } from '../../entities/audio'
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
-import { Left, Right } from '../../../../shared/core/either'
 import { teacherGeneratesResponse } from '../teacher.generates.response'
-import { GPT } from '@davna/providers/src/gpt/gpt.model'
 
-jest.mock('../../utils/ai.generate.response', () => ({
+jest.mock('../../helpers/ai.generate.response', () => ({
   AIGenerateResponse: jest.fn(),
 }))
 
@@ -33,12 +33,10 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
   let audios: Repository<Audio>
   let storage: any
   let messageHandler: any
-  const gpt = GPT({
-    options: {
-      textToRespond: 'to respond',
-      pathToSpeech: '/path',
-      transcribe: 'from speech',
-    },
+  const gpt = FakeAI({
+    textToRespond: 'to respond',
+    pathToSpeech: '/path',
+    textFromSpeech: 'from speech',
   })
 
   const teacher_id = 'teacher-1'

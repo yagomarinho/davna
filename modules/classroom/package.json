@@ -3,7 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "test": "jest",
+    "test:handlers": "jest src/handlers/",
+    "test:services": "jest src/services/"
+  },
   "author": {
     "name": "Yago Marinho",
     "email": "marinho.rj2@hotmail.com"
@@ -16,6 +20,7 @@
     "@davna/repositories": "*",
     "@davna/providers": "*",
     "@davna/types": "*",
-    "@davna/utils": "*"
+    "@davna/utils": "*",
+    "music-metadata": "^11.10.2"
   }
 }

@@ -1,7 +1,6 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Audio } from '../../entities/audio'
 import { downloadAudio as service } from '../../services/download.audio'
 import { downloadAudioHandler } from '../download.audio.handler'

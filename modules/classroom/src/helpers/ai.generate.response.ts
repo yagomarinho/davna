@@ -5,6 +5,7 @@ import { getDuration } from '../utils'
 import { uploadAudio } from '../services/upload.audio'
 
 import { Audio } from '../entities/audio'
+import { StorageConstructor } from '../utils/storage'
 
 interface Request {
   input: GPTInput[]

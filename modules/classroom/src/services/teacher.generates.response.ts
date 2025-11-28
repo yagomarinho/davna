@@ -10,6 +10,7 @@ import { AIGenerateResponse } from '../helpers/ai.generate.response'
 
 import { appendMessageToClassroom } from './append.message.to.classroom'
 import { verifyConsume } from './verify.consume'
+import { StorageConstructor } from '../utils/storage'
 
 interface Data {
   classroom: Classroom

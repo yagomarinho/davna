@@ -1,11 +1,12 @@
+import { Left, Repository } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+import { STORAGE_TYPE } from '@davna/providers'
+
 import { appendMessageToClassroom } from '../append.message.to.classroom'
+
 import { Classroom } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
-import { Left } from '../../../../shared/core/either'
-import { STORAGE_TYPE } from '../../../../shared/providers/storage/storage'
 
 describe('appendMessageToClassroom service', () => {
   const classroomId = 'class-1'

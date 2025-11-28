@@ -1,11 +1,10 @@
-import { isLeft, isRight } from '../../../../shared/core/either'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { InMemoryRepository } from '@davna/repositories'
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
-import {
-  STORAGE_TYPE,
-  StorageConstructor,
-} from '../../../../shared/providers/storage/storage'
+
 import { downloadAudio } from '../download.audio'
+import { isLeft, isRight } from '@davna/core'
+import { STORAGE_TYPE } from '@davna/providers'
+import { StorageConstructor } from '../../utils/storage'
 
 describe('downloadAudio Service', () => {
   it('should return Left when audio is not found in repository', async () => {

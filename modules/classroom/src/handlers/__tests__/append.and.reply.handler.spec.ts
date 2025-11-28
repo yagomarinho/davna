@@ -1,18 +1,15 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
-import { Repository } from '../../../../shared/core/repository'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { FakeAI, STORAGE_TYPE } from '@davna/providers'
+import { InMemoryRepository } from '@davna/repositories'
 
 import { appendAndReplyHandler } from '../append.and.reply.handler'
 import { appendMessageToClassroom as appendMessageService } from '../../services/append.message.to.classroom'
 import { teacherGeneratesResponse as teacherGeneratesService } from '../../services/teacher.generates.response'
-import { getTranscriptionFromAudio as getTranscription } from '../../../utils/get.transcription.from.audio'
+import { getTranscriptionFromAudio as getTranscription } from '../../helpers/get.transcription.from.audio'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
-import { STORAGE_TYPE } from '../../../../shared/providers/storage/storage'
-import { GPT } from '@davna/providers/src/gpt/gpt.model'
 
 jest.mock('../../services/append.message.to.classroom', () => ({
   appendMessageToClassroom: jest.fn(),
@@ -22,7 +19,7 @@ jest.mock('../../services/teacher.generates.response', () => ({
   teacherGeneratesResponse: jest.fn(),
 }))
 
-jest.mock('../../utils/get.transcription.from.audio', () => ({
+jest.mock('../../helpers/get.transcription.from.audio', () => ({
   getTranscriptionFromAudio: jest.fn(),
 }))
 
@@ -43,12 +40,10 @@ describe('appendAndReply handler', () => {
   let storage: any
   let messageHandler: any
   let emitter: { emit: jest.Mock }
-  const gpt = GPT({
-    options: {
-      textToRespond: 'to respond',
-      pathToSpeech: '/path',
-      transcribe: 'from speech',
-    },
+  const gpt = FakeAI({
+    textToRespond: 'to respond',
+    pathToSpeech: '/path',
+    textFromSpeech: 'from speech',
   })
 
   beforeEach(async () => {

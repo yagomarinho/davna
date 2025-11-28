@@ -10,6 +10,7 @@ import { MessageHandler } from '../helpers/message.handler'
 import { appendMessageToClassroom } from './append.message.to.classroom'
 import { getTranscriptionFromAudio } from '../helpers/get.transcription.from.audio'
 import { verifyConsume } from './verify.consume'
+import { StorageConstructor } from '../utils/storage'
 
 interface Data {
   audio: Audio

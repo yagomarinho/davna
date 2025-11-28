@@ -1,8 +1,3 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Request } from '../../../../shared/core/request'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
-import { Repository } from '../../../../shared/core/repository'
-
 import { initializeClassroomHandler } from '../initialize.classroom.handler'
 import { openClassroom as openClassroomService } from '../../services/open.classroom'
 import { teacherGeneratesResponse as teacherGeneratesService } from '../../services/teacher.generates.response'
@@ -10,7 +5,9 @@ import { teacherGeneratesResponse as teacherGeneratesService } from '../../servi
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Audio } from '../../entities/audio'
 import { Message } from '../../entities/message'
-import { GPT } from '@davna/providers/src/gpt/gpt.model'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { FakeAI } from '@davna/providers'
+import { InMemoryRepository } from '@davna/repositories'
 
 jest.mock('../../services/open.classroom', () => ({
   openClassroom: jest.fn(),
@@ -33,7 +30,11 @@ describe('initializeClassroomHandler', () => {
   let storage: any
   let messageHandler: any
   let emitter: { emit: jest.Mock }
-  const gpt = GPT()
+  const gpt = FakeAI({
+    pathToSpeech: '',
+    textFromSpeech: '',
+    textToRespond: '',
+  })
 
   beforeEach(() => {
     audios = InMemoryRepository<Audio>()

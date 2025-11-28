@@ -1,5 +1,6 @@
-import { isRight, Left, Right } from '../../../../shared/core/either'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { isRight, Left, Repository, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Message } from '../../entities/message'
 import { openClassroom } from '../open.classroom'
@@ -12,8 +13,8 @@ jest.mock('../verify.consume', () => ({
 const verifyConsume = verifyConsumeService as unknown as jest.Mock
 
 describe('openClassroom (service) - updated behavior', () => {
-  let classrooms: ReturnType<typeof InMemoryRepository<Classroom>>
-  let messages: ReturnType<typeof InMemoryRepository<Message>>
+  let classrooms: Repository<Classroom>
+  let messages: Repository<Message>
 
   beforeEach(async () => {
     classrooms = InMemoryRepository<Classroom>()

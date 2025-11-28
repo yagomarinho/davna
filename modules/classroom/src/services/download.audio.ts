@@ -1,6 +1,7 @@
 import { Left, Repository, Right, Service } from '@davna/core'
 
 import { Audio } from '../entities/audio'
+import { StorageConstructor } from '../utils/storage'
 
 interface Request {
   audio_id: string

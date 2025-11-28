@@ -4,6 +4,7 @@ import { getDuration } from '../utils'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { uploadAudio } from '../services/upload.audio'
+import { StorageConstructor } from '../utils/storage'
 
 interface Env {
   audios: Repository<Audio>

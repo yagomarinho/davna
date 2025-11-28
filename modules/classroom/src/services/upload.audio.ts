@@ -3,6 +3,7 @@ import { string } from 'yup'
 import { Left, Repository, Right, Service } from '@davna/core'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
+import { StorageConstructor } from '../utils/storage'
 
 interface Request {
   owner_id: string
@@ -37,7 +38,7 @@ export const uploadAudio = Service<Request, Env, Audio>(
       const source = Readable.from(buffer)
 
       const { identifier, storage_type } = await storage({
-        driver: process.env.STORAGE_DRIVER_DEFAULT as any,
+        driver: process.env.STORAGE_DRIVER_DEFAULT! as any,
       }).upload({
         source,
         metadata: {

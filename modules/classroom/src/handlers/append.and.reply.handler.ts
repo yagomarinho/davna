@@ -13,6 +13,7 @@ import { Emitter } from '../helpers/emitter'
 
 import { transcribeAndAppend } from '../services/transcribe.and.append'
 import { remainingConsumption } from '../helpers/remaining.consumption'
+import { StorageConstructor } from '../utils/storage'
 
 interface Metadata {
   account: Identifier

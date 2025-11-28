@@ -1,11 +1,10 @@
-import type { Config } from 'jest'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const config: Config = {
+const config = {
   clearMocks: true,
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -13,7 +12,7 @@ const config: Config = {
   coverageReporters: ['text-summary', 'lcov'],
   preset: 'ts-jest',
   testMatch: ['**/*.spec.ts?(x)'],
-  setupFiles: [`${__dirname}/jest.setup.ts`],
+  setupFiles: [`${__dirname}/jest.setup.js`],
 }
 
 export default config

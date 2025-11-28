@@ -9,6 +9,7 @@ import { teacherGeneratesResponse } from '../services/teacher.generates.response
 
 import { MessageHandler } from '../helpers/message.handler'
 import { remainingConsumption } from '../helpers/remaining.consumption'
+import { StorageConstructor } from '../utils/storage'
 
 interface Metadata {
   account: Identifier

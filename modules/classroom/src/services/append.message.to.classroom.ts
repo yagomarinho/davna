@@ -5,6 +5,7 @@ import { Classroom } from '../entities/classroom'
 import { Message } from '../entities/message'
 
 import { MessageHandler } from '../helpers/message.handler'
+import { StorageConstructor } from '../utils/storage'
 
 interface Request {
   classroom_id: string

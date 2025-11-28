@@ -1,12 +1,10 @@
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
-import { Request } from '../../../../shared/core/request'
-import { StorageConstructor } from '../../../../shared/providers/storage/storage'
-import { Left, Right } from '../../../../shared/core/either'
+import { Left, Repository, Request, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
 
 import { Audio } from '../../entities/audio'
 import { uploadAudio as service } from '../../services/upload.audio'
 import { uploadAudioHandler } from '../upload.audio.handler'
+import { StorageConstructor } from '../../utils/storage'
 
 jest.mock('../../services/upload.audio', () => ({
   uploadAudio: jest.fn(),

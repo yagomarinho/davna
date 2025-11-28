@@ -1,6 +1,5 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { Left, Repository, Right } from '@davna/core'
+import { InMemoryRepository } from '@davna/repositories'
 
 import { Classroom } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
@@ -14,7 +13,7 @@ describe('verifyConsume (service)', () => {
   const owner_id = 'owner-1'
   const other_owner = 'owner-2'
 
-  const actualDay = new Date(new Date().toDateString()) // same logic as service
+  const actualDay = new Date(new Date().toDateString())
   const yesterday = new Date(actualDay)
   yesterday.setDate(yesterday.getDate() - 1)
 

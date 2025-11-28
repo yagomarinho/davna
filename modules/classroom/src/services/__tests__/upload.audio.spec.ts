@@ -1,12 +1,12 @@
 import { Readable } from 'node:stream'
-import { isLeft, isRight } from '../../../../shared/core/either'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+
+import { isLeft, isRight } from '@davna/core'
+import { STORAGE_TYPE } from '@davna/providers'
+import { InMemoryRepository } from '@davna/repositories'
+
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
-import {
-  STORAGE_TYPE,
-  StorageConstructor,
-} from '../../../../shared/providers/storage/storage'
 import { uploadAudio } from '../upload.audio'
+import { StorageConstructor } from '../../utils/storage'
 
 describe('uploadAudio Service', () => {
   it('should return Left when MIME type is not supported', async () => {

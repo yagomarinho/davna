@@ -1,16 +1,17 @@
-import { Left, Right } from '../../../../shared/core/either'
-import { Repository } from '../../../../shared/core/repository'
-import { InMemoryRepository } from '../../../../shared/repositories/in.memory.repository'
+import { Left, Repository, Right } from '@davna/core'
+
 import { Audio } from '../../entities/audio'
 import { Classroom } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
+
 import { getTranscriptionFromAudio as getTranscriptionFromAudioService } from '../../helpers/get.transcription.from.audio'
 import { appendMessageToClassroom as appendMessageToClassroomService } from '../append.message.to.classroom'
 import { verifyConsume as verifyConsumeService } from '../verify.consume'
 import { transcribeAndAppend } from '../transcribe.and.append'
-import { GPT } from '@davna/providers/src/gpt/gpt.model'
+import { FakeAI } from '@davna/providers'
+import { InMemoryRepository } from '@davna/repositories'
 
-jest.mock('../../utils/get.transcription.from.audio', () => ({
+jest.mock('../../helpers/get.transcription.from.audio', () => ({
   getTranscriptionFromAudio: jest.fn(),
 }))
 
@@ -34,12 +35,10 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
   let messages: Repository<Message>
   let storage: any
   let messageHandler: any
-  const gpt = GPT({
-    options: {
-      textToRespond: 'to respond',
-      pathToSpeech: '/path',
-      transcribe: 'from speech',
-    },
+  const gpt = FakeAI({
+    textToRespond: 'to respond',
+    pathToSpeech: '/path',
+    textFromSpeech: 'from speech',
   })
 
   const classroom_id = 'class-1'
