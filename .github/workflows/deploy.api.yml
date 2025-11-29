@@ -85,13 +85,14 @@ jobs:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
         run: |
           set -e
-          mkdir -p "$TARGET_DIR"
+          cd ~
+          mkdir -p ./$TARGET_DIR
           if [ -z "$ENV_PROD_B64" ]; then
             echo "ENV_PROD_B64 is empty"
             exit 1
           fi
-          echo "$ENV_PROD_B64" | base64 --decode > "$TARGET_DIR/.env"
-          chmod 600 "$TARGET_DIR/.env"
+          echo "$ENV_PROD_B64" | base64 --decode > ~/$TARGET_DIR/.env
+          chmod 600 ~/$TARGET_DIR/.env
           echo ".env created in $TARGET_DIR"
 
       - name: Copy compose into target dir
@@ -99,11 +100,12 @@ jobs:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
           COMPOSE_FILE_PROD: ${{ vars.COMPOSE_FILE_PROD }}
         run: |
-          mkdir -p "$TARGET_DIR"
+          cd ~
+          mkdir -p ./$TARGET_DIR
           # copy and rename to docker-compose.prod.yml in target dir
-          cp $COMPOSE_FILE_PROD "$TARGET_DIR/docker-compose.yml"
-          ls -la "$TARGET_DIR"
-          sed -n '1,200p' "$TARGET_DIR/docker-compose.yml"
+          cp $COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
+          ls -la ./$TARGET_DIR
+          sed -n '1,200p' ./$TARGET_DIR/docker-compose.yml
 
       - name: Pull Image and Run Compose (only recreate service)
         env:
@@ -114,7 +116,8 @@ jobs:
           SERVICE_NAME: ${{ vars.SERVICE_NAME}}
         run: |
           set -e
-          cd "$TARGET_DIR"
+          cd ~
+          cd ./$TARGET_DIR
           echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
           docker pull "$IMAGE_NAME"
           docker logout
