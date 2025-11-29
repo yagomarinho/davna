@@ -10,6 +10,7 @@ import {
   verifySessionHandler,
 } from '@davna/account'
 import { downloadAudioHandler, uploadAudioHandler } from '@davna/classroom'
+import { healthCheckHandler } from '@davna/health'
 import { appendLeadHandler } from '@davna/lead'
 
 import { Env } from './env'
@@ -109,5 +110,9 @@ export const routes = ({
       storage,
       config,
     },
+  }),
+  Route({
+    path: '/health',
+    handler: healthCheckHandler,
   }),
 ]

@@ -31,6 +31,12 @@ services:
       - '3333:3333'
     env_file:
       - ../../.env.dev
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3333/health']
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
     entrypoint:
       [
         '/usr/local/bin/wait-for.sh',

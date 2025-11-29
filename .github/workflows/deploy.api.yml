@@ -30,12 +30,13 @@ jobs:
       - name: Start docker-compose for integration tests and stop when api exits
         env:
           IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE_NAME }}
+          SERVICE_NAME: ${{ vars.SERVICE_NAME}}
+          COMPOSE_FILE_DEV: ${{ vars.COMPOSE_FILE_DEV}}
         run: |
           docker build -t "$IMAGE_NAME" -f apps/api/Dockerfile .
-          docker compose -f apps/api/docker-compose.yml up --abort-on-container-exit --exit-code-from api
-          EXIT_CODE=$?
-          docker compose -f apps/api/docker-compose.yml down --volumes --remove-orphans
-          if [ $EXIT_CODE -ne 0 ]; then exit $EXIT_CODE; fi
+          docker compose -f $COMPOSE_FILE_DEV up -d
+          chmod +x ./scripts/wait-for-api.sh
+          SLEEP_INTERVAL=1 MAX_RETRIES=10 STACK_FILE=$COMPOSE_FILE_DEV SERVICE_NAME=$SERVICE_NAME ./scripts/wait-for-api.sh --down
 
       - name: Login to Docker Hub
         env:
@@ -71,10 +72,12 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Show the file
+        env:
+          COMPOSE_FILE_PROD: ${{ vars.COMPOSE_FILE_PROD }}
         run: |
           echo "File exists:"
-          ls -la packages/api/docker-compose.prod.yml
-          sed -n '1,200p' packages/api/docker-compose.prod.yml
+          ls -la $COMPOSE_FILE_PROD
+          sed -n '1,200p' $COMPOSE_FILE_PROD
 
       - name: Copy environment file to server folder
         env:
@@ -94,10 +97,11 @@ jobs:
       - name: Copy compose into target dir
         env:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
+          COMPOSE_FILE_PROD: ${{ vars.COMPOSE_FILE_PROD }}
         run: |
           mkdir -p "$TARGET_DIR"
           # copy and rename to docker-compose.prod.yml in target dir
-          cp apps/api/docker-compose.prod.yml "$TARGET_DIR/docker-compose.yml"
+          cp $COMPOSE_FILE_PROD "$TARGET_DIR/docker-compose.yml"
           ls -la "$TARGET_DIR"
           sed -n '1,200p' "$TARGET_DIR/docker-compose.yml"
 
