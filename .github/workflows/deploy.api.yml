@@ -3,14 +3,125 @@ name: Deploy Workflow With Integration Test
 on:
   push:
     branches: [main]
-    paths:
-      - 'apps/api/**'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  test-and-build:
+  watch:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.paths.outputs.api }}
+      ffmpeg: ${{ steps.paths.outputs.ffmpeg }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: paths
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+            ffmpeg:
+              - 'apps/ffmpeg/**'
+
+  ffmpeg-build:
     name: Build, test
     runs-on: ubuntu-latest
+    needs: watch
+    if: ${{ needs.filter.outputs.ffmpeg == 'true' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build ffmpeg api
+        env:
+          FFMPEG_IMAGE_NAME: ${{ secrets.DOCKER_HUB_FFMPEG_IMAGE_NAME }}
+        run: |
+          docker build -t "$FFMPEG_IMAGE_NAME" -f apps/ffmpeg/Dockerfile .
+
+      - name: Login to Docker Hub
+        env:
+          USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        run: |
+          echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+
+      - name: Push to Registry
+        env:
+          FFMPEG_IMAGE_NAME: ${{ secrets.DOCKER_HUB_FFMPEG_IMAGE_NAME }}
+        run: |
+          docker push "$FFMPEG_IMAGE_NAME"
+
+      - name: Logout Docker Hub
+        run: docker logout
+
+  deploy-ffmpeg:
+    runs-on: [self-hosted, prod-runner]
+    needs: [watch, ffmpeg-build]
+    if: ${{ needs.filter.outputs.ffmpeg == 'true' }}
+    steps:
+      - name: Checkout only docker-compose.prod.yml
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            docker-compose.prod.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Copy environment file to server folder
+        env:
+          ENV_PROD_B64: ${{ secrets.ENV_PROD_B64 }}
+          TARGET_DIR: ${{ vars.TARGET_DIR }}
+        run: |
+          set -e
+          cd ~
+          mkdir -p ./$TARGET_DIR
+          if [ -z "$ENV_PROD_B64" ]; then
+            echo "ENV_PROD_B64 is empty"
+            exit 1
+          fi
+          echo "$ENV_PROD_B64" | base64 --decode > ~/$TARGET_DIR/.env
+          chmod 600 ~/$TARGET_DIR/.env
+          echo ".env created in $TARGET_DIR"
+
+      - name: Copy compose prod into target dir
+        env:
+          TARGET_DIR: ${{ vars.TARGET_DIR }}
+          COMPOSE_FILE_PROD: ${{ vars.COMPOSE_FILE_PROD }}
+        run: |
+          cd ~
+          mkdir -p ./$TARGET_DIR
+          cp $COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
+          ls -la ./$TARGET_DIR
+          sed -n '1,200p' ./$TARGET_DIR/docker-compose.yml
+
+      - name: Pull Image and Run Compose
+        env:
+          USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          FFMPEG_IMAGE_NAME: ${{ secrets.DOCKER_HUB_FFMPEG_IMAGE_NAME }}
+          TARGET_DIR: ${{ vars.TARGET_DIR }}
+        run: |
+          set -e
+          cd ~/$TARGET_DIR
+          echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+          docker pull $FFMPEG_IMAGE_NAME
+          docker logout
+          docker compose -f docker-compose.yml up $FFMPEG_SERVICE_NAME -d
+
+  api-build:
+    name: Build, test
+    runs-on: ubuntu-latest
+    needs: [watch, ffmpeg-build]
+    if: ${{ needs.filter.outputs.api == 'true' }}
     defaults:
       run:
         shell: bash
@@ -29,14 +140,16 @@ jobs:
 
       - name: Start docker-compose for integration tests and stop when api exits
         env:
-          IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE_NAME }}
-          SERVICE_NAME: ${{ vars.SERVICE_NAME}}
+          API_IMAGE_NAME: ${{ secrets.DOCKER_HUB_API_IMAGE_NAME }}
+          FFMPEG_IMAGE_NAME: ${{ secrets.DOCKER_HUB_FFMPEG_IMAGE_NAME }}
+          API_SERVICE_NAME: ${{ vars.API_SERVICE_NAME}}
           COMPOSE_FILE_DEV: ${{ vars.COMPOSE_FILE_DEV}}
         run: |
-          docker build -t "$IMAGE_NAME" -f apps/api/Dockerfile .
+          docker build -t "$API_IMAGE_NAME" -f apps/api/Dockerfile .
+          docker build -t "$FFMPEG_IMAGE_NAME" -f apps/ffmpeg/Dockerfile .
           docker compose -f $COMPOSE_FILE_DEV up -d
-          chmod +x ./scripts/wait-for-health.sh
-          SLEEP_INTERVAL=1 MAX_RETRIES=10 STACK_FILE=$COMPOSE_FILE_DEV SERVICE_NAME=$SERVICE_NAME ./scripts/wait-for-health.sh --down
+          chmod +x ./scripts/wait-for-docker-health.sh
+          SLEEP_INTERVAL=1 MAX_RETRIES=10 STACK_FILE=$COMPOSE_FILE_DEV SERVICE_NAME=$API_SERVICE_NAME ./scripts/wait-for-docker-healthy.sh --down
 
       - name: Login to Docker Hub
         env:
@@ -47,9 +160,9 @@ jobs:
 
       - name: Push to Registry
         env:
-          IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE_NAME }}
+          API_IMAGE_NAME: ${{ secrets.DOCKER_HUB_API_IMAGE_NAME }}
         run: |
-          docker push "$IMAGE_NAME"
+          docker push "$API_IMAGE_NAME"
 
       - name: Logout Docker Hub
         run: docker logout
@@ -59,16 +172,17 @@ jobs:
         run: |
           rm -f ./.env.dev || true
 
-  deploy-on-server:
+  deploy-api:
     runs-on: [self-hosted, prod-runner]
-    needs: [test-and-build]
+    needs: [watch, api-build]
+    if: ${{ needs.filter.outputs.api == 'true' }}
     steps:
       - name: Checkout only docker-compose.prod.yml
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           sparse-checkout: |
-            apps/api/docker-compose.prod.yml
+            docker-compose.prod.yml
           sparse-checkout-cone-mode: false
 
       - name: Show the file
@@ -102,7 +216,6 @@ jobs:
         run: |
           cd ~
           mkdir -p ./$TARGET_DIR
-          # copy and rename to docker-compose.prod.yml in target dir
           cp $COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
           ls -la ./$TARGET_DIR
           sed -n '1,200p' ./$TARGET_DIR/docker-compose.yml
@@ -111,14 +224,13 @@ jobs:
         env:
           USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          IMAGE_NAME: ${{ secrets.DOCKER_HUB_IMAGE_NAME }}
+          API_IMAGE_NAME: ${{ secrets.DOCKER_HUB_API_IMAGE_NAME }}
           TARGET_DIR: ${{ vars.TARGET_DIR }}
-          SERVICE_NAME: ${{ vars.SERVICE_NAME}}
+          API_SERVICE_NAME: ${{ vars.API_SERVICE_NAME}}
         run: |
           set -e
-          cd ~
-          cd ./$TARGET_DIR
+          cd ~/$TARGET_DIR
           echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
-          docker pull "$IMAGE_NAME"
+          docker pull "$API_IMAGE_NAME"
           docker logout
-          docker compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yml up --no-deps $API_SERVICE_NAME -d
