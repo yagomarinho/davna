@@ -4,25 +4,30 @@ set -eu
 usage() {
   cat <<EOF
 Usage:
-  $0 -t mongo host:port -t health service_name -- <command ...>
+  $0 -t TYPE ARG [-t TYPE ARG ...] -- <command ...>
 
 Supported types:
-  mongo   -> uses /usr/local/bin/wait-for-mongo.sh <host:port>
-  health  -> uses /usr/local/bin/wait-for-health.sh <service_name>
+  mongo   -> uses wait-for-mongo.sh <host:port>
+  http    -> uses wait-for-http-health.sh host:port[/path]
 
-Example:
-  $0 -t mongo mongo:27017 -t health cache -- node ./dist/index.js
+Examples:
+  $0 -t mongo mongo:27017 -t http cache:3334/health -- node ./dist/index.js
+  $0 -t http api:3334/ready -t mongo mongo:27017 -- ./start.sh
 EOF
   exit 1
 }
 
+# Defaults
 PIDS=""
 CMDS=""
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "$SCRIPT_DIR"
 
 # Cleanup background processes on exit
 cleanup() {
   for pid in $PIDS; do
-    if kill -0 "$pid" 2>/dev/null; then
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
       kill "$pid" 2>/dev/null || true
     fi
   done
@@ -45,29 +50,36 @@ while [ $# -gt 0 ]; do
 
       case "$TYPE" in
         mongo)
-          SCRIPT="/usr/local/bin/wait-for-mongo.sh"
+          SCRIPT="$SCRIPT_DIR/wait-for-mongo.sh"
+          if [ ! -x "$SCRIPT" ]; then
+            echo "ERROR: $SCRIPT not found or not executable" >&2
+            exit 2
+          fi
+          "$SCRIPT" "$ARG" &
+          pid=$!
+          PIDS="$PIDS $pid"
+          CMDS="$CMDS|$SCRIPT $ARG"
+          echo "Started waiter: $SCRIPT $ARG (pid $pid)"
           ;;
-        health)
-          SCRIPT="/usr/local/bin/wait-for-health.sh"
+
+        http)
+          SCRIPT="$SCRIPT_DIR/wait-for-http-health.sh"
+          if [ ! -x "$SCRIPT" ]; then
+            echo "ERROR: $SCRIPT not found or not executable" >&2
+            exit 2
+          fi
+          "$SCRIPT" "$ARG" &
+          pid=$!
+          PIDS="$PIDS $pid"
+          CMDS="$CMDS|$SCRIPT $ARG"
+          echo "Started waiter: $SCRIPT $ARG (pid $pid)"
           ;;
+
         *)
           echo "Unknown type: $TYPE" >&2
           usage
           ;;
       esac
-
-      if [ ! -x "$SCRIPT" ]; then
-        echo "ERROR: $SCRIPT not found or not executable" >&2
-        exit 2
-      fi
-
-      # Start waiter in the background
-      sh -c "$SCRIPT $ARG" &
-      pid=$!
-      PIDS="$PIDS $pid"
-      CMDS="$CMDS|$SCRIPT $ARG"
-
-      echo "Started waiter: $SCRIPT $ARG (pid $pid)"
       ;;
 
     --)
@@ -87,8 +99,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# No waiters? Error.
-if [ -z "$(echo "$PIDS" | tr -d ' ')" ]; then
+# Check that at least one waiter was started
+trimmed_pids=$(echo "$PIDS" | tr -s ' ' | sed 's/^ //;s/ $//')
+if [ -z "$trimmed_pids" ]; then
   echo "No -t arguments provided. Nothing to wait for." >&2
   usage
 fi
@@ -96,7 +109,7 @@ fi
 EXIT_CODE=0
 
 # Wait for all background waiters
-for pid in $PIDS; do
+for pid in $trimmed_pids; do
   if wait "$pid"; then
     echo "Waiter pid $pid completed successfully"
   else
@@ -105,7 +118,7 @@ for pid in $PIDS; do
     EXIT_CODE=$status
 
     # Kill other waiters still running
-    for other in $PIDS; do
+    for other in $trimmed_pids; do
       if [ "$other" != "$pid" ]; then
         if kill -0 "$other" 2>/dev/null; then
           echo "Killing waiter pid $other"
@@ -117,16 +130,10 @@ for pid in $PIDS; do
   fi
 done
 
-if [ $EXIT_CODE -ne 0 ]; then
-  echo "One or more waiters failed. Exiting with status $EXIT_CODE" >&2
-  exit $EXIT_CODE
-fi
-
 # Run final command after all services are ready
-if [ $# -gt 0 ]; then
+if [ $EXIT_CODE -eq 0 ] && [ $# -gt 0 ]; then
   echo "All services are ready. Executing final command: $*"
   exec "$@"
 else
-  echo "All services are ready. No final command provided — exiting."
-  exit 0
+  exit $EXIT_CODE
 fi

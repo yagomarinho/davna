@@ -5,17 +5,12 @@ import { Route } from '@davna/core'
 
 import { expressHandlerAdapter } from './express.handler.adapter'
 
-const DEFAULT_PORT = Number(process.env.PORT) || 3333
-
 export interface Options {
-  port?: number
+  port: number
   routes?: Route[]
 }
 
-export function Application({
-  routes = [],
-  port = DEFAULT_PORT,
-}: Options = {}) {
+export function Application({ routes = [], port }: Options) {
   let server: Server
   const app = express()
   app.use(express.json())

@@ -20,11 +20,13 @@ RUN yarn workspace @davna/api run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
+RUN apk add --no-cache bash
+
 COPY ./scripts/wait-for-mongo.sh /usr/local/bin/wait-for-mongo.sh
-COPY ./scripts/wait-for-health.sh /usr/local/bin/wait-for-health.sh
+COPY ./scripts/wait-for-http-health.sh /usr/local/bin/wait-for-http-health.sh
 COPY ./scripts/wait-for.sh /usr/local/bin/wait-for.sh
 RUN chmod +x /usr/local/bin/wait-for-mongo.sh
-RUN chmod +x /usr/local/bin/wait-for-health.sh
+RUN chmod +x /usr/local/bin/wait-for-http-health.sh
 RUN chmod +x /usr/local/bin/wait-for.sh
 
 COPY --from=build /app/apps/api/dist ./dist

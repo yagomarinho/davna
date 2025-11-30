@@ -10,7 +10,7 @@ import { Env } from './env'
 function limiter() {
   return rateLimit({
     windowMs: 5 * 60 * 1000,
-    limit: 25,
+    limit: 250,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_, response) => {
@@ -24,6 +24,7 @@ function limiter() {
 
 export const App = (env: Env) => {
   const app = Application({
+    port: 3334,
     routes: getRoutes({ env }),
   })
 

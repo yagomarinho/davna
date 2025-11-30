@@ -1,5 +1,5 @@
 type API_KEY = {
-  header: string
+  headerName: string
   key: string
 }
 
@@ -8,10 +8,10 @@ export interface Config {
   apiKey: API_KEY
 }
 
-export const DEFAULT_CONFIG: Config = {
+export const DEFAULT_CONFIG = (): Config => ({
   baseUrl: `${process.env.FFMPEG_SERVICE_BASE_URL}`,
   apiKey: {
-    header: `${process.env.API_KEY_HEADER_NAME}`,
+    headerName: `${process.env.API_KEY_HEADER_NAME}`,
     key: `${process.env.API_ACCESS_TOKEN}`,
   },
-}
+})

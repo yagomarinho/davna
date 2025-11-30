@@ -19,9 +19,9 @@ import { createWsServer } from './create.ws.server'
 import { Env } from './env'
 
 Env().then(env => {
-  const PORT = process.env.PORT || 3333
+  const PORT = process.env.PORT ? Number(process.env.PORT) : 3333
 
-  const app = Application({ routes: routes(env) })
+  const app = Application({ routes: routes(env), port: PORT })
 
   const upload = multer({ storage: multer.memoryStorage() })
   const exposed = app.exposeApp()

@@ -28,12 +28,17 @@ export async function getDuration({
   form.append('file', file)
 
   const headers = new Headers()
-  headers.append(config.apiKey.header, `apikey=${config.apiKey.key}`)
+  headers.append(config.apiKey.headerName, `apikey=${config.apiKey.key}`)
 
   const response = await fetch(`${config.baseUrl}/`, {
     method: 'post',
     body: form,
+    headers,
   })
 
-  if (response.ok) return response.json()
+  if (!response.ok) return
+
+  const body = await response.json()
+
+  return body
 }
