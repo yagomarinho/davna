@@ -99,7 +99,7 @@ jobs:
         run: |
           cd ~
           mkdir -p ./$TARGET_DIR
-          cp $COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
+          cp ./$COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
           ls -la ./$TARGET_DIR
           sed -n '1,200p' ./$TARGET_DIR/docker-compose.yml
 
@@ -148,7 +148,7 @@ jobs:
           docker build -t "$API_IMAGE_NAME" -f apps/api/Dockerfile .
           docker build -t "$FFMPEG_IMAGE_NAME" -f apps/ffmpeg/Dockerfile .
           docker compose -f $COMPOSE_FILE_DEV up -d
-          chmod +x ./scripts/wait-for-docker-health.sh
+          chmod +x ./scripts/wait-for-docker-healthy.sh
           SLEEP_INTERVAL=1 MAX_RETRIES=10 STACK_FILE=$COMPOSE_FILE_DEV SERVICE_NAME=$API_SERVICE_NAME ./scripts/wait-for-docker-healthy.sh --down
 
       - name: Login to Docker Hub
@@ -216,7 +216,7 @@ jobs:
         run: |
           cd ~
           mkdir -p ./$TARGET_DIR
-          cp $COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
+          cp ./$COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
           ls -la ./$TARGET_DIR
           sed -n '1,200p' ./$TARGET_DIR/docker-compose.yml
 

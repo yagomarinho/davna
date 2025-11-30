@@ -16,7 +16,7 @@ RUN yarn workspace @davna/api run test
 
 RUN yarn workspace @davna/api run build
 
-# Stage 2: Copy Files and Expose
+# Stage 2: Copy Files and Expose Port
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
