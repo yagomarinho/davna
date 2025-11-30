@@ -40,13 +40,15 @@ export function AIGenerateResponse({ input }: Request) {
       text: transcription,
     })
 
-    const duration = await getDuration({ buffer })
+    const name = `rec${new Date().toISOString()}`
+    const mime = 'audio/webm; codecs=opus'
+    const duration = await getDuration({ buffer, name, mime })
 
     const audioResult = await uploadAudio({
       buffer,
       duration,
-      mime: 'audio/webm; codecs=opus',
-      name: `rec${new Date().toISOString()}`,
+      mime,
+      name,
       owner_id: 'agent',
     })({ audios, storage })
 

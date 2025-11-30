@@ -6,12 +6,13 @@
       "apps/*",
       "config/*",
       "modules/*",
+      "services/*",
       "shared/*"
     ]
   },
   "scripts": {
-    "api:down": "docker compose -f ./apps/api/docker-compose.yml down",
-    "api:up": "docker compose -f ./apps/api/docker-compose.yml up -d",
+    "api:down": "docker compose -f ./docker-compose.yml down",
+    "api:up": "docker compose -f ./docker-compose.yml up -d",
     "rm:node_modules": "node scripts/rm.node_modules.js",
     "test:api-tsc": "node scripts/api.tsc.monitor.js",
     "test:modules": "tsnd --respawn=false --no-watch scripts/run.command.ts modules test",

@@ -2,6 +2,7 @@ services:
   mongo:
     image: mongo
     container_name: mongo
+    restart: unless-stopped
     ports:
       - '27017:27017'
     volumes:
@@ -20,31 +21,34 @@ services:
       retries: 10
 
   api:
-    build:
-      context: ../../
-      dockerfile: ./apps/api/Dockerfile
+    image: yagomarinho/davna:latest
     container_name: api
+    restart: unless-stopped
     depends_on:
       mongo:
         condition: service_healthy
     ports:
       - '3333:3333'
     env_file:
-      - ../../.env.dev
-    healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:3333/health']
-      interval: 5s
-      timeout: 2s
-      retries: 10
-      start_period: 5s
+      - ./.env
     entrypoint:
       [
-        '/usr/local/bin/wait-for.sh',
+        '/usr/local/bin/wait-for-mongo.sh',
         'mongo:27017',
         '--',
         'node',
         './dist/index.js',
       ]
 
+  ffmpeg:
+    image: yagomarinho/davna-ffmpeg:latest
+    container_name: ffmpeg
+    restart: unless-stopped
+    ports:
+      - '3334'
+    env_file:
+      - ./.env
+
 volumes:
   mongo_data:
+#

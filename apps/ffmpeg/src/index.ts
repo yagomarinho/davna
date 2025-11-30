@@ -12,4 +12,5 @@ const app = App(Env())
 
 app.mount()
 
-app.start().then(() => {})
+// eslint-disable-next-line no-console
+app.start().then(() => console.log(`Microservice: ffmpeg Start Running...`))

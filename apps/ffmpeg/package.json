@@ -3,7 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "test": "jest"
+    "build": "rimraf ./dist && npm run typecheck && node build.js",
+    "dev": "tsnd --respawn --transpile-only --ignore-watch node_modules src/index.ts",
+    "test": "jest",
+    "typecheck": "tsc --noEmit --project ./tsconfig.build.json"
   },
   "author": {
     "name": "Yago Marinho",

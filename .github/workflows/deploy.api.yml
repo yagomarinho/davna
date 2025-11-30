@@ -35,8 +35,8 @@ jobs:
         run: |
           docker build -t "$IMAGE_NAME" -f apps/api/Dockerfile .
           docker compose -f $COMPOSE_FILE_DEV up -d
-          chmod +x ./scripts/wait-for-api.sh
-          SLEEP_INTERVAL=1 MAX_RETRIES=10 STACK_FILE=$COMPOSE_FILE_DEV SERVICE_NAME=$SERVICE_NAME ./scripts/wait-for-api.sh --down
+          chmod +x ./scripts/wait-for-health.sh
+          SLEEP_INTERVAL=1 MAX_RETRIES=10 STACK_FILE=$COMPOSE_FILE_DEV SERVICE_NAME=$SERVICE_NAME ./scripts/wait-for-health.sh --down
 
       - name: Login to Docker Hub
         env:
