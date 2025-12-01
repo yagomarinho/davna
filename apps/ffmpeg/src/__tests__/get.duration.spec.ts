@@ -25,7 +25,7 @@ describe('getDuration (integration with ffprobe)', () => {
   test('should return correct duration from audio', async () => {
     const expectedSec = 1.5
 
-    const { duration } = await getDuration(audio)
+    const { duration } = await getDuration()(audio)
     expect(Math.abs(duration - expectedSec)).toEqual(expect.any(Number))
   })
 })

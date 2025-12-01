@@ -10,8 +10,11 @@ export function getRoutes({ env }: { env: Env }) {
     Route({
       method: 'post',
       path: '/',
-      handler: handlerPipe(apiKeyAuthorization, getDurationHandler),
-      env,
+      handler: handlerPipe(apiKeyAuthorization as any, getDurationHandler),
+      env: {
+        audioMetadata: env.providers.audioMetadata,
+        config: env.config,
+      },
     }),
     Route({
       path: '/health',

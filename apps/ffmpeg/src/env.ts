@@ -1,3 +1,6 @@
+import type { AudioMetadataProvider } from './audio.metadata.provider'
+import { getDuration } from './get.duration'
+
 export type Config = {
   auth: {
     apiKey: {
@@ -9,9 +12,17 @@ export type Config = {
 
 export type Env = {
   config: Config
+  providers: {
+    audioMetadata: AudioMetadataProvider
+  }
 }
 
 export const Env = (): Env => ({
+  providers: {
+    audioMetadata: {
+      getDuration: getDuration(),
+    },
+  },
   config: {
     auth: {
       apiKey: {

@@ -1,21 +1,28 @@
+import type { AudioMetadataProvider } from './audio.metadata.provider'
 import { Handler, Response } from '@davna/core'
-import { getDuration } from './get.duration'
 
-export const getDurationHandler = Handler<{}>(request => async () => {
-  const { file } = request.metadata
+interface Env {
+  audioMetadata: AudioMetadataProvider
+}
 
-  try {
-    const { duration } = await getDuration(file.buffer)
+export const getDurationHandler = Handler(
+  request =>
+    async ({ audioMetadata }: Env) => {
+      const { file } = request.metadata
 
-    return Response.data({
-      name: file.originalname,
-      mime: file.mimetype,
-      duration,
-    })
-  } catch {
-    return Response({
-      data: { message: 'Invalid Audio File Type' },
-      metadata: { headers: { status: 400 } },
-    })
-  }
-})
+      try {
+        const { duration } = await audioMetadata.getDuration(file.buffer)
+
+        return Response.data({
+          name: file.originalname,
+          mime: file.mimetype,
+          duration,
+        })
+      } catch {
+        return Response({
+          data: { message: 'Invalid Audio File Type' },
+          metadata: { headers: { status: 400 } },
+        })
+      }
+    },
+)
