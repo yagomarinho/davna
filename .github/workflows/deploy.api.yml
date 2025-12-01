@@ -82,8 +82,7 @@ jobs:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
         run: |
           set -e
-          cd ~
-          mkdir -p ./$TARGET_DIR
+          mkdir -p ~/$TARGET_DIR
           if [ -z "$ENV_PROD_B64" ]; then
             echo "ENV_PROD_B64 is empty"
             exit 1
@@ -97,11 +96,10 @@ jobs:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
           COMPOSE_FILE_PROD: ${{ vars.COMPOSE_FILE_PROD }}
         run: |
-          cd ~
-          mkdir -p ./$TARGET_DIR
-          cp ./$COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
-          ls -la ./$TARGET_DIR
-          sed -n '1,200p' ./$TARGET_DIR/docker-compose.yml
+          mkdir -p ~/$TARGET_DIR
+          cp "$COMPOSE_FILE_PROD" ~/$TARGET_DIR/docker-compose.yml
+          ls -la ~/$TARGET_DIR
+          sed -n '1,200p' ~/$TARGET_DIR/docker-compose.yml
 
       - name: Pull Image and Run Compose
         env:
@@ -144,12 +142,13 @@ jobs:
           FFMPEG_IMAGE_NAME: ${{ secrets.DOCKER_HUB_FFMPEG_IMAGE_NAME }}
           API_SERVICE_NAME: ${{ vars.API_SERVICE_NAME}}
           COMPOSE_FILE_DEV: ${{ vars.COMPOSE_FILE_DEV}}
+          TARGET_DIR: ${{ vars.TARGET_DIR }}
         run: |
           docker build -t "$API_IMAGE_NAME" -f apps/api/Dockerfile .
           docker build -t "$FFMPEG_IMAGE_NAME" -f apps/ffmpeg/Dockerfile .
           docker compose -f $COMPOSE_FILE_DEV up -d
           chmod +x ./scripts/wait-for-docker-healthy.sh
-          SLEEP_INTERVAL=1 MAX_RETRIES=10 STACK_FILE=$COMPOSE_FILE_DEV SERVICE_NAME=$API_SERVICE_NAME ./scripts/wait-for-docker-healthy.sh --down
+          SLEEP_INTERVAL=1 MAX_RETRIES=10 ./scripts/wait-for-docker-healthy.sh --file $COMPOSE_FILE_DEV --service $API_SERVICE_NAME --down
 
       - name: Login to Docker Hub
         env:
@@ -199,8 +198,7 @@ jobs:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
         run: |
           set -e
-          cd ~
-          mkdir -p ./$TARGET_DIR
+          mkdir -p ~/$TARGET_DIR
           if [ -z "$ENV_PROD_B64" ]; then
             echo "ENV_PROD_B64 is empty"
             exit 1
@@ -214,11 +212,10 @@ jobs:
           TARGET_DIR: ${{ vars.TARGET_DIR }}
           COMPOSE_FILE_PROD: ${{ vars.COMPOSE_FILE_PROD }}
         run: |
-          cd ~
-          mkdir -p ./$TARGET_DIR
-          cp ./$COMPOSE_FILE_PROD ./$TARGET_DIR/docker-compose.yml
-          ls -la ./$TARGET_DIR
-          sed -n '1,200p' ./$TARGET_DIR/docker-compose.yml
+          mkdir -p ~/$TARGET_DIR
+          cp $COMPOSE_FILE_PROD ~/$TARGET_DIR/docker-compose.yml
+          ls -la ~/$TARGET_DIR
+          sed -n '1,200p' ~/$TARGET_DIR/docker-compose.yml
 
       - name: Pull Image and Run Compose (only recreate service)
         env:
