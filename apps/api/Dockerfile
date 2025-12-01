@@ -22,9 +22,10 @@ WORKDIR /app
 
 RUN apk add --no-cache bash
 
-COPY ./scripts/wait-for-mongo.sh /usr/local/bin/wait-for-mongo.sh
-COPY ./scripts/wait-for-http-health.sh /usr/local/bin/wait-for-http-health.sh
-COPY ./scripts/wait-for.sh /usr/local/bin/wait-for.sh
+COPY --from=build /app/scripts/wait-for-mongo.sh /usr/local/bin/wait-for-mongo.sh
+COPY --from=build /app/scripts/wait-for-http-health.sh /usr/local/bin/wait-for-http-health.sh
+COPY --from=build /app/scripts/wait-for.sh /usr/local/bin/wait-for.sh
+
 RUN chmod +x /usr/local/bin/wait-for-mongo.sh
 RUN chmod +x /usr/local/bin/wait-for-http-health.sh
 RUN chmod +x /usr/local/bin/wait-for.sh
