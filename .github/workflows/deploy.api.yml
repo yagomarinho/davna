@@ -47,12 +47,14 @@ jobs:
           exit 0
 
       - name: Build ffmpeg api
+        if: ${{ needs.watch.outputs.ffmpeg == 'true' }}
         env:
           FFMPEG_IMAGE_NAME: ${{ secrets.DOCKER_HUB_FFMPEG_IMAGE_NAME }}
         run: |
           docker build -t "$FFMPEG_IMAGE_NAME" -f apps/ffmpeg/Dockerfile .
 
       - name: Login to Docker Hub
+        if: ${{ needs.watch.outputs.ffmpeg == 'true' }}
         env:
           USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -60,12 +62,14 @@ jobs:
           echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
 
       - name: Push to Registry
+        if: ${{ needs.watch.outputs.ffmpeg == 'true' }}
         env:
           FFMPEG_IMAGE_NAME: ${{ secrets.DOCKER_HUB_FFMPEG_IMAGE_NAME }}
         run: |
           docker push "$FFMPEG_IMAGE_NAME"
 
       - name: Logout Docker Hub
+        if: ${{ needs.watch.outputs.ffmpeg == 'true' }}
         run: docker logout
 
   deploy-ffmpeg:
