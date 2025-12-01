@@ -4,6 +4,14 @@ set -e
 hostport="$1"
 shift || true
 
+case "$hostport" in
+  *:*) ;;
+  *)
+    echo "Error: expected host:port, got '$hostport'" >&2
+    exit 2
+    ;;
+esac
+
 host=$(echo "$hostport" | cut -d: -f1)
 port=$(echo "$hostport" | cut -d: -f2)
 
