@@ -23,6 +23,7 @@ COPY --from=build /app/apps/ffmpeg/package.build.json ./package.json
 RUN yarn install --frozen-lockfile --production
 
 RUN addgroup -S app && adduser -S app -G app
+RUN chown -R app:app /app
 USER app
 
 ENV NODE_ENV=production

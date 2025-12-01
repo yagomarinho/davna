@@ -32,6 +32,10 @@ export function getDuration(
       })
     })
 
+    p.on('error', err => {
+      reject(err)
+    })
+
     p.stdin.write(buffer)
     p.stdin.end()
   })
