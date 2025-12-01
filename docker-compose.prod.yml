@@ -47,7 +47,7 @@ services:
     ports:
       - '3333:3333'
     env_file:
-      - .env
+      - .env.prod
     entrypoint:
       [
         '/usr/local/bin/wait-for.sh',
