@@ -15,42 +15,29 @@ interface Env {
 export const refreshSessionHandler = Handler(
   request =>
     async ({ sessions, signer, config }: Env) => {
-      try {
-        const user_agent = request.metadata.headers['user-agent'] ?? ''
-        const bearer =
-          (request.metadata.headers[
-            config.auth.jwt.refresh_token.headerName
-          ] as string | undefined) ?? ''
+      const user_agent = request.metadata.headers['user-agent'] ?? ''
+      const bearer =
+        (request.metadata.headers[config.auth.jwt.refresh_token.headerName] as
+          | string
+          | undefined) ?? ''
 
-        if (!bearer) throw new Error('Invalid Session')
-
-        const signature: string = tokenFromBearer(bearer)
-
-        const result = await refreshSession({
-          signature,
-          user_agent,
-        })({
-          sessions,
-          signer,
-          config,
+      if (!bearer)
+        return Response({
+          data: { message: 'Not Authorized. JWT is Missing' },
+          metadata: {
+            headers: {
+              status: 401,
+            },
+          },
         })
 
-        if (isLeft(result))
-          return Response({
-            data: {
-              message: 'Invalid Session',
-            },
-            metadata: {
-              headers: {
-                status: 401,
-              },
-            },
-          })
+      let signature: string
 
-        return Response.data(result.value)
+      try {
+        signature = tokenFromBearer(bearer)
       } catch {
         return Response({
-          data: { message: 'Invalid Session' },
+          data: { message: 'Not Authorized. Invalid Token' },
           metadata: {
             headers: {
               status: 401,
@@ -58,5 +45,28 @@ export const refreshSessionHandler = Handler(
           },
         })
       }
+
+      const result = await refreshSession({
+        signature,
+        user_agent,
+      })({
+        sessions,
+        signer,
+        config,
+      })
+
+      if (isLeft(result))
+        return Response({
+          data: {
+            message: 'Invalid Session',
+          },
+          metadata: {
+            headers: {
+              status: 401,
+            },
+          },
+        })
+
+      return Response.data(result.value)
     },
 )

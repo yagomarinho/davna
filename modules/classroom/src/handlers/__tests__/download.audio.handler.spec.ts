@@ -25,7 +25,7 @@ describe('downloadAudioHandler', () => {
     jest.clearAllMocks()
   })
 
-  it('should return 400 Response when downloadAudio service returns Left (error)', async () => {
+  it('should return 404 Response when downloadAudio service returns Left (error)', async () => {
     const req = Request.metadata({
       params: { id: audio_id },
     })
@@ -43,7 +43,7 @@ describe('downloadAudioHandler', () => {
       expect.objectContaining({
         data: expect.objectContaining({ message: errorPayload.message }),
         metadata: expect.objectContaining({
-          headers: expect.objectContaining({ status: 400 }),
+          headers: expect.objectContaining({ status: 404 }),
         }),
       }),
     )

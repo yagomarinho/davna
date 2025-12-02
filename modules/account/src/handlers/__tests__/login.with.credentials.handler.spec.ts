@@ -70,7 +70,7 @@ describe('loginWithCredentialsHandler', () => {
     expect(result).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({ message: 'Unauthorized to login' }),
-        metadata: expect.objectContaining({ status: 401 }),
+        metadata: expect.objectContaining({ headers: { status: 401 } }),
       }),
     )
 

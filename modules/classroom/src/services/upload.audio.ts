@@ -62,7 +62,10 @@ export const uploadAudio = Service<Request, Env, Audio>(
 
       audio = Audio.create({
         ...audio,
-        src: `${process.env.API_BASE_URL}/audio/download/${audio.id}`,
+        // A construção do SRC pode vir a mudar no futuro, então
+        // preciso deixar isso em aberto e colocar a solução externa
+        // ou seja usar outro padrão
+        src: `${process.env.API_BASE_URL}/audio/${audio.id}`,
       })
 
       audio = await audios.set(audio)

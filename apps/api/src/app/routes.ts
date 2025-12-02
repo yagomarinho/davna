@@ -14,11 +14,11 @@ import { healthCheckHandler } from '@davna/health'
 import { appendLeadHandler } from '@davna/lead'
 
 import { Env } from './env'
-import config from '../config'
 
 export const routes = ({
   repositories: { accounts, leads, audios, sessions },
   providers: { auth, signer, multimedia, storage },
+  constants: { config },
 }: Env): Route[] => [
   Route({
     method: 'post',
@@ -79,7 +79,7 @@ export const routes = ({
     },
   }),
   Route({
-    path: '/audio/download/:id',
+    path: '/audio/:id',
     handler: handlerPipe(
       apiKeyAuthorization as any,
       ensureAuthenticated as any,
@@ -96,7 +96,7 @@ export const routes = ({
   }),
   Route({
     method: 'post',
-    path: '/audio/upload',
+    path: '/audio',
     handler: handlerPipe(
       apiKeyAuthorization as any,
       ensureAuthenticated as any,

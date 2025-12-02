@@ -41,7 +41,7 @@ export function App({ env, port }: Config) {
   exposed.use(limiter())
   exposed.use(helmet())
 
-  exposed.post('/audio/upload', upload.single('file'), (req, res, next) => {
+  exposed.post('/audio', upload.single('file'), (req, res, next) => {
     if (!req.file)
       return res.status(400).json({ message: 'Audio file is missing' })
     ;(req as any).ctx = { file: req.file }

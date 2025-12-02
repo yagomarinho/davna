@@ -18,11 +18,14 @@ export const uploadAudioHandler = Handler(request => async (env: Env) => {
     account: { id: owner_id },
   } = request.metadata
 
-  let { name, mime, duration } = await env.multimedia.convert({
+  const converted = await env.multimedia.convert({
     buffer: file.buffer,
     name: file.originalname,
     mime: file.mimetype,
   })
+
+  const { buffer } = converted
+  let { name, mime, duration } = converted
 
   try {
     name = await string().required().validate(name)
@@ -63,7 +66,7 @@ export const uploadAudioHandler = Handler(request => async (env: Env) => {
     })
 
   const result = await uploadAudio({
-    buffer: file.buffer,
+    buffer,
     duration,
     mime,
     name,

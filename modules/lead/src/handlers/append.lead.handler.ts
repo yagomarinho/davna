@@ -16,7 +16,9 @@ export const appendLeadHandler = Handler(request => async ({ leads }: Env) => {
     return Response({
       data: { message: 'Invalid Lead Contact' },
       metadata: {
-        status: 400,
+        Headers: {
+          status: 400,
+        },
       },
     })
 

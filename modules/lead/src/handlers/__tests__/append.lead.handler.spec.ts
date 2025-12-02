@@ -38,7 +38,9 @@ describe('appendLeadHandler', () => {
       expect.objectContaining({
         data: expect.objectContaining({ message: 'Invalid Lead Contact' }),
         metadata: expect.objectContaining({
-          status: 400,
+          headers: {
+            status: 400,
+          },
         }),
       }),
     )

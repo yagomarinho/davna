@@ -44,7 +44,19 @@ export const ensureAuthenticated = Middleware<Env>(
           },
         })
 
-      const token = tokenFromBearer(bearer)
+      let token: string
+      try {
+        token = tokenFromBearer(bearer)
+      } catch {
+        return Response({
+          data: { message: 'Not Authorized. Invalid Bearer Token' },
+          metadata: {
+            headers: {
+              status: 401,
+            },
+          },
+        })
+      }
 
       const result = await getSessionInfo(token)({
         signer,

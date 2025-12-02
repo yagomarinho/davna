@@ -19,7 +19,7 @@ export const downloadAudioHandler = Handler(request => async (env: Env) => {
       data: { message: result.value.message },
       metadata: {
         headers: {
-          status: 400,
+          status: 404,
         },
       },
     })

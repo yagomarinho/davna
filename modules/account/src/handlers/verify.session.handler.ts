@@ -22,9 +22,29 @@ export const verifySessionHandler = Handler(
           | string
           | undefined) ?? ''
 
-      if (!bearer) throw new Error('Invalid Session')
+      if (!bearer)
+        return Response({
+          data: { message: 'Not Authorized. JWT is Missing' },
+          metadata: {
+            headers: {
+              status: 401,
+            },
+          },
+        })
 
-      const signature = tokenFromBearer(bearer)
+      let signature: string
+      try {
+        signature = tokenFromBearer(bearer)
+      } catch {
+        return Response({
+          data: { message: 'Not Authorized. Invalid Token' },
+          metadata: {
+            headers: {
+              status: 401,
+            },
+          },
+        })
+      }
 
       const result = await verifySession({
         signature,

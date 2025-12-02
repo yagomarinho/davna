@@ -37,7 +37,9 @@ export const loginWithCredentialsHandler = Handler(
         return Response({
           data: { message: 'Unauthorized to login' },
           metadata: {
-            status: 401,
+            headers: {
+              status: 401,
+            },
           },
         })
 

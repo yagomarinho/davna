@@ -51,6 +51,7 @@ export interface Env {
     storage: StorageConstructor
   }
   constants: {
+    config: typeof config
     tempDir: string
   }
 }
@@ -96,10 +97,10 @@ export const Env = async (): Promise<Env> => {
     multimedia: Multimedia(),
     messageHandler: MessageHandler,
     storage: Storage,
-    config,
   }
 
   const constants = {
+    config,
     tempDir: resolve(__dirname, process.env.RELATIVE_TMP_DIR_PATH!),
   }
 
