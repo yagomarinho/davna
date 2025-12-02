@@ -13,10 +13,10 @@
   "scripts": {
     "api:down": "docker compose -f ./docker-compose.yml down",
     "api:up": "docker compose -f ./docker-compose.yml up -d",
-    "rm:node_modules": "node scripts/rm.node_modules.js",
+    "rm:node_modules": "node scripts/rm.js node_modules",
     "test:api-tsc": "node scripts/api.tsc.monitor.js",
     "test:modules": "tsnd --respawn=false --no-watch scripts/run.command.ts modules test",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b --noEmit"
   },
   "author": {
     "name": "Yago Marinho",

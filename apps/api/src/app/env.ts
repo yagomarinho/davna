@@ -30,7 +30,7 @@ import {
 } from '@davna/classroom'
 import { Lead, LeadRepository } from '@davna/lead'
 
-import config from './config'
+import config from '../config'
 import { Multimedia } from './multimedia'
 
 export interface Env {
@@ -100,7 +100,7 @@ export const Env = async (): Promise<Env> => {
   }
 
   const constants = {
-    tempDir: resolve(__dirname, '../temp'),
+    tempDir: resolve(__dirname, process.env.RELATIVE_TMP_DIR_PATH!),
   }
 
   return {

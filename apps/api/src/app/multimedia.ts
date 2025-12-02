@@ -1,5 +1,5 @@
 import { MultimediaProvider } from '@davna/classroom'
-import { ffmpeg } from '../../../services/ffmpeg'
+import { ffmpeg } from '@davna/ffmpeg.sdk'
 
 export function Multimedia(): MultimediaProvider {
   const metadata: MultimediaProvider['metadata'] = async ({

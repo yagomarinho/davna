@@ -3,13 +3,13 @@ import type { Server as HTTPServer } from 'node:http'
 import { Server } from 'socket.io'
 
 import { isLeft, Request } from '@davna/core'
-
-import { Env } from './env'
 import { verifyWebsocketAuth } from '@davna/account'
 import {
   appendAndReplyHandler,
   initializeClassroomHandler,
 } from '@davna/classroom'
+
+import { Env } from './env'
 
 export function createWsServer(server: HTTPServer, env: Env) {
   const io = new Server(server)

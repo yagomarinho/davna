@@ -14,7 +14,7 @@ import { healthCheckHandler } from '@davna/health'
 import { appendLeadHandler } from '@davna/lead'
 
 import { Env } from './env'
-import config from './config'
+import config from '../config'
 
 export const routes = ({
   repositories: { accounts, leads, audios, sessions },

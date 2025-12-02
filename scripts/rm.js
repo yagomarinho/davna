@@ -4,6 +4,22 @@ const { readdirSync, readFileSync, statSync, rmSync } = require('node:fs')
 const { resolve } = require('node:path')
 
 function main() {
+  const folder = process.argv[2].trim()
+  const folderToAvoidDelete = [
+    'src',
+    'api',
+    'app',
+    'public',
+    'config',
+    'temp',
+    'tmp',
+  ]
+
+  if (folderToAvoidDelete.includes(folder)) {
+    console.error('Invalid folder to remove')
+    return process.exit(2)
+  }
+
   const nm = JSON.parse(
     readFileSync(resolve(__dirname, '../package.json'), {
       encoding: 'utf-8',
@@ -19,16 +35,14 @@ function main() {
     .flatMap(path => {
       try {
         const folders = readdirSync(path, { withFileTypes: true })
-        const paths = folders.map(
-          dirent => dirent.path + '/' + dirent.name + '/node_modules',
-        )
+        const paths = folders.map(dirent => resolve(path, dirent.name, folder))
 
         return paths
       } catch {
         return
       }
     })
-    .concat(resolve(__dirname, '../node_modules'))
+    .concat(resolve(__dirname, '../', folder))
     .filter(Boolean)
     .map(path => {
       try {

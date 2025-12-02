@@ -1,29 +1,53 @@
-import { routes } from '../routes'
-
-import { Account } from '../../../../modules/account/src/entities/account'
-import { Session } from '../../../../modules/account/src/entities/session'
+import request from 'supertest'
 import { InMemoryRepository } from '@davna/repositories'
-import { Application } from '@davna/applications'
 
-describe('application tests', () => {
-  const env = {
-    repositories: {
-      accounts: InMemoryRepository<Account>(),
-      sessions: InMemoryRepository<Session>(),
+import type { Env } from '../app'
+import { App } from '../app'
+
+import { resolve } from 'node:path'
+
+function makeEnv(): Env {
+  return {
+    constants: {
+      tempDir: resolve(__dirname, '../../temp'),
     },
     providers: {
-      signer: { sign: jest.fn(), decode: jest.fn() },
-      auth: { authenticate: jest.fn(), getUser: jest.fn() },
+      auth,
+      gpt,
+      messageHandler,
+      multimedia,
+      signer,
+      storage,
+    },
+    repositories: {
+      accounts: InMemoryRepository(),
+      audios: InMemoryRepository(),
+      classrooms: InMemoryRepository(),
+      leads: InMemoryRepository(),
+      messages: InMemoryRepository(),
+      sessions: InMemoryRepository(),
     },
   }
+}
 
-  const app = Application({ routes: routes(env), port: 3333 }).exposeApp()
+describe('application tests', () => {
+  const env = makeEnv()
+
+  let app: any
+
+  beforeAll(() => {
+    const a = App({ env, port: 3333 })
+    a.mount()
+    app = a.exposeApp()
+  })
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('should be able to sum 2 + 2', () => {
-    expect(2 + 2).toBe(4)
+  test('health check', async () => {
+    const res = await request(app).get('/health').expect(200)
+
+    expect(res.body.healthy).toBeTruthy()
   })
 })
