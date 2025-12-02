@@ -1,6 +1,6 @@
 import request from 'supertest'
-import { App } from '../app'
-import { Env } from '../env'
+import { App } from '../app/app'
+import { Env } from '../app/env'
 import { createReadStream } from 'node:fs'
 import { resolve } from 'node:path'
 

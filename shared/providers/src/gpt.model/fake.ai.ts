@@ -14,10 +14,10 @@ export function FakeAI({
 }: FakeAIConfig): GPTModel {
   const respond: GPTModel['respond'] = async () => textToRespond
 
-  const transcribe: GPTModel['transcribe'] = async () =>
-    readFile(pathToSpeech, { flag: 'r' })
+  const transcribe: GPTModel['transcribe'] = async () => textFromSpeech
 
-  const synthesize: GPTModel['synthesize'] = async () => textFromSpeech
+  const synthesize: GPTModel['synthesize'] = async () =>
+    readFile(pathToSpeech, { flag: 'r' })
 
   return {
     respond,

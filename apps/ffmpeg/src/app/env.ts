@@ -1,5 +1,5 @@
-import type { AudioMetadataProvider } from './audio.metadata.provider'
-import { getDuration } from './get.duration'
+import type { AudioMetadataProvider } from '../providers/audio.metadata.provider'
+import { getDuration } from '../services/get.duration'
 
 export type Config = {
   auth: {

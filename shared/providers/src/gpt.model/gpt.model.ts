@@ -8,16 +8,15 @@ export interface Respond {
   input: GPTInput[]
 }
 
-export interface Transcribe {
+export interface Synthesize {
   text: string
 }
-
-export interface Synthesize {
+export interface Transcribe {
   path: string
 }
 
 export interface GPTModel {
   readonly respond: (data: Respond) => Promise<string>
-  readonly transcribe: (data: Transcribe) => Promise<Buffer<ArrayBufferLike>>
-  readonly synthesize: (data: Synthesize) => Promise<string>
+  readonly transcribe: (data: Transcribe) => Promise<string>
+  readonly synthesize: (data: Synthesize) => Promise<Buffer<ArrayBufferLike>>
 }

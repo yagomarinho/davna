@@ -5,8 +5,8 @@ const path = resolve(__dirname, '../../../.env')
 dotenv.config({ path })
 
 /* --------------------------------------------- */
-import { App } from './app'
-import { Env } from './env'
+import { App } from './app/app'
+import { Env } from './app/env'
 
 const app = App(Env())
 

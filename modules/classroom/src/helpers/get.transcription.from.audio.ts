@@ -36,7 +36,7 @@ export function getTranscriptionFromAudio(audio_id: string) {
 
     await writeFile(path, buffer, { flag: 'w' })
 
-    const transcription = await gpt.synthesize({
+    const transcription = await gpt.transcribe({
       path,
     })
 

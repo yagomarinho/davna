@@ -1,7 +1,7 @@
 import { handlerPipe } from '@davna/applications'
 import { Route } from '@davna/core'
 import { apiKeyAuthorization } from '@davna/middlewares'
-import { getDurationHandler } from './get.audio.duration'
+import { getDurationHandler } from '../handlers/get.audio.duration'
 import { healthCheckHandler } from '@davna/health'
 import { Env } from './env'
 

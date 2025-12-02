@@ -6,6 +6,8 @@
     "build": "rimraf ./dist && npm run typecheck && node build.js",
     "dev": "tsnd --respawn --transpile-only --ignore-watch node_modules src/index.ts",
     "test": "jest",
+    "test:handlers": "jest src/handlers/",
+    "test:services": "jest src/services/",
     "typecheck": "tsc --noEmit --project ./tsconfig.build.json"
   },
   "author": {

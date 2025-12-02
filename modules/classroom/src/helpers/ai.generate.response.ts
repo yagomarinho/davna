@@ -36,7 +36,7 @@ export function AIGenerateResponse({ input }: Request) {
       ],
     })
 
-    const buffer = await gpt.transcribe({
+    const buffer = await gpt.synthesize({
       text: transcription,
     })
 

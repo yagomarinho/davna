@@ -23,24 +23,24 @@ export function ChatGPT({
     return response.output_text
   }
 
-  const transcribe: GPTModel['transcribe'] = async ({ text }) => {
-    const response = await openai.audio.speech.create({
-      model: 'gpt-4o-mini-tts',
-      response_format: 'opus',
-      voice: 'alloy',
-      input: text,
-    })
-
-    return Buffer.from(await response.arrayBuffer())
-  }
-
-  const synthesize: GPTModel['synthesize'] = async ({ path }) => {
+  const transcribe: GPTModel['transcribe'] = async ({ path }) => {
     const response = await openai.audio.transcriptions.create({
       file: createReadStream(path),
       model: 'gpt-4o-transcribe',
     })
 
     return response.text
+  }
+
+  const synthesize: GPTModel['synthesize'] = async ({ text }) => {
+    const response = await openai.audio.speech.create({
+      model: 'gpt-4o-mini-tts',
+      response_format: 'aac',
+      voice: 'alloy',
+      input: text,
+    })
+
+    return Buffer.from(await response.arrayBuffer())
   }
 
   return {
