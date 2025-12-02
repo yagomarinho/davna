@@ -51,8 +51,8 @@ Env().then(env => {
 
 function limiter() {
   return rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 25,
+    windowMs: 60 * 1000,
+    limit: 2500,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_, response) => {

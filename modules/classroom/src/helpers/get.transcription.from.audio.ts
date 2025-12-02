@@ -10,10 +10,11 @@ interface Env {
   audios: Repository<Audio>
   storage: StorageConstructor
   gpt: GPTModel
+  tempDir: string
 }
 
 export function getTranscriptionFromAudio(audio_id: string) {
-  return async ({ audios, storage, gpt }: Env) => {
+  return async ({ audios, storage, gpt, tempDir }: Env) => {
     const audio = await audios.get(audio_id)
 
     if (!audio) throw new Error('No audio founded')
@@ -26,11 +27,8 @@ export function getTranscriptionFromAudio(audio_id: string) {
 
     if (!buffer) throw new Error('No audio founded on storage')
 
-    const relativeTempPath = process.env.RELATIVE_TMP_DIR_PATH || ''
-    const dirPath = resolve(__dirname, relativeTempPath)
-
     const path = resolve(
-      dirPath,
+      tempDir,
       `${audio.name}.${audio.mime.replace('audio/', '')}`,
     )
 
@@ -51,7 +49,6 @@ export function getTranscriptionFromAudio(audio_id: string) {
       ],
     })
 
-    // apagar o arquivo temp
     rm(path)
 
     return {

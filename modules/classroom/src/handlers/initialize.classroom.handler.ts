@@ -10,6 +10,7 @@ import { teacherGeneratesResponse } from '../services/teacher.generates.response
 import { MessageHandler } from '../utils/message.handler'
 import { remainingConsumption } from '../helpers/remaining.consumption'
 import { StorageConstructor } from '../utils/storage'
+import { MultimediaProvider } from '../providers'
 
 interface Metadata {
   account: Identifier
@@ -21,6 +22,7 @@ interface Env {
   classrooms: Repository<Classroom>
   messages: Repository<Message>
   gpt: GPTModel
+  multimedia: MultimediaProvider
   messageHandler: MessageHandler
   storage: StorageConstructor
 }
@@ -33,6 +35,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
       classrooms,
       messages,
       gpt,
+      multimedia,
       messageHandler,
       storage,
     }) => {
@@ -84,6 +87,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         classrooms,
         messages,
         gpt,
+        multimedia,
         messageHandler,
         storage,
       })

@@ -1,4 +1,6 @@
 import { Left, Repository, Right } from '@davna/core'
+import { FakeAI } from '@davna/providers'
+import { InMemoryRepository } from '@davna/repositories'
 
 import { Audio } from '../../entities/audio'
 import { Classroom } from '../../entities/classroom'
@@ -8,8 +10,6 @@ import { getTranscriptionFromAudio as getTranscriptionFromAudioService } from '.
 import { appendMessageToClassroom as appendMessageToClassroomService } from '../append.message.to.classroom'
 import { verifyConsume as verifyConsumeService } from '../verify.consume'
 import { transcribeAndAppend } from '../transcribe.and.append'
-import { FakeAI } from '@davna/providers'
-import { InMemoryRepository } from '@davna/repositories'
 
 jest.mock('../../helpers/get.transcription.from.audio', () => ({
   getTranscriptionFromAudio: jest.fn(),
@@ -30,6 +30,7 @@ const appendMessageToClassroom =
 const verifyConsume = verifyConsumeService as unknown as jest.Mock
 
 describe('transcribeAndAppend (service) - updated behavior', () => {
+  const tempDir = ''
   let audios: Repository<Audio>
   let classrooms: Repository<Classroom>
   let messages: Repository<Message>
@@ -96,6 +97,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       gpt,
       messageHandler,
       storage,
+      tempDir,
     })
 
     expect(result).toEqual(
@@ -125,6 +127,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       gpt,
       messageHandler,
       storage,
+      tempDir,
     })
 
     expect(verifyConsume).toHaveBeenCalledTimes(1)
@@ -180,6 +183,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       gpt,
       messageHandler,
       storage,
+      tempDir,
     })
 
     expect(verifyConsume).toHaveBeenCalledTimes(1)
@@ -243,6 +247,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
       gpt,
       messageHandler,
       storage,
+      tempDir,
     })
 
     expect(getTranscriptionFromAudio).toHaveBeenCalledTimes(1)
@@ -274,6 +279,7 @@ describe('transcribeAndAppend (service) - updated behavior', () => {
         gpt,
         messageHandler,
         storage,
+        tempDir,
       }),
     ).rejects.toThrow('Transcription failure')
 

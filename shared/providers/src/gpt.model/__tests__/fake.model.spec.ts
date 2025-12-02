@@ -29,13 +29,13 @@ describe('FakeAI', () => {
     expect(result).toEqual('hello world')
   })
 
-  it('should call readFile and return the file buffer on transcribe', async () => {
+  it('should call readFile and return the file buffer on synthesize', async () => {
     const fakeBuffer = Buffer.from([1, 2, 3])
     readFileMock.mockResolvedValueOnce(fakeBuffer)
 
     const ai = FakeAI(config)
 
-    const result = await ai.transcribe({ text: 'ignored' })
+    const result = await ai.synthesize({ text: 'ignored' })
 
     expect(readFileMock).toHaveBeenCalledTimes(1)
     expect(readFileMock).toHaveBeenCalledWith('/tmp/audio.opus', { flag: 'r' })
@@ -45,7 +45,7 @@ describe('FakeAI', () => {
   it('should return transcribe on speechToText', async () => {
     const ai = FakeAI(config)
 
-    const text = await ai.synthesize({ path: 'ignored' })
+    const text = await ai.transcribe({ path: 'ignored' })
 
     expect(text).toEqual('transcribed text')
   })

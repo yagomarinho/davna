@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 
-import { convertAudioToAAC } from '../convert.audio.to.m4a'
+import { convertAudioToAAC } from '../convert.audio.to.aac'
 
 jest.setTimeout(20_000)
 

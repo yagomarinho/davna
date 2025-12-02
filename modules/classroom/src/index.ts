@@ -1,4 +1,5 @@
 export * from './entities'
 export * from './handlers'
+export * from './providers'
 export * from './repositories'
 export * from './utils'

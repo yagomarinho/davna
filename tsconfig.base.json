@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "isolatedModules": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "allowJs": false,
+    "noEmit": true,
+    "noImplicitAny": false
+  },
+  "include": ["apps", "config", "modules", "shared"],
+  "exclude": ["node_modules", "coverage", "dist", "*.js"]
+}

@@ -5,6 +5,7 @@ import { Audio } from '../../entities/audio'
 import { uploadAudio as service } from '../../services/upload.audio'
 import { uploadAudioHandler } from '../upload.audio.handler'
 import { StorageConstructor } from '../../utils/storage'
+import { MultimediaProvider } from '../../providers'
 
 jest.mock('../../services/upload.audio', () => ({
   uploadAudio: jest.fn(),
@@ -19,6 +20,7 @@ describe('uploadAudioHandler', () => {
 
   let audios: Repository<Audio>
   let storage: jest.Mocked<StorageConstructor>
+  let multimedia: jest.Mocked<MultimediaProvider>
 
   beforeEach(() => {
     audios = InMemoryRepository<Audio>()
@@ -27,6 +29,14 @@ describe('uploadAudioHandler', () => {
       download: jest.fn(),
       check: jest.fn(),
     })
+    multimedia = {
+      metadata: jest.fn(),
+      convert: jest.fn().mockImplementation(({ name, mime }) => ({
+        name,
+        mime,
+        duration: 120,
+      })),
+    }
     jest.clearAllMocks()
   })
 
@@ -50,6 +60,7 @@ describe('uploadAudioHandler', () => {
     const result = await uploadAudioHandler(req)({
       audios,
       storage,
+      multimedia,
     })
 
     expect(result).toBeDefined()
@@ -80,6 +91,7 @@ describe('uploadAudioHandler', () => {
     const result = await uploadAudioHandler(req)({
       audios,
       storage,
+      multimedia,
     })
 
     expect(result).toBeDefined()
@@ -113,6 +125,7 @@ describe('uploadAudioHandler', () => {
     const result = await uploadAudioHandler(req)({
       audios,
       storage,
+      multimedia,
     })
 
     expect(result).toBeDefined()
@@ -164,6 +177,7 @@ describe('uploadAudioHandler', () => {
     const result = await uploadAudioHandler(req)({
       audios,
       storage,
+      multimedia,
     })
 
     expect(result).toBeDefined()

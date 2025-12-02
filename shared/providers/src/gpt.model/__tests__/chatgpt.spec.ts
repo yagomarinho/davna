@@ -73,7 +73,7 @@ describe('ChatGPT module', () => {
     expect(result).toEqual(fakeOutput)
   })
 
-  it('should call OpenAI.audio.speech.create and return Buffer for transcribe()', async () => {
+  it('should call OpenAI.audio.speech.create and return Buffer for synthesize()', async () => {
     // mock a response whose arrayBuffer resolves to an ArrayBuffer
     const fakeArray = new Uint8Array([1, 2, 3]).buffer
     const fakeResponse = {
@@ -84,7 +84,7 @@ describe('ChatGPT module', () => {
     const client = ChatGPT({ apiKey: 'another-key' })
 
     const text = 'Hello text to speech'
-    const buf = await client.transcribe({ text })
+    const buf = await client.synthesize({ text })
 
     expect(audioSpeechCreateMock).toHaveBeenCalledTimes(1)
     const callArg = audioSpeechCreateMock.mock.calls[0][0]
@@ -110,7 +110,7 @@ describe('ChatGPT module', () => {
 
     const client = ChatGPT({ apiKey: 'key-tts' })
 
-    const result = await client.synthesize({ path: '/some/path/file.mp3' })
+    const result = await client.transcribe({ path: '/some/path/file.mp3' })
 
     expect(createReadStreamMock).toHaveBeenCalledTimes(1)
     expect(createReadStreamMock).toHaveBeenCalledWith('/some/path/file.mp3')

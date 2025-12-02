@@ -18,7 +18,7 @@ import config from './config'
 
 export const routes = ({
   repositories: { accounts, leads, audios, sessions },
-  providers: { auth, signer, storage },
+  providers: { auth, signer, multimedia, storage },
 }: Env): Route[] => [
   Route({
     method: 'post',
@@ -109,6 +109,7 @@ export const routes = ({
       signer,
       storage,
       config,
+      multimedia,
     },
   }),
   Route({

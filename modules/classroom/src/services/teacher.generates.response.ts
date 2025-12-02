@@ -11,6 +11,7 @@ import { AIGenerateResponse } from '../helpers/ai.generate.response'
 import { appendMessageToClassroom } from './append.message.to.classroom'
 import { verifyConsume } from './verify.consume'
 import { StorageConstructor } from '../utils/storage'
+import { MultimediaProvider } from '../providers'
 
 interface Data {
   classroom: Classroom
@@ -23,6 +24,7 @@ interface Env {
   messages: Repository<Message>
   gpt: GPTModel
   messageHandler: MessageHandler
+  multimedia: MultimediaProvider
   storage: StorageConstructor
 }
 
@@ -34,7 +36,15 @@ interface Response {
 
 export const teacherGeneratesResponse = Service<Data, Env, Response>(
   ({ classroom, teacher_id }) =>
-    async ({ audios, classrooms, messages, gpt, messageHandler, storage }) => {
+    async ({
+      audios,
+      classrooms,
+      messages,
+      gpt,
+      messageHandler,
+      multimedia,
+      storage,
+    }) => {
       const result = await verifyConsume({ classroom })({
         classrooms,
         messages,
@@ -68,6 +78,7 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
         storage,
         audios,
         gpt,
+        multimedia,
       })
 
       const { audio: data, transcription, translation } = AIResult

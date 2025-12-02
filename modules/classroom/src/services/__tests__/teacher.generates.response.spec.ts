@@ -23,6 +23,11 @@ jest.mock('../verify.consume', () => ({
   verifyConsume: jest.fn(),
 }))
 
+jest.mock('node:fs/promises', () => ({
+  writeFile: jest.fn(),
+  rm: jest.fn(),
+}))
+
 const AIGenerateResponse = AIGenerateResponseService as unknown as jest.Mock
 const appendMessageToClassroom = appendMessageService as unknown as jest.Mock
 const verifyConsume = verifyConsumeService as unknown as jest.Mock
@@ -33,6 +38,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
   let audios: Repository<Audio>
   let storage: any
   let messageHandler: any
+  let multimedia: any
   const gpt = FakeAI({
     textToRespond: 'to respond',
     pathToSpeech: '/path',
@@ -80,6 +86,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
     })
 
     messageHandler = { process: jest.fn() }
+    multimedia = { metadata: jest.fn(), convert: jest.fn() }
 
     await classrooms.set(classroom)
     for (const m of messagesSeed) await messages.set(m)
@@ -136,6 +143,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       classrooms,
       messages,
       gpt,
+      multimedia,
       messageHandler,
       storage,
     })
@@ -185,6 +193,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       classrooms,
       messages,
       gpt,
+      multimedia,
       messageHandler,
       storage,
     })
@@ -224,6 +233,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       classrooms,
       messages,
       gpt,
+      multimedia,
       messageHandler,
       storage,
     })
@@ -253,6 +263,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
         classrooms,
         messages,
         gpt,
+        multimedia,
         messageHandler,
         storage,
       }),

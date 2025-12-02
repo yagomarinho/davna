@@ -1,14 +1,15 @@
 import { number, string } from 'yup'
 import { Handler, isLeft, Repository, Response } from '@davna/core'
-import { getDuration } from '../utils/get.duration'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { uploadAudio } from '../services/upload.audio'
 import { StorageConstructor } from '../utils/storage'
+import { MultimediaProvider } from '../providers'
 
 interface Env {
   audios: Repository<Audio>
   storage: StorageConstructor
+  multimedia: MultimediaProvider
 }
 
 export const uploadAudioHandler = Handler(request => async (env: Env) => {
@@ -17,11 +18,11 @@ export const uploadAudioHandler = Handler(request => async (env: Env) => {
     account: { id: owner_id },
   } = request.metadata
 
-  let name: string, mime: string, duration: number
-
-  name = file.originalname
-  mime = file.mimetype
-  duration = await getDuration({ buffer: file.buffer, name, mime })
+  let { name, mime, duration } = await env.multimedia.convert({
+    buffer: file.buffer,
+    name: file.originalname,
+    mime: file.mimetype,
+  })
 
   try {
     name = await string().required().validate(name)

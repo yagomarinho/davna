@@ -13,6 +13,7 @@ import { Emitter } from '../helpers/emitter'
 
 import { transcribeAndAppend } from '../services/transcribe.and.append'
 import { remainingConsumption } from '../helpers/remaining.consumption'
+import { MultimediaProvider } from '../providers'
 
 interface Metadata {
   account: Identifier
@@ -30,8 +31,10 @@ interface Env {
   classrooms: Repository<Classroom>
   messages: Repository<Message>
   gpt: GPTModel
+  multimedia: MultimediaProvider
   messageHandler: MessageHandler
   storage: StorageConstructor
+  tempDir: string
 }
 
 export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
@@ -42,8 +45,10 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       emitter,
       messages,
       gpt,
+      multimedia,
       messageHandler,
       storage,
+      tempDir,
     }) => {
       const { classroom_id, participant_id, data } =
         await messageSchema.validate({
@@ -62,6 +67,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
         gpt,
         messageHandler,
         storage,
+        tempDir,
       })
 
       if (isLeft(result)) {
@@ -107,6 +113,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
         classrooms,
         messages,
         gpt,
+        multimedia,
         messageHandler,
         storage,
       })

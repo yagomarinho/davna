@@ -1,10 +1,12 @@
-import request from 'supertest'
-import { App } from '../app/app'
-import { Env } from '../app/env'
 import { createReadStream } from 'node:fs'
 import { resolve } from 'node:path'
+import request from 'supertest'
 
-const env = Env()
+import { App } from '../app/app'
+import { Env } from '../app/env'
+
+import { AudioInfo } from '../services/get.audio.metadata'
+import { Audio } from '../services/convert.audio.to.aac'
 
 function readFileAsBuffer(filePath: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -19,10 +21,9 @@ function readFileAsBuffer(filePath: string): Promise<Buffer> {
 
 describe('application tests', () => {
   let app: any
+  const env = Env()
 
   beforeAll(async () => {
-    process.env.NODE_ENV = 'production'
-
     const a = App(env)
     a.mount()
     app = a.exposeApp()
@@ -32,25 +33,66 @@ describe('application tests', () => {
     jest.clearAllMocks()
   })
 
+  test('health check', async () => {
+    const res = await request(app).get('/health').expect(200)
+
+    expect(res.body.healthy).toBeTruthy()
+  })
+
   it('uploads audio (buffer) and returns duration', async () => {
-    const filePath = resolve(__dirname, '../../temp/audiotest.m4a')
+    const filePath = resolve(env.config.tempDir, 'audiotest.m4a')
     const audio = await readFileAsBuffer(filePath)
 
     const res = await request(app)
-      .post('/')
+      .post('/metadata')
       .set(
         env.config.auth.apiKey.headerName,
         'apikey=' + env.config.auth.apiKey.key,
       )
       .attach('file', audio, {
         filename: 'audiotest.m4a',
-        contentType: 'audio/wav',
+        contentType: 'audio/mp4',
       })
       .expect(200)
 
-    expect(res.body).toHaveProperty('duration')
-    expect(res.body.duration).toEqual(expect.any(Number))
+    const metadata: AudioInfo = res.body
+    expect(metadata).toEqual(
+      expect.objectContaining({
+        name: 'audiotest.m4a',
+        mime: 'audio/mp4',
+        codec: 'aac',
+        duration: 12.543771,
+        format: expect.stringContaining('mp4'),
+      }),
+    )
   })
 
-  afterAll(async () => {})
+  it('converts audio ogg (buffer) and returns an audio acc codec', async () => {
+    const filePath = resolve(env.config.tempDir, 'audiotest.ogg')
+    const audio = await readFileAsBuffer(filePath)
+
+    const res = await request(app)
+      .post('/convert')
+      .set(
+        env.config.auth.apiKey.headerName,
+        'apikey=' + env.config.auth.apiKey.key,
+      )
+      .attach('file', audio, {
+        filename: 'audiotest',
+        contentType: 'audio/ogg',
+      })
+      .expect(200)
+
+    const converted: Audio = res.body
+    expect(converted).toHaveProperty('buffer')
+    expect(converted).toEqual(
+      expect.objectContaining({
+        name: 'audiotest',
+        mime: 'audio/mp4',
+        codec: 'aac',
+        duration: expect.any(Number),
+        format: expect.stringContaining('mp4'),
+      }),
+    )
+  })
 })

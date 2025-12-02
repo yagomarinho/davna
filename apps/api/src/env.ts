@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import {
   Auth,
   ChatGPT,
@@ -23,12 +24,14 @@ import {
   Message,
   MessageHandler,
   MessageRepository,
+  MultimediaProvider,
   Storage,
   StorageConstructor,
 } from '@davna/classroom'
 import { Lead, LeadRepository } from '@davna/lead'
 
 import config from './config'
+import { Multimedia } from './multimedia'
 
 export interface Env {
   repositories: {
@@ -43,8 +46,12 @@ export interface Env {
     auth: Auth
     gpt: GPTModel
     signer: Signer
+    multimedia: MultimediaProvider
     messageHandler: MessageHandler
     storage: StorageConstructor
+  }
+  constants: {
+    tempDir: string
   }
 }
 
@@ -86,13 +93,19 @@ export const Env = async (): Promise<Env> => {
     auth,
     gpt,
     signer,
+    multimedia: Multimedia(),
     messageHandler: MessageHandler,
     storage: Storage,
     config,
   }
 
+  const constants = {
+    tempDir: resolve(__dirname, '../temp'),
+  }
+
   return {
     repositories,
     providers,
+    constants,
   }
 }

@@ -33,6 +33,7 @@ describe('appendAndReply handler', () => {
   const teacher_id = 'teacher-1'
   const audio_id = 'audio-1'
   const internalRef = 'ref-1'
+  const tempDir = 'temp.dir'
 
   let audios: Repository<Audio>
   let classrooms: Repository<Classroom>
@@ -120,6 +121,7 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      tempDir,
     } as any)
 
     expect(getTranscriptionFromAudio).toHaveBeenCalledTimes(1)
@@ -171,6 +173,7 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      tempDir,
     } as any)
 
     expect(appendMessageToClassroom).toHaveBeenCalledTimes(1)
@@ -228,6 +231,7 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      tempDir,
     } as any)
 
     expect(teacherGeneratesResponse).toHaveBeenCalledTimes(1)
@@ -289,6 +293,7 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      tempDir,
     } as any)
 
     expect(appendMessageToClassroom).toHaveBeenCalledTimes(1)

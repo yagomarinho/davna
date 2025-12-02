@@ -1,15 +1,27 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "allowJs": false,
     "noEmit": true,
-    "noImplicitAny": false
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "/tsconfig.info"
   },
-  "include": ["apps", "config", "modules", "shared"],
-  "exclude": ["node_modules", "coverage", "**/*.js", "*.js", "scrips"]
+  "files": [],
+  "references": [
+    { "path": "./apps/api" },
+    { "path": "./apps/app" },
+    { "path": "./apps/ffmpeg" },
+    { "path": "./config/jest" },
+    { "path": "./modules/account" },
+    { "path": "./modules/classroom" },
+    { "path": "./modules/health" },
+    { "path": "./modules/lead" },
+    { "path": "./services/ffmpeg" },
+    { "path": "./shared/applications" },
+    { "path": "./shared/core" },
+    { "path": "./shared/middlewares" },
+    { "path": "./shared/providers" },
+    { "path": "./shared/repositories" },
+    { "path": "./shared/types" },
+    { "path": "./shared/utils" }
+  ]
 }

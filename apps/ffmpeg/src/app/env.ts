@@ -1,7 +1,10 @@
+import { resolve } from 'node:path'
 import type { AudioMetadataProvider } from '../providers/audio.metadata.provider'
-import { getDuration } from '../services/get.duration'
+import { convertAudioToAAC } from '../services/convert.audio.to.aac'
+import { getAudioMetadata } from '../services/get.audio.metadata'
 
 export type Config = {
+  tempDir: string
   auth: {
     apiKey: {
       headerName: string
@@ -20,10 +23,12 @@ export type Env = {
 export const Env = (): Env => ({
   providers: {
     audioMetadata: {
-      getDuration: getDuration(),
+      getMetadata: getAudioMetadata(),
+      convertAudioToAAC: convertAudioToAAC(),
     },
   },
   config: {
+    tempDir: resolve(__dirname, '../../temp'),
     auth: {
       apiKey: {
         headerName: process.env.API_KEY_HEADER_NAME || 'x-api-key',

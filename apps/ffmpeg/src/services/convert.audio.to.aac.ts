@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process'
-import { createReadStream } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { Readable } from 'node:stream'
 import nodePath from 'node:path'
@@ -9,26 +8,35 @@ import { toBuffer } from '../utils/to.buffer'
 import { ffmpegPath } from '../utils/ffmpeg.path'
 import { ensurePath } from '../utils/ensure.path'
 import { AudioInfo, getAudioMetadata } from './get.audio.metadata'
+import { readFileAsBuffer } from '../utils/read.file.as.buffer'
+import { randomId } from '../utils/random.id'
 
 export interface Audio extends AudioInfo {
   name: string
   buffer: Buffer
 }
 
+export interface ConvertToAccOptions {
+  timeoutMs?: number
+  mime: string
+  filename?: string
+}
+
 export function convertAudioToAAC() {
   const DEFAULT_TIMEOUT_MS = 10_000
   const path = ffmpegPath()
 
-  return (
-    input: AudioLike,
-    opts: { timeoutMs?: number; mime: string; filename?: string },
-  ): Promise<Audio> =>
+  return (input: AudioLike, opts: ConvertToAccOptions): Promise<Audio> =>
     new Promise((resolve, reject) => {
       const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS
 
       const useFilePath = typeof input === 'string'
       const outputPath = opts.filename
-        ? nodePath.resolve(__dirname, '../../temp', `${opts.filename}.mp4`)
+        ? nodePath.resolve(
+            __dirname,
+            '../../temp',
+            `${randomId()}-${opts.filename}.mp4`,
+          )
         : undefined
 
       const args = (
@@ -63,7 +71,7 @@ export function convertAudioToAAC() {
           console.error(_)
         }
 
-        reject(reason)
+        reject(typeof reason === 'string' ? new Error(reason) : reason)
       }
 
       const timer = setTimeout(() => {
@@ -128,16 +136,14 @@ export function convertAudioToAAC() {
         if (!buf) {
           clearTimeout(timer)
           return killAndReject(
-            new Error(
-              'input must be Buffer | ArrayBuffer | Uint8Array | Readable | filePath',
-            ),
+            'input must be Buffer | ArrayBuffer | Uint8Array | Readable | filePath',
           )
         }
 
         function safeWriteBuffer(buffer: Buffer) {
           if (childClosed) {
             return killAndReject(
-              new Error('ffmpeg already closed before write (childClosed)'),
+              'ffmpeg already closed before write (childClosed)',
             )
           }
 
@@ -145,9 +151,7 @@ export function convertAudioToAAC() {
 
           rs.on('error', e => {
             if (!finished)
-              killAndReject(
-                new Error(`readable error before piping to ffmpeg: ${e}`),
-              )
+              killAndReject(`readable error before piping to ffmpeg: ${e}`)
           })
 
           rs.pipe(p.stdin).on('error', e => {
@@ -179,15 +183,4 @@ export function convertAudioToAAC() {
         p.stdin.end()
       }
     })
-}
-
-function readFileAsBuffer(filePath: string): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    const stream = createReadStream(filePath)
-
-    stream.on('data', (chunk: any) => chunks.push(chunk))
-    stream.on('error', reject)
-    stream.on('end', () => resolve(Buffer.concat(chunks)))
-  })
 }

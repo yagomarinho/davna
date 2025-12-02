@@ -17,11 +17,9 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
-    "@davna/ffmpeg.sdk": "*",
     "@davna/repositories": "*",
     "@davna/providers": "*",
     "@davna/types": "*",
-    "@davna/utils": "*",
-    "music-metadata": "^11.10.2"
+    "@davna/utils": "*"
   }
 }

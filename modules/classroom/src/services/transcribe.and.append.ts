@@ -25,6 +25,7 @@ interface Env {
   gpt: GPTModel
   messageHandler: MessageHandler
   storage: StorageConstructor
+  tempDir: string
 }
 
 interface Response {
@@ -35,7 +36,15 @@ interface Response {
 
 export const transcribeAndAppend = Service<Data, Env, Response>(
   ({ audio, classroom_id, participant_id }) =>
-    async ({ audios, classrooms, messages, gpt, messageHandler, storage }) => {
+    async ({
+      audios,
+      classrooms,
+      messages,
+      gpt,
+      messageHandler,
+      storage,
+      tempDir,
+    }) => {
       const classroom = await classrooms.get(classroom_id)
 
       if (!classroom)
@@ -52,6 +61,7 @@ export const transcribeAndAppend = Service<Data, Env, Response>(
         audios,
         storage,
         gpt,
+        tempDir,
       })
 
       const { transcription, translation } = transcriptionResult

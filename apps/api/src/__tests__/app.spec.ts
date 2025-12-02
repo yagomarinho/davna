@@ -19,10 +19,6 @@ describe('application tests', () => {
 
   const app = Application({ routes: routes(env), port: 3333 }).exposeApp()
 
-  beforeAll(async () => {
-    process.env.NODE_ENV = 'production'
-  })
-
   beforeEach(() => {
     jest.clearAllMocks()
   })

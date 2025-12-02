@@ -1,5 +1,7 @@
 import { Config, DEFAULT_CONFIG } from './config'
-import { DurationRequest, getDuration } from './get.duration'
+
+import { convertAudioToAAC, ConvertRequest } from './convert.audio.to.aac'
+import { MetadataRequest, getMetadata } from './get.metadata'
 import { healthy } from './healthy'
 
 interface Options {
@@ -9,7 +11,9 @@ interface Options {
 export function ffmpeg({ config }: Options = {}) {
   const c = config ?? DEFAULT_CONFIG()
   return {
-    getDuration: (data: DurationRequest) => getDuration({ data, config: c }),
+    convertAudioToAAC: (data: ConvertRequest) =>
+      convertAudioToAAC({ data, config: c }),
+    getMetadata: (data: MetadataRequest) => getMetadata({ data, config: c }),
     healthy: () => healthy({ config: c }),
   }
 }
