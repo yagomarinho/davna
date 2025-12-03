@@ -1,7 +1,15 @@
+import { createServer, type Server } from 'node:http'
+import { io, type Socket } from 'socket.io-client'
+
 import request from 'supertest'
 
-import { App } from '../app'
+import { Classroom, Message } from '@davna/classroom'
+
+import { App, createWsServer } from '../app'
 import { makeEnv } from './fakes/env'
+import { bearer } from './utils/bearer'
+import { connect } from './utils/connect'
+import { waitFor } from './utils/wait.for'
 
 type Token = {
   value: string
@@ -13,11 +21,23 @@ type Session = {
   refresh_token: Token
 }
 
-function bearer(token: string) {
-  return `Bearer ${token}`
+interface ClassStarted {
+  classroom: Classroom
+  remainingConsumption: number
+}
+
+interface ClassUpdated extends ClassStarted {
+  message: Message
+}
+
+interface ClassReplying {
+  classroom_id: string
+  participant_id: string
 }
 
 describe('application integration tests', () => {
+  const credentials = { email: 'john@example.com', password: '123456' }
+
   const env = makeEnv()
   const API_KEY_HEADER_NAME = env.constants.config.auth.apiKey.headerName
   const API_KEY_TOKEN = `apikey=${env.constants.config.auth.apiKey.key}`
@@ -29,12 +49,66 @@ describe('application integration tests', () => {
   let app: any
   let session: Session
   let audio: { id: string }
+  let server: Server
+  let socket: Socket
+  let classroom: Classroom
 
-  beforeAll(() => {
-    const a = App({ env, port: 3333 })
+  beforeAll(async () => {
+    const port = 3333
+    const a = App({ env, port })
+
     a.mount()
+
     app = a.exposeApp()
-  })
+    server = createWsServer(createServer(app), env)
+
+    const res = await request(app)
+      .post('/session')
+      .send(credentials)
+      .set(API_KEY_HEADER_NAME, API_KEY_TOKEN)
+
+    const ses = res.body
+
+    connect({ server, port })
+
+    socket = io(`http://localhost:${port}`, {
+      path: '/socket.io',
+      reconnectionAttempts: 2,
+      auth: {
+        token: ses.token.value,
+      },
+      autoConnect: true,
+      timeout: 5_000,
+    })
+
+    socket.on('connect_error', (err: any) => {
+      throw new Error(err)
+    })
+
+    socket.on('connect_timeout', (t: any) => {
+      throw new Error(t)
+    })
+
+    socket.on('error:internal', t => {
+      throw new Error(t)
+    })
+
+    socket.on('error', (err: any) => {
+      throw new Error(err)
+    })
+
+    socket.on('error', (err: any) => {
+      throw new Error(err)
+    })
+
+    const [started] = await Promise.all([
+      waitFor<ClassStarted>(socket, 'classroom:started'),
+      waitFor<ClassStarted>(socket, 'classroom:replying'),
+      waitFor(socket, 'classroom:updated'),
+    ])
+
+    classroom = started.classroom
+  }, 20_000)
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -57,7 +131,6 @@ describe('application integration tests', () => {
   })
 
   test('create session service', async () => {
-    const credentials = { email: 'john@example.com', password: '123456' }
     const res = await request(app)
       .post('/session')
       .send(credentials)
@@ -178,6 +251,29 @@ describe('application integration tests', () => {
       .expect(404)
   })
 
+  test('append message and receive reply: WS', async () => {
+    socket.emit('classroom:append-message', {
+      classroom_id: classroom.id,
+      type: 'audio',
+      data: audio,
+    })
+
+    const [append, reply] = await Promise.all([
+      waitFor<ClassUpdated>(socket, 'classroom:updated'),
+      waitFor<ClassReplying>(socket, 'classroom:replying'),
+    ])
+
+    const agent = await waitFor<ClassUpdated>(socket, 'classroom:updated')
+
+    expect(append.classroom.id).toBe(classroom.id)
+    expect(append.message.participant_id).toBe('0')
+    expect(append.message.data).toEqual(audio)
+    expect(reply.classroom_id).toBe(classroom.id)
+    expect(reply.participant_id).toBe('agent')
+    expect(agent.classroom.id).toBe(classroom.id)
+    expect(agent.message.participant_id).toBe('agent')
+  })
+
   test('revoke session service', async () => {
     await request(app)
       .delete('/session')
@@ -190,5 +286,9 @@ describe('application integration tests', () => {
       .set(API_KEY_HEADER_NAME, API_KEY_TOKEN)
       .set(SESSION_TOKEN_HEADER_NAME, bearer(session.token.value))
       .expect(401)
+  })
+  afterAll(() => {
+    socket.disconnect()
+    server.close()
   })
 })
