@@ -25,7 +25,6 @@ describe('ChatGPT module', () => {
     audioSpeechCreateMock = jest.fn()
     audioTranscriptionsCreateMock = jest.fn()
 
-    // Each call to new OpenAI() returns this shape
     OpenAIMock.mockImplementation(() => ({
       responses: {
         create: responsesCreateMock,
@@ -40,7 +39,6 @@ describe('ChatGPT module', () => {
       },
     }))
 
-    // reset fs mock
     createReadStreamMock.mockReset()
     jest.clearAllMocks()
   })
@@ -51,7 +49,7 @@ describe('ChatGPT module', () => {
 
   it('should call OpenAI.responses.create and return output_text for respond()', async () => {
     const fakeOutput = 'This is the GPT response'
-    // make responses.create return an object with output_text
+
     responsesCreateMock.mockResolvedValueOnce({ output_text: fakeOutput })
 
     const client = ChatGPT({ apiKey: 'test-key' })
@@ -64,7 +62,7 @@ describe('ChatGPT module', () => {
     expect(responsesCreateMock).toHaveBeenCalledTimes(1)
     const callArg = responsesCreateMock.mock.calls[0][0]
     expect(callArg).toBeDefined()
-    // check model and that instruction is included as system role
+
     expect(callArg.model).toEqual('o4-mini')
     expect(callArg.input).toEqual([
       { role: 'system', content: instruction },
@@ -74,7 +72,6 @@ describe('ChatGPT module', () => {
   })
 
   it('should call OpenAI.audio.speech.create and return Buffer for synthesize()', async () => {
-    // mock a response whose arrayBuffer resolves to an ArrayBuffer
     const fakeArray = new Uint8Array([1, 2, 3]).buffer
     const fakeResponse = {
       arrayBuffer: jest.fn().mockResolvedValueOnce(fakeArray),
@@ -90,7 +87,7 @@ describe('ChatGPT module', () => {
     const callArg = audioSpeechCreateMock.mock.calls[0][0]
     expect(callArg).toBeDefined()
     expect(callArg.model).toEqual('gpt-4o-mini-tts')
-    expect(callArg.response_format).toEqual('opus')
+    expect(callArg.response_format).toEqual('aac')
     expect(callArg.voice).toEqual('alloy')
     expect(callArg.input).toEqual(text)
 
@@ -99,11 +96,9 @@ describe('ChatGPT module', () => {
   })
 
   it('should call OpenAI.audio.transcriptions.create and return text for speechToText()', async () => {
-    // mock fs.createReadStream to return a dummy stream object
     const dummyStream = {} as any
     createReadStreamMock.mockReturnValueOnce(dummyStream)
 
-    // mock transcriptions.create to return object with text property
     audioTranscriptionsCreateMock.mockResolvedValueOnce({
       text: 'transcribed text',
     })
@@ -118,7 +113,7 @@ describe('ChatGPT module', () => {
     expect(audioTranscriptionsCreateMock).toHaveBeenCalledTimes(1)
     const callArg = audioTranscriptionsCreateMock.mock.calls[0][0]
     expect(callArg).toBeDefined()
-    // ensure file was forwarded (we don't inspect the exact stream object beyond that it was created)
+
     expect(callArg.file).toBe(dummyStream)
     expect(callArg.model).toEqual('gpt-4o-transcribe')
 

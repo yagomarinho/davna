@@ -49,4 +49,60 @@ describe('FakeAI', () => {
 
     expect(text).toEqual('transcribed text')
   })
+
+  it('should return a valid WAV buffer when readFile rejects (fallback)', async () => {
+    readFileMock.mockRejectedValueOnce(new Error('file not found'))
+
+    const ai = FakeAI(config)
+
+    const result = await ai.synthesize({ text: 'ignored' })
+
+    const seconds = 2
+    const sampleRate = 44100
+    const channels = 1
+    const bitDepth = 16
+    const bytesPerSample = bitDepth / 8
+    const totalSamples = Math.floor(seconds * sampleRate)
+    const dataByteLength = totalSamples * channels * bytesPerSample
+    const headerByteLength = 44
+    const expectedTotalLength = headerByteLength + dataByteLength
+
+    expect(Buffer.isBuffer(result)).toBe(true)
+    expect(result.length).toEqual(expectedTotalLength)
+
+    expect(result.toString('ascii', 0, 4)).toEqual('RIFF')
+    expect(result.toString('ascii', 8, 12)).toEqual('WAVE')
+
+    expect(result.toString('ascii', 12, 16)).toEqual('fmt ')
+    expect(result.readUInt32LE(16)).toEqual(16)
+    expect(result.readUInt16LE(20)).toEqual(1)
+    expect(result.readUInt16LE(22)).toEqual(channels)
+    expect(result.readUInt32LE(24)).toEqual(sampleRate)
+
+    const expectedByteRate = sampleRate * channels * bytesPerSample
+    const expectedBlockAlign = channels * bytesPerSample
+    expect(result.readUInt32LE(28)).toEqual(expectedByteRate)
+    expect(result.readUInt16LE(32)).toEqual(expectedBlockAlign)
+    expect(result.readUInt16LE(34)).toEqual(bitDepth)
+
+    expect(result.toString('ascii', 36, 40)).toEqual('data')
+    expect(result.readUInt32LE(40)).toEqual(dataByteLength)
+  })
+
+  it('should return fallback WAV if readFile resolves to falsy value (undefined)', async () => {
+    readFileMock.mockResolvedValueOnce(undefined)
+
+    const ai = FakeAI(config)
+
+    const result = await ai.synthesize({ text: 'ignored' })
+
+    expect(Buffer.isBuffer(result)).toBe(true)
+    expect(result.toString('ascii', 0, 4)).toEqual('RIFF')
+    expect(result.toString('ascii', 8, 12)).toEqual('WAVE')
+
+    const dataSize = result.readUInt32LE(40)
+    expect(dataSize).toBeGreaterThan(0)
+
+    expect(dataSize).toEqual(176400)
+  })
 })
