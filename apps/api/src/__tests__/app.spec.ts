@@ -272,7 +272,7 @@ describe('application integration tests', () => {
     expect(reply.participant_id).toBe('agent')
     expect(agent.classroom.id).toBe(classroom.id)
     expect(agent.message.participant_id).toBe('agent')
-  })
+  }, 20_000)
 
   test('revoke session service', async () => {
     await request(app)

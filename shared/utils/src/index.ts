@@ -1,5 +1,6 @@
 export * from './clone.function'
 export * from './deep.clone'
+export * from './fallback.wav'
 export * from './is.object'
 export * from './token.from.bearer'
 export * from './verify.signature'
