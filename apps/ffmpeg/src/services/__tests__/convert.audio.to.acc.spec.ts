@@ -5,11 +5,13 @@ import { convertAudioToAAC } from '../convert.audio.to.aac'
 jest.setTimeout(20_000)
 
 describe('convertToAac (integration with ffmpeg + ffprobe)', () => {
-  const webmPath = resolve(__dirname, '../../../temp', 'audiotest.webm')
-  const oggPath = resolve(__dirname, '../../../temp', 'audiotest.ogg')
+  const tempDir = resolve(__dirname, '../../../temp')
+  const webmPath = resolve(tempDir, 'audiotest.webm')
+  const oggPath = resolve(tempDir, 'audiotest.ogg')
+  const converter = convertAudioToAAC({ tempDir })
 
   test('converts webm (buffer) -> aac (m4a buffer) and result has valid duration', async () => {
-    const { buffer, ...metadata } = await convertAudioToAAC()(webmPath, {
+    const { buffer, ...metadata } = await converter(webmPath, {
       mime: 'audio/webm',
       filename: 'output',
     })
@@ -21,7 +23,7 @@ describe('convertToAac (integration with ffmpeg + ffprobe)', () => {
   })
 
   test('converts ogg (buffer) -> aac (m4a buffer) and result has valid duration', async () => {
-    const { buffer, ...metadata } = await convertAudioToAAC()(oggPath, {
+    const { buffer, ...metadata } = await converter(oggPath, {
       mime: 'audio/ogg',
       filename: 'output',
     })

@@ -82,9 +82,12 @@ export function createWsServer(server: HTTPServer, env: Env) {
       }
     })
 
-    socket.on('disconnect', reason => {
-      console.log('logout:', socket.id, reason)
-    })
+    // Manter por enquanto como comentário, mais tarde usar essa função para realizar
+    // outras ações importantes
+    //
+    // socket.on('disconnect', reason => {
+    //   console.log('logout:', socket.id, reason)
+    // })
   })
 
   return server

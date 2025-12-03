@@ -20,20 +20,23 @@ export type Env = {
   }
 }
 
-export const Env = (): Env => ({
-  providers: {
-    audioMetadata: {
-      getMetadata: getAudioMetadata(),
-      convertAudioToAAC: convertAudioToAAC(),
-    },
-  },
-  config: {
-    tempDir: resolve(__dirname, process.env.RELATIVE_TMP_DIR_PATH!),
-    auth: {
-      apiKey: {
-        headerName: process.env.API_KEY_HEADER_NAME || 'x-api-key',
-        key: process.env.API_ACCESS_TOKEN || 'default_access_token',
+export const Env = (): Env => {
+  const tempDir = resolve(__dirname, process.env.RELATIVE_TMP_DIR_PATH!)
+  return {
+    providers: {
+      audioMetadata: {
+        getMetadata: getAudioMetadata(),
+        convertAudioToAAC: convertAudioToAAC({ tempDir }),
       },
     },
-  },
-})
+    config: {
+      tempDir,
+      auth: {
+        apiKey: {
+          headerName: process.env.API_KEY_HEADER_NAME || 'x-api-key',
+          key: process.env.API_ACCESS_TOKEN || 'default_access_token',
+        },
+      },
+    },
+  }
+}

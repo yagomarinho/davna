@@ -22,7 +22,7 @@ export interface ConvertToAccOptions {
   filename?: string
 }
 
-export function convertAudioToAAC() {
+export function convertAudioToAAC({ tempDir }: { tempDir: string }) {
   const DEFAULT_TIMEOUT_MS = 10_000
   const path = ffmpegPath()
 
@@ -32,11 +32,7 @@ export function convertAudioToAAC() {
 
       const useFilePath = typeof input === 'string'
       const outputPath = opts.filename
-        ? nodePath.resolve(
-            __dirname,
-            '../../temp',
-            `${randomId()}-${opts.filename}.mp4`,
-          )
+        ? nodePath.resolve(tempDir, `${randomId()}-${opts.filename}.mp4`)
         : undefined
 
       const args = (

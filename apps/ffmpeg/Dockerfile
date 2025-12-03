@@ -18,6 +18,7 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 
 COPY --from=build /app/apps/ffmpeg/dist ./dist
+COPY --from=build /app/apps/ffmpeg/temp ./temp
 COPY --from=build /app/apps/ffmpeg/package.build.json ./package.json
 
 RUN yarn install --frozen-lockfile --production

@@ -22,6 +22,7 @@ export function Multimedia(): MultimediaProvider {
       mime,
       name,
     })
+
     if (!result) throw new Error('Invalid audio file to get metadata')
 
     return result

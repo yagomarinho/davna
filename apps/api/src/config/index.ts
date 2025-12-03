@@ -120,7 +120,11 @@ export default {
       'fake.ai': {
         textToRespond: 'this is a simple response',
         textFromSpeech: 'this is a simple transcription',
-        pathToSpeech: resolve(__dirname, '../../temp/audiotest.m4a'),
+        pathToSpeech: resolve(
+          __dirname,
+          process.env.RELATIVE_TMP_DIR_PATH!,
+          'audiotest.m4a',
+        ),
       },
     },
   },
