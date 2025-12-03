@@ -23,7 +23,7 @@ describe('convertAudioToAACtaHandler (integration points)', () => {
     const file = {
       buffer: Buffer.from('audio buffer'),
       originalname: 'song.track',
-      mimetype: 'audio/aac',
+      mimetype: 'audio/mp4',
     }
 
     const req = Request.metadata({
@@ -48,17 +48,19 @@ describe('convertAudioToAACtaHandler (integration points)', () => {
     expect(result).toBeDefined()
     expect(result).toEqual(
       expect.objectContaining({
-        data: expect.objectContaining({
-          name: file.originalname,
-          mime: file.mimetype,
-          duration: expectedConversion.duration,
-          format: expectedConversion.format,
-          codec: expectedConversion.codec,
+        metadata: expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Disposition': expect.stringContaining(file.originalname),
+            'Content-Type': file.mimetype,
+            'X-File-Duration': expectedConversion.duration.toString(),
+            'X-File-Format': expectedConversion.format.toString(),
+            'X-File-Codec': expectedConversion.codec,
+          }),
         }),
       }),
     )
 
-    const expectedTempName = `${file.originalname}.aac`
+    const expectedTempName = `tmp-${file.originalname}.mp4`
     const expectedPath = resolve(tempDir, expectedTempName)
 
     expect(writeFile).toHaveBeenCalledTimes(1)
@@ -108,7 +110,7 @@ describe('convertAudioToAACtaHandler (integration points)', () => {
       }),
     )
 
-    const expectedTempName = `${file.originalname}.octet-stream`
+    const expectedTempName = `tmp-${file.originalname}.octet-stream`
     const expectedPath = resolve(tempDir, expectedTempName)
 
     expect(writeFile).toHaveBeenCalledTimes(1)

@@ -43,13 +43,17 @@ export const convertAudioToAACtaHandler = Handler(
 
       const { format, codec, duration, buffer: converted } = audio
 
-      return Response.data({
-        buffer: converted,
-        name,
-        duration,
-        format,
-        codec,
-        mime: 'audio/mp4',
+      return Response({
+        data: converted,
+        metadata: {
+          headers: {
+            'Content-Type': 'audio/mp4',
+            'Content-Disposition': `attachment; filename="${name}"`,
+            'X-File-Duration': duration.toString(),
+            'X-File-Codec': codec,
+            'X-File-Format': format,
+          },
+        },
       })
     },
 )

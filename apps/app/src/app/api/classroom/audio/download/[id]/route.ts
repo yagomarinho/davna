@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, ctx: any) {
     headers.set('Authorization', bearer(token))
 
     const response = await fetch(
-      `${process.env.API_BASE_URL}/audio/download/${audio_id}`,
+      `${process.env.API_BASE_URL}/audio/${audio_id}`,
       {
         headers,
       },

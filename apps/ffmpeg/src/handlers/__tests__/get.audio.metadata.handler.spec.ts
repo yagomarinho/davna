@@ -58,7 +58,7 @@ describe('getAudioMetadataHandler (integration points)', () => {
       }),
     )
 
-    const expectedTempName = `${file.originalname}.mp3`
+    const expectedTempName = `tmp-${file.originalname}.mp3`
     const expectedPath = resolve(tempDir, expectedTempName)
 
     expect(writeFile).toHaveBeenCalledTimes(1)
@@ -103,7 +103,7 @@ describe('getAudioMetadataHandler (integration points)', () => {
       }),
     )
 
-    const expectedTempName = `${file.originalname}.octet-stream`
+    const expectedTempName = `tmp-${file.originalname}.octet-stream`
     const expectedPath = resolve(tempDir, expectedTempName)
 
     expect(writeFile).toHaveBeenCalledTimes(1)

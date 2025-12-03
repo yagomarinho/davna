@@ -13,7 +13,7 @@ async function uploadAudio({ data, token }: Options) {
   headers.set('X-Api-Key', apiKey(process.env.API_ACCESS_TOKEN!))
   headers.set('Authorization', bearer(token))
 
-  const response = await fetch(`${process.env.API_BASE_URL}/audio/upload`, {
+  const response = await fetch(`${process.env.API_BASE_URL}/audio`, {
     method: 'POST',
     headers,
     body: data,

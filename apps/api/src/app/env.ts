@@ -29,9 +29,9 @@ import {
   StorageConstructor,
 } from '@davna/classroom'
 import { Lead, LeadRepository } from '@davna/lead'
+import { Multimedia } from './multimedia'
 
 import config from '../config'
-import { Multimedia } from './multimedia'
 
 export interface Env {
   repositories: {

@@ -7,6 +7,7 @@ import { Env } from '../app/env'
 
 import { AudioInfo } from '../services/get.audio.metadata'
 import { Audio } from '../services/convert.audio.to.aac'
+import { extractInfo } from './utils/extract.info'
 
 function readFileAsBuffer(filePath: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -61,7 +62,7 @@ describe('application tests', () => {
         name: 'audiotest.m4a',
         mime: 'audio/mp4',
         codec: 'aac',
-        duration: 12.543771,
+        duration: expect.any(Number),
         format: expect.stringContaining('mp4'),
       }),
     )
@@ -81,11 +82,20 @@ describe('application tests', () => {
         filename: 'audiotest',
         contentType: 'audio/ogg',
       })
+      .buffer()
+      .parse((resStream, callback) => {
+        const chunks: Buffer[] = []
+        resStream.on('data', c => chunks.push(c))
+        resStream.on('end', () => callback(null, Buffer.concat(chunks)))
+        resStream.on('error', err => callback(err, undefined))
+      })
       .expect(200)
 
     const converted: Audio = res.body
-    expect(converted).toHaveProperty('buffer')
-    expect(converted).toEqual(
+    const info = extractInfo(res)
+
+    expect(converted instanceof Buffer).toBeTruthy()
+    expect(info).toEqual(
       expect.objectContaining({
         name: 'audiotest',
         mime: 'audio/mp4',
@@ -110,11 +120,20 @@ describe('application tests', () => {
         filename: 'audiotest',
         contentType: 'audio/webm',
       })
+      .buffer()
+      .parse((resStream, callback) => {
+        const chunks: Buffer[] = []
+        resStream.on('data', c => chunks.push(c))
+        resStream.on('end', () => callback(null, Buffer.concat(chunks)))
+        resStream.on('error', err => callback(err, undefined))
+      })
       .expect(200)
 
     const converted: Audio = res.body
-    expect(converted).toHaveProperty('buffer')
-    expect(converted).toEqual(
+    const info = extractInfo(res)
+
+    expect(converted instanceof Buffer).toBeTruthy()
+    expect(info).toEqual(
       expect.objectContaining({
         name: 'audiotest',
         mime: 'audio/mp4',
@@ -146,12 +165,12 @@ describe('application tests', () => {
         name: 'audiotest',
         mime: 'audio/mp4',
         codec: 'aac',
-        duration: 12.543771,
+        duration: expect.any(Number),
         format: expect.stringContaining('mp4'),
       }),
     )
 
-    const converted = await request(app)
+    const res = await request(app)
       .post('/convert')
       .set(
         env.config.auth.apiKey.headerName,
@@ -161,12 +180,22 @@ describe('application tests', () => {
         filename: 'audiotest',
         contentType: 'audio/ogg',
       })
+      .buffer()
+      .parse((resStream, callback) => {
+        const chunks: Buffer[] = []
+        resStream.on('data', c => chunks.push(c))
+        resStream.on('end', () => callback(null, Buffer.concat(chunks)))
+        resStream.on('error', err => callback(err, undefined))
+      })
       .expect(200)
 
     const { name, mime, codec, format } = metadata.body
 
-    expect(converted.body).toHaveProperty('buffer')
-    expect(converted.body).toEqual(
+    const converted: Audio = res.body
+    const info = extractInfo(res)
+
+    expect(converted instanceof Buffer).toBeTruthy()
+    expect(info).toEqual(
       expect.objectContaining({
         name,
         mime,

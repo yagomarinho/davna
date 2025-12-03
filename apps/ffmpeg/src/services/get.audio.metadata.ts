@@ -108,9 +108,8 @@ export function getAudioMetadata() {
 
           const formatName = json.format?.format_name || ''
           const codec = stream.codec_name || ''
-          const duration = parseFloat(
-            json.format?.duration || stream?.duration || 0,
-          )
+          const duration =
+            parseFloat(json.format?.duration || stream?.duration || 0) * 1000
           const channels = stream.channels
           const sample_rate = stream.sample_rate
             ? parseInt(stream.sample_rate)
