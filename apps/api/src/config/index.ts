@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 
-export default {
+export const Config = () => ({
   databases: {
     default_uri:
       process.env.MONGODB_DEFAULT_CONNECT_URI || 'mongodb://localhost:27017',
@@ -128,4 +128,4 @@ export default {
       },
     },
   },
-}
+})

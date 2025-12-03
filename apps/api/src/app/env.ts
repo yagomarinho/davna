@@ -31,7 +31,7 @@ import {
 import { Lead, LeadRepository } from '@davna/lead'
 import { Multimedia } from './multimedia'
 
-import config from '../config'
+import { Config } from '../config'
 
 export interface Env {
   repositories: {
@@ -51,12 +51,14 @@ export interface Env {
     storage: StorageConstructor
   }
   constants: {
-    config: typeof config
+    config: ReturnType<typeof Config>
     tempDir: string
   }
 }
 
 export const Env = async (): Promise<Env> => {
+  const config = Config()
+
   const auth = FirebaseAdminAuth({ config })
   const gpt = ChatGPT({ apiKey: process.env.OPENAI_API_KEY })
   const signer = JWTSigner({

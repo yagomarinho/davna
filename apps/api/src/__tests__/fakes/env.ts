@@ -10,11 +10,12 @@ import { makeMultimedia } from './multimedia'
 import { makeSigner } from './signer'
 import { makeStorage } from './storage'
 
-import config from '../../config'
+import { Config } from '../../config'
 
 export function makeEnv(): Env {
   const tempDir = resolve(__dirname, '../../../temp')
   const storage = makeStorage()
+  const config = Config()
 
   return {
     constants: {
