@@ -28,7 +28,7 @@ export const Env = (): Env => ({
     },
   },
   config: {
-    tempDir: resolve(__dirname, '../../temp'),
+    tempDir: resolve(__dirname, process.env.RELATIVE_TMP_DIR_PATH!),
     auth: {
       apiKey: {
         headerName: process.env.API_KEY_HEADER_NAME || 'x-api-key',

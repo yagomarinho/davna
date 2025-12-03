@@ -9,6 +9,7 @@ interface Env {
   audioMetadata: AudioMetadataProvider
   config: {
     tempDir: string
+    // adicionar um prefix para trocar o tmp- no inicio do nome
   }
 }
 

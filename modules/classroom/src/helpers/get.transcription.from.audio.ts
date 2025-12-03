@@ -29,7 +29,7 @@ export function getTranscriptionFromAudio(audio_id: string) {
 
     const path = resolve(
       tempDir,
-      `${audio.name}.${audio.mime.replace('audio/', '')}`,
+      `${audio.name}.${audio.mime.replace('audio/', '')}`, // adicionar padrão strategy para melhorar a forma como se criam os nomes
     )
 
     await writeFile(path, buffer, { flag: 'w' })
