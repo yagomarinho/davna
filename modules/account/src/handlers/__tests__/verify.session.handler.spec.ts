@@ -50,9 +50,19 @@ describe('verifySessionHandler', () => {
       },
     })
 
-    await expect(
-      verifySessionHandler(req)({ sessions, signer, config }),
-    ).rejects.toThrow('Invalid Session')
+    const result = await verifySessionHandler(req)({ sessions, signer, config })
+
+    expect(result).toBeDefined()
+    expect(result).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          message: 'Not Authorized. JWT is Missing',
+        }),
+        metadata: expect.objectContaining({
+          headers: expect.objectContaining({ status: 401 }),
+        }),
+      }),
+    )
 
     expect(verifySession).not.toHaveBeenCalled()
   })

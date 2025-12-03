@@ -44,7 +44,9 @@ describe('refreshSessionHandler', () => {
 
     expect(result).toEqual(
       expect.objectContaining({
-        data: expect.objectContaining({ message: 'Invalid Session' }),
+        data: expect.objectContaining({
+          message: 'Not Authorized. JWT is Missing',
+        }),
         metadata: expect.objectContaining({
           headers: expect.objectContaining({ status: 401 }),
         }),
@@ -73,7 +75,9 @@ describe('refreshSessionHandler', () => {
     expect(result).toBeDefined()
     expect(result).toEqual(
       expect.objectContaining({
-        data: expect.objectContaining({ message: 'Invalid Session' }),
+        data: expect.objectContaining({
+          message: 'Not Authorized. Invalid Token',
+        }),
         metadata: expect.objectContaining({
           headers: expect.objectContaining({ status: 401 }),
         }),

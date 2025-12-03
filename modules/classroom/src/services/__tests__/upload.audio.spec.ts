@@ -110,7 +110,7 @@ describe('uploadAudio Service', () => {
       owner_id: 'owner-2',
       name: 'lesson-audio',
       mime: supportedMime,
-      src: `${process.env.API_BASE_URL}/audio/download/${audio.id}`,
+      src: `${process.env.API_BASE_URL}/audio/${audio.id}`,
       internal_ref: {
         storage: STORAGE_TYPE.AWS_S3,
         identifier: 'file-2',

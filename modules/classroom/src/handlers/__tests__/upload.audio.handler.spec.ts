@@ -31,7 +31,8 @@ describe('uploadAudioHandler', () => {
     })
     multimedia = {
       metadata: jest.fn(),
-      convert: jest.fn().mockImplementation(({ name, mime }) => ({
+      convert: jest.fn().mockImplementation(({ buffer, name, mime }) => ({
+        buffer,
         name,
         mime,
         duration: 120,
