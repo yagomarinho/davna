@@ -1,6 +1,6 @@
 import { Header } from '@/components/headers'
 import Link from 'next/link'
-import { FiMic } from 'react-icons/fi'
+import { FiInfo, FiMic } from 'react-icons/fi'
 
 const MicIcon = () => (
   <div className="flex shrink-0 justify-center items-center border border-[#FFFFFF]/15 bg-[#202020] w-12 h-12 rounded-full">
@@ -11,7 +11,15 @@ const MicIcon = () => (
 const Dashboard = () => (
   <div className="w-full">
     <Header type="dashboard" />
-    <main className="flex flex-row justify-center w-full">
+    <main className="flex flex-col px-4 justify-start items-center w-full">
+      <div className="mb-5 flex flex-row px-4 py-3 gap-2 justify-center items-start text-sm md:text-base text-white w-full max-w-screen-md border rounded-lg border-[rgba(90,137,239,0.3)] bg-[rgba(90,137,239,0.15)]">
+        <FiInfo className="shrink-0" size={24} color="#385CAA" />
+        <span>
+          Por favor, evite compartilhar dados pessoais ou sigilosos. Estamos
+          aprimorando nosso agente de IA e algumas interações podem ser usadas
+          para melhorar a experiência.
+        </span>
+      </div>
       <div className="flex justify-center w-full max-w-screen-md p-4 md:p-8">
         <Link
           href="/dashboard/classroom"
