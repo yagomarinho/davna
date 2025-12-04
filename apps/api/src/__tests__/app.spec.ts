@@ -122,7 +122,7 @@ describe('application integration tests', () => {
   test('post lead service', async () => {
     const lead = { lead: '(21) 988776655' }
     const res = await request(app)
-      .post('/lead')
+      .post('/feedback/lead')
       .send(lead)
       .set(API_KEY_HEADER_NAME, API_KEY_TOKEN)
       .expect(200)
@@ -249,6 +249,25 @@ describe('application integration tests', () => {
       .set(API_KEY_HEADER_NAME, API_KEY_TOKEN)
       .set(SESSION_TOKEN_HEADER_NAME, bearer(session.token.value))
       .expect(404)
+  })
+
+  test('post suggestion service', async () => {
+    const suggestion = { suggestion: 'This is a suggestion' }
+    const res = await request(app)
+      .post('/feedback/suggestion')
+      .send(suggestion)
+      .set(API_KEY_HEADER_NAME, API_KEY_TOKEN)
+      .set(SESSION_TOKEN_HEADER_NAME, bearer(session.token.value))
+      .expect(200)
+
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        id: expect.any(String),
+        suggestion: 'This is a suggestion',
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+      }),
+    )
   })
 
   test('append message and receive reply: WS', async () => {

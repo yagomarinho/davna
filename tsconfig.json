@@ -14,7 +14,7 @@
     { "path": "./modules/account" },
     { "path": "./modules/classroom" },
     { "path": "./modules/health" },
-    { "path": "./modules/lead" },
+    { "path": "./modules/feedback" },
     { "path": "./services/ffmpeg" },
     { "path": "./shared/applications" },
     { "path": "./shared/core" },

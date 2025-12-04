@@ -9,7 +9,7 @@ export async function appendLead(lead: string): Promise<void> {
   headers.set('X-Api-Key', apiKey(process.env.API_ACCESS_TOKEN!))
   headers.set('Content-Type', 'application/json')
 
-  const result = await fetch(`${config.api.baseUrl}/lead`, {
+  const result = await fetch(`${config.api.baseUrl}/feedback/lead`, {
     method: 'POST',
     cache: 'no-cache',
     headers,

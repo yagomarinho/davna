@@ -19,18 +19,23 @@ import {
   uploadValidation,
 } from '@davna/classroom'
 import { healthCheckHandler } from '@davna/health'
-import { appendLeadHandler, leadValidate } from '@davna/lead'
+import {
+  appendLeadHandler,
+  appendSuggestionHandler,
+  leadValidate,
+  suggestionValidate,
+} from '@davna/feedback'
 
 import { Env } from './env'
 
 export const routes = ({
-  repositories: { accounts, leads, audios, sessions },
+  repositories: { accounts, leads, audios, sessions, suggestions },
   providers: { auth, signer, multimedia, storage },
   constants: { config },
 }: Env): Route[] => [
   Route({
     method: 'post',
-    path: '/lead',
+    path: '/feedback/lead',
     handler: handlerPipe(
       apiKeyAuthorization as any,
       guardian as any,
@@ -40,6 +45,25 @@ export const routes = ({
       leads,
       config,
       validate: leadValidate,
+    },
+  }),
+  Route({
+    method: 'post',
+    path: '/feedback/suggestion',
+    handler: handlerPipe(
+      apiKeyAuthorization as any,
+      ensureAuthenticated as any,
+      guardian as any,
+      appendSuggestionHandler,
+    ),
+    env: {
+      auth,
+      signer,
+      sessions,
+      accounts,
+      suggestions,
+      config,
+      validate: suggestionValidate,
     },
   }),
   Route({

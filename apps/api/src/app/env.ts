@@ -28,7 +28,12 @@ import {
   Storage,
   StorageConstructor,
 } from '@davna/classroom'
-import { Lead, LeadRepository } from '@davna/lead'
+import {
+  Lead,
+  LeadRepository,
+  Suggestion,
+  SuggestionRepository,
+} from '@davna/feedback'
 import { Multimedia } from './multimedia'
 
 import { Config } from '../config'
@@ -41,6 +46,7 @@ export interface Env {
     leads: Writable<Repository<Lead>>
     messages: Repository<Message>
     sessions: Repository<Session>
+    suggestions: Writable<Repository<Suggestion>>
   }
   providers: {
     auth: Auth
@@ -73,7 +79,15 @@ export const Env = async (): Promise<Env> => {
   const messages = MessageRepository({ client })
   const sessions = SessionRepository({ client })
 
-  const leads = LeadRepository()
+  const leads = LeadRepository({
+    credentials: config.providers.gcp.credentials,
+    ...config.databases.lead,
+  })
+
+  const suggestions = SuggestionRepository({
+    credentials: config.providers.gcp.credentials,
+    ...config.databases.suggestion,
+  })
 
   await Promise.all([
     accounts.connect(),
@@ -90,6 +104,7 @@ export const Env = async (): Promise<Env> => {
     leads,
     messages,
     sessions,
+    suggestions,
   }
 
   const providers = {

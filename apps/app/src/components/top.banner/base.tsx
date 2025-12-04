@@ -13,7 +13,7 @@ export const TopBannerBox = ({ children }: PropsWithChildren<{}>) => (
 )
 
 export const TopBannerText = ({ children }: { children: string }) => (
-  <span className="text-center text-[8px] md:text-[12px] font-roboto font-semibold text-white w-full max-w-screen-md">
+  <span className="text-center text-[12px] md:text-[14px] font-roboto font-semibold text-white w-full max-w-screen-md">
     {children}
   </span>
 )

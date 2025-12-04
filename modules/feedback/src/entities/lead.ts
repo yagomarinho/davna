@@ -10,7 +10,7 @@ export interface CreateLead extends Partial<Entity> {
 export interface Lead extends Entity<URI> {}
 
 export function Lead(id: string, created_at: Date, updated_at: Date): Lead {
-  return applyTag('lead')({
+  return applyTag(URI)({
     id,
     created_at,
     updated_at,

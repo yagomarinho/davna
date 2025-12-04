@@ -37,6 +37,7 @@ export function makeEnv(): Env {
       leads: InMemoryRepository(),
       messages: InMemoryRepository(),
       sessions: InMemoryRepository(),
+      suggestions: InMemoryRepository(),
     },
   }
 }

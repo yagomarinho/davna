@@ -9,8 +9,8 @@ interface LeadRepositoryConfig {
 
 export const LeadRepository = ({
   credentials,
-  spreadsheetId = process.env.GCP_SPREADSHEET_ID!,
-  range = process.env.GCP_SPREADSHEET_RANGE!,
+  spreadsheetId = process.env.GCP_LEAD_SPREADSHEET_ID!,
+  range = process.env.GCP_LEAD_SPREADSHEET_RANGE!,
 }: LeadRepositoryConfig = {}) => {
   const DEFAULT_CREDENTIALS = {
     type: process.env.GCP_TYPE ?? '',

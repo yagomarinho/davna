@@ -34,6 +34,14 @@ export const Config = () => ({
       database: process.env.MONGODB_SESSION_DATABASE || 'db',
       collection: process.env.MONGODB_SESSION_COLLECTION || 'sessions',
     },
+    lead: {
+      spreadsheetId: process.env.GCP_LEAD_SPREADSHEET_ID ?? '',
+      range: process.env.GCP_LEAD_SPREADSHEET_RANGE ?? '',
+    },
+    suggestion: {
+      spreadsheetId: process.env.GCP_SUGGESTION_SPREADSHEET_ID ?? '',
+      range: process.env.GCP_SUGGESTION_SPREADSHEET_RANGE ?? '',
+    },
   },
   auth: {
     apiKey: {
@@ -79,7 +87,7 @@ export const Config = () => ({
         type: process.env.GCP_TYPE ?? '',
         project_id: process.env.GCP_PROJECT_ID ?? '',
         private_key_id: process.env.GCP_PRIVATE_KEY_ID ?? '',
-        private_key: process.env.GCP_PRIVATE_KEY ?? ''.replace(/\\n/g, '\n'),
+        private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, '\n') ?? '',
         client_email: process.env.GCP_CLIENT_EMAIL ?? '',
         client_id: process.env.GCP_CLIENT_ID ?? '',
         auth_uri: process.env.GCP_AUTH_URI ?? '',
@@ -88,10 +96,6 @@ export const Config = () => ({
           process.env.GCP_AUTH_PROVIDER_X509_CERT_URL ?? '',
         client_x509_cert_url: process.env.GCP_CLIENT_X509_CERT_URL ?? '',
         universe_domain: process.env.GCP_UNIVERSE_DOMAIN ?? '',
-      },
-      sheets: {
-        spreadsheetId: process.env.GCP_SPREADSHEET_ID ?? '',
-        range: process.env.GCP_SPREADSHEET_RANGE ?? '',
       },
     },
     storage: {

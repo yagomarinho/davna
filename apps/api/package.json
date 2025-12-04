@@ -24,7 +24,7 @@
     "@davna/classroom": "*",
     "@davna/ffmpeg.sdk": "*",
     "@davna/health": "*",
-    "@davna/lead": "*",
+    "@davna/feedback": "*",
     "@davna/middlewares": "*",
     "@davna/repositories": "*",
     "cors": "^2.8.5",

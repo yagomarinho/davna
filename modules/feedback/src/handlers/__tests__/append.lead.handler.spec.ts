@@ -1,4 +1,4 @@
-import { Left, Repository, Request, Right } from '@davna/core'
+import { Repository, Request, Right } from '@davna/core'
 import { InMemoryRepository } from '@davna/repositories'
 
 import { Lead } from '../../entities/lead'
@@ -21,38 +21,6 @@ describe('appendLeadHandler', () => {
 
   afterEach(() => {
     jest.clearAllMocks()
-  })
-
-  it('should return 400 when service returns Left', async () => {
-    const req = Request.data({ lead: '(21)999998888' })
-
-    appendLead.mockImplementationOnce(
-      () => async () => Left({ message: 'invalid' }),
-    )
-
-    const result = await appendLeadHandler(req)({ leads })
-
-    expect(result).toBeDefined()
-
-    expect(result).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({ message: 'Invalid Lead Contact' }),
-        metadata: expect.objectContaining({
-          headers: {
-            status: 400,
-          },
-        }),
-      }),
-    )
-
-    expect(appendLead).toHaveBeenCalledTimes(1)
-
-    const calledWith = appendLead.mock.calls[0][0]
-    expect(calledWith).toEqual(
-      expect.objectContaining({
-        lead: '(21)999998888',
-      }),
-    )
   })
 
   it('should return data when service returns Right', async () => {

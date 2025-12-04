@@ -1,14 +1,26 @@
 'use client'
 
-import { whatsappLead } from '@/actions/whatsapp.lead'
+import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { FiSend } from 'react-icons/fi'
-import { InlineNotification } from './inline.notification'
-import { useActionState } from 'react'
 
-export const WhatsAppLead = () => {
+import { InlineNotification } from './inline.notification'
+
+interface Init<T = any> {
+  name: string
+  action: (state: T, formData: FormData) => any
+  placeholder: string
+  errorMessage: string
+}
+
+export const FeedbackSender = ({
+  action,
+  errorMessage,
+  name,
+  placeholder,
+}: Init) => {
   const { pending } = useFormStatus()
-  const [state, formAction] = useActionState(whatsappLead, undefined)
+  const [state, formAction] = useActionState(action, undefined)
 
   return (
     <div className="flex flex-col justify-start items-center w-full max-w-sm md:max-w-lg">
@@ -20,9 +32,9 @@ export const WhatsAppLead = () => {
         className="flex flex-row justify-center items-center gap-0 w-full max-h-11 md:max-h-14 bg-[#121212] rounded-full border"
       >
         <input
-          name="whatsapp"
+          name={name}
           className="px-4 md:px-6 py-3 md:py-4 font-roboto text-xs md:text-base w-full bg-transparent placeholder:text-[#727272] outline-none"
-          placeholder="Insira seu WhatsApp para desbloquear seu acesso"
+          placeholder={placeholder}
         />
         <button
           disabled={pending}
@@ -34,11 +46,7 @@ export const WhatsAppLead = () => {
       </form>
       {state?.errors && (
         <div className="w-full max-w-md mt-3">
-          <InlineNotification
-            type="error"
-            message='Formato de WhatsApp inválido, por favor use o seguinte formato "(11) 99999-9999"'
-            initial
-          />
+          <InlineNotification type="error" message={errorMessage} initial />
         </div>
       )}
     </div>
