@@ -1,17 +1,25 @@
 import { Route } from '@davna/core'
 import { handlerPipe } from '@davna/applications'
-import { apiKeyAuthorization } from '@davna/middlewares'
+import { apiKeyAuthorization, guardian } from '@davna/middlewares'
 
 import {
   ensureAuthenticated,
+  loginValidation,
   loginWithCredentialsHandler,
   refreshSessionHandler,
+  refreshValidation,
   revokeSessionHandler,
   verifySessionHandler,
+  verifyValidation,
 } from '@davna/account'
-import { downloadAudioHandler, uploadAudioHandler } from '@davna/classroom'
+import {
+  downloadAudioHandler,
+  downloadValidation,
+  uploadAudioHandler,
+  uploadValidation,
+} from '@davna/classroom'
 import { healthCheckHandler } from '@davna/health'
-import { appendLeadHandler } from '@davna/lead'
+import { appendLeadHandler, leadValidate } from '@davna/lead'
 
 import { Env } from './env'
 
@@ -23,28 +31,47 @@ export const routes = ({
   Route({
     method: 'post',
     path: '/lead',
-    handler: handlerPipe(apiKeyAuthorization as any, appendLeadHandler),
+    handler: handlerPipe(
+      apiKeyAuthorization as any,
+      guardian as any,
+      appendLeadHandler,
+    ),
     env: {
       leads,
       config,
+      validate: leadValidate,
     },
   }),
   Route({
     path: '/session',
-    handler: handlerPipe(apiKeyAuthorization as any, verifySessionHandler),
+    handler: handlerPipe(
+      apiKeyAuthorization as any,
+      guardian as any,
+      verifySessionHandler,
+    ),
     env: {
       sessions,
       signer,
       config,
+      validate: verifyValidation({
+        tokenHeader: config.auth.jwt.token.headerName,
+      }),
     },
   }),
   Route({
     path: '/session/refresh',
-    handler: handlerPipe(apiKeyAuthorization as any, refreshSessionHandler),
+    handler: handlerPipe(
+      apiKeyAuthorization as any,
+      guardian as any,
+      refreshSessionHandler,
+    ),
     env: {
       sessions,
       signer,
       config,
+      validate: refreshValidation({
+        refreshTokenHeader: config.auth.jwt.refresh_token.headerName,
+      }),
     },
   }),
   Route({
@@ -52,6 +79,7 @@ export const routes = ({
     path: '/session',
     handler: handlerPipe(
       apiKeyAuthorization as any,
+      guardian as any,
       loginWithCredentialsHandler,
     ),
     env: {
@@ -60,6 +88,7 @@ export const routes = ({
       auth,
       signer,
       config,
+      validate: loginValidation,
     },
   }),
   Route({
@@ -81,6 +110,7 @@ export const routes = ({
   Route({
     path: '/audio/:id',
     handler: handlerPipe(
+      guardian as any,
       apiKeyAuthorization as any,
       ensureAuthenticated as any,
       downloadAudioHandler,
@@ -92,12 +122,14 @@ export const routes = ({
       signer,
       storage,
       config,
+      validate: downloadValidation,
     },
   }),
   Route({
     method: 'post',
     path: '/audio',
     handler: handlerPipe(
+      guardian as any,
       apiKeyAuthorization as any,
       ensureAuthenticated as any,
       uploadAudioHandler,
@@ -110,6 +142,7 @@ export const routes = ({
       storage,
       config,
       multimedia,
+      validate: uploadValidation,
     },
   }),
   Route({

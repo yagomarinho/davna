@@ -19,7 +19,7 @@ export const loginWithCredentialsHandler = Handler(
   request =>
     async ({ accounts, sessions, auth, signer, config }: Env) => {
       const { email, password } = request.data
-      const user_agent = request.metadata.headers['user-agent'] ?? ''
+      const user_agent: string = request.metadata.headers['user-agent']
 
       const result = await loginWithCredentials({
         email,

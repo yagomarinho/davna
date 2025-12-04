@@ -15,11 +15,9 @@ interface Env {
 export const refreshSessionHandler = Handler(
   request =>
     async ({ sessions, signer, config }: Env) => {
-      const user_agent = request.metadata.headers['user-agent'] ?? ''
-      const bearer =
-        (request.metadata.headers[config.auth.jwt.refresh_token.headerName] as
-          | string
-          | undefined) ?? ''
+      const user_agent: string = request.metadata.headers['user-agent']
+      const bearer: string =
+        request.metadata.headers[config.auth.jwt.refresh_token.headerName]
 
       if (!bearer)
         return Response({
