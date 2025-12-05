@@ -2,16 +2,25 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Audio, AudioChat } from './audio.chat'
-import { io } from 'socket.io-client'
-import { Socket } from 'socket.io-client'
-import { AudioCapture } from './audio.capture'
-import config from '@/config'
+import { io, Socket } from 'socket.io-client'
+
 import { useClassroom } from '@/contexts/classroom.context'
+
+import { Audio, AudioChat } from './audio.chat'
+import { AudioCapture } from './audio.capture'
+import { AUDIO_MESSAGE_ROLE } from './audio.chat/audio.message.roles'
+import { Replying } from './audio.chat/replying'
+
+import config from '@/config'
 
 interface Participant {
   participant_id: string
-  role: 'student' | 'teacher'
+  role: AUDIO_MESSAGE_ROLE
+}
+
+interface ReplyingMessage {
+  classroom_id: string
+  participant_id: string
 }
 
 interface Classroom {
@@ -43,11 +52,12 @@ interface Updated extends Started {
 
 export const Classroom = () => {
   const socketRef = useRef<Socket>(null)
-  const classroomIdRef = useRef('')
+  const classroomRef = useRef<Classroom>(null)
   const participantsRef = useRef<Participant[]>([])
   const { setRemaining } = useClassroom()
 
   const [audios, setAudios] = useState<Audio[]>([])
+  const [replying, setReplying] = useState<Replying>()
 
   async function getClassroomSession(): Promise<string> {
     const response = await fetch('/api/classroom/session')
@@ -78,7 +88,7 @@ export const Classroom = () => {
       s.on(
         'classroom:started',
         ({ classroom, remainingConsumption }: Started) => {
-          classroomIdRef.current = classroom.id
+          classroomRef.current = classroom
           participantsRef.current = classroom.participants
 
           setRemaining(remainingConsumption)
@@ -91,7 +101,7 @@ export const Classroom = () => {
         'classroom:updated',
         ({ classroom, message, remainingConsumption }: Updated) => {
           // comparar para ver se a mensagem pertence a classroom correta
-          if (classroom.id !== classroomIdRef.current) return
+          if (classroom.id !== classroomRef.current?.id) return
 
           const role = participantsRef.current.find(
             participant => participant.participant_id === message.data.owner_id,
@@ -103,6 +113,7 @@ export const Classroom = () => {
 
           if (exists) return
 
+          setReplying(undefined)
           setRemaining(remainingConsumption)
 
           const audio: Audio = {
@@ -117,8 +128,16 @@ export const Classroom = () => {
         },
       )
 
-      s.on('classroom:replying', msg => {
-        console.log(msg)
+      s.on('classroom:replying', (message: ReplyingMessage) => {
+        if (message.classroom_id !== classroomRef.current?.id) return
+
+        const role = classroomRef.current?.participants.find(
+          p => p.participant_id === message.participant_id,
+        )?.role
+
+        if (!role) return
+
+        setReplying({ role })
       })
 
       s.on('error:service', err => {
@@ -146,8 +165,9 @@ export const Classroom = () => {
 
   return (
     <main className="flex flex-col items-center w-full">
-      <div className="flex justify-center w-full max-w-screen-md p-4 md:p-8">
+      <div className="flex flex-col gap-3 justify-start items-center w-full max-w-screen-md p-4 md:p-8">
         <AudioChat messages={audios} />
+        <Replying replying={replying} />
       </div>
       <footer>
         <AudioCapture
@@ -159,7 +179,7 @@ export const Classroom = () => {
             )
 
             s?.emit('classroom:append-message', {
-              classroom_id: classroomIdRef.current,
+              classroom_id: classroomRef.current?.id,
               participant_id: student?.participant_id,
               type: 'audio',
               data: audio,

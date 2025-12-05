@@ -1,39 +1,37 @@
-import { Left, Repository, Request, Right } from '@davna/core'
-import { FakeAI, STORAGE_TYPE } from '@davna/providers'
+import type { GPTModel } from '@davna/providers'
+import { Left, Right, Request, Repository } from '@davna/core'
+
 import { InMemoryRepository } from '@davna/repositories'
+import { FakeAI, STORAGE_TYPE as _STORAGE_TYPE } from '@davna/providers'
 
 import { appendAndReplyHandler } from '../append.and.reply.handler'
-import { appendMessageToClassroom as appendMessageService } from '../../services/append.message.to.classroom'
-import { teacherGeneratesResponse as teacherGeneratesService } from '../../services/teacher.generates.response'
-import { getTranscriptionFromAudio as getTranscription } from '../../helpers/get.transcription.from.audio'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 
-jest.mock('../../services/append.message.to.classroom', () => ({
-  appendMessageToClassroom: jest.fn(),
+import { transcribeAndAppend as transcribeAndAppendService } from '../../services/transcribe.and.append'
+import { teacherGeneratesResponse as teacherGeneratesService } from '../../services/teacher.generates.response'
+
+jest.mock('../../services/transcribe.and.append', () => ({
+  transcribeAndAppend: jest.fn(),
 }))
 
 jest.mock('../../services/teacher.generates.response', () => ({
   teacherGeneratesResponse: jest.fn(),
 }))
 
-jest.mock('../../helpers/get.transcription.from.audio', () => ({
-  getTranscriptionFromAudio: jest.fn(),
-}))
-
-const appendMessageToClassroom = appendMessageService as any as jest.Mock
+const transcribeAndAppend = transcribeAndAppendService as any as jest.Mock
 const teacherGeneratesResponse = teacherGeneratesService as any as jest.Mock
-const getTranscriptionFromAudio = getTranscription as any as jest.Mock
 
-describe('appendAndReply handler', () => {
+describe('appendAndReplyHandler', () => {
   const classroom_id = 'class-1'
   const participant_id = 'student-1'
   const teacher_id = 'teacher-1'
   const audio_id = 'audio-1'
   const internalRef = 'ref-1'
   const tempDir = 'temp.dir'
+  const storage_driver = _STORAGE_TYPE.MONGO_GRIDFS
 
   let audios: Repository<Audio>
   let classrooms: Repository<Classroom>
@@ -45,7 +43,7 @@ describe('appendAndReply handler', () => {
     textToRespond: 'to respond',
     pathToSpeech: '/path',
     textFromSpeech: 'from speech',
-  })
+  }) as unknown as GPTModel
 
   beforeEach(async () => {
     audios = InMemoryRepository<Audio>()
@@ -87,7 +85,7 @@ describe('appendAndReply handler', () => {
         duration: 3000,
         internal_ref: {
           identifier: internalRef,
-          storage: STORAGE_TYPE.MONGO_GRIDFS,
+          storage: _STORAGE_TYPE.MONGO_GRIDFS,
         },
         src: 'src',
       }),
@@ -101,15 +99,11 @@ describe('appendAndReply handler', () => {
     return Request({ data, metadata })
   }
 
-  it('should emit error:service and return failed when appendMessageToClassroom returns Left', async () => {
+  it('should emit error:service and return failed when transcribeAndAppend returns Left', async () => {
     const req = makeReq()
-    const transcription = { transcription: 't', translation: 'tr' }
-    getTranscriptionFromAudio.mockImplementationOnce(
-      () => async () => transcription,
-    )
 
     const errorPayload = { status: 'error', message: 'cannot append' }
-    appendMessageToClassroom.mockImplementationOnce(
+    transcribeAndAppend.mockImplementationOnce(
       () => async () => Left(errorPayload),
     )
 
@@ -121,11 +115,11 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      storage_driver,
       tempDir,
     } as any)
 
-    expect(getTranscriptionFromAudio).toHaveBeenCalledTimes(1)
-    expect(appendMessageToClassroom).toHaveBeenCalledTimes(1)
+    expect(transcribeAndAppend).toHaveBeenCalledTimes(1)
 
     expect(emitter.emit).toHaveBeenCalledWith('error:service', {
       status: 'error',
@@ -141,10 +135,6 @@ describe('appendAndReply handler', () => {
 
   it('should emit error:internal and return failed when classroom has no teacher', async () => {
     const req = makeReq()
-    const transcription = { transcription: 't', translation: 'tr' }
-    getTranscriptionFromAudio.mockImplementationOnce(
-      () => async () => transcription,
-    )
 
     const classroomNoTeacher: Classroom = {
       id: classroom_id,
@@ -157,12 +147,11 @@ describe('appendAndReply handler', () => {
       participant_id,
       type: MESSAGE_TYPE.AUDIO,
       data: { id: audio_id, internal_ref: { identifier: internalRef } },
-      transcription: 't',
-      translation: 'tr',
     } as any
 
-    appendMessageToClassroom.mockImplementationOnce(
-      () => async () => Right({ classroom: classroomNoTeacher, message }),
+    transcribeAndAppend.mockImplementationOnce(
+      () => async () =>
+        Right({ classroom: classroomNoTeacher, message, consume: 0 }),
     )
 
     const result = await appendAndReplyHandler(req)({
@@ -173,10 +162,11 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      storage_driver,
       tempDir,
     } as any)
 
-    expect(appendMessageToClassroom).toHaveBeenCalledTimes(1)
+    expect(transcribeAndAppend).toHaveBeenCalledTimes(1)
     expect(emitter.emit).toHaveBeenCalledWith('error:internal', {
       status: 'error',
       message: 'Internal Server Error',
@@ -191,10 +181,6 @@ describe('appendAndReply handler', () => {
 
   it('should emit error:service and return failed when teacherGeneratesResponse returns Left', async () => {
     const req = makeReq()
-    const transcription = { transcription: 't', translation: 'tr' }
-    getTranscriptionFromAudio.mockImplementationOnce(
-      () => async () => transcription,
-    )
 
     const classroomWithTeacher: Classroom = {
       id: classroom_id,
@@ -210,12 +196,11 @@ describe('appendAndReply handler', () => {
       participant_id,
       type: MESSAGE_TYPE.AUDIO,
       data: { id: audio_id, internal_ref: { identifier: internalRef } },
-      transcription: 't',
-      translation: 'tr',
     } as any
 
-    appendMessageToClassroom.mockImplementationOnce(
-      () => async () => Right({ classroom: classroomWithTeacher, message }),
+    transcribeAndAppend.mockImplementationOnce(
+      () => async () =>
+        Right({ classroom: classroomWithTeacher, message, consume: 0 }),
     )
 
     const errorPayload = { status: 'error', message: 'ai failed' }
@@ -231,6 +216,7 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      storage_driver,
       tempDir,
     } as any)
 
@@ -247,12 +233,8 @@ describe('appendAndReply handler', () => {
     )
   })
 
-  it('should return successful when appendMessageToClassroom and teacherGeneratesResponse succeed', async () => {
+  it('should return successful when transcribeAndAppend and teacherGeneratesResponse succeed', async () => {
     const req = makeReq()
-    const transcription = { transcription: 't', translation: 'tr' }
-    getTranscriptionFromAudio.mockImplementationOnce(
-      () => async () => transcription,
-    )
 
     const classroomWithTeacher: Classroom = {
       id: classroom_id,
@@ -268,12 +250,15 @@ describe('appendAndReply handler', () => {
       participant_id,
       type: MESSAGE_TYPE.AUDIO,
       data: { id: audio_id, internal_ref: { identifier: internalRef } },
-      transcription: 't',
-      translation: 'tr',
     } as any
 
-    appendMessageToClassroom.mockImplementationOnce(
-      () => async () => Right({ classroom: classroomWithTeacher, message }),
+    transcribeAndAppend.mockImplementationOnce(
+      () => async () =>
+        Right({
+          classroom: classroomWithTeacher,
+          message,
+          consume: 20 * 60 * 1000, // 20 minutes
+        }),
     )
 
     const teacherResult = Right({
@@ -281,9 +266,8 @@ describe('appendAndReply handler', () => {
       classroom: classroomWithTeacher,
       message,
     })
-    teacherGeneratesResponse.mockImplementationOnce(
-      () => async () => teacherResult,
-    )
+
+    teacherGeneratesResponse.mockImplementation(() => async () => teacherResult)
 
     const result = await appendAndReplyHandler(req)({
       audios,
@@ -293,24 +277,50 @@ describe('appendAndReply handler', () => {
       messageHandler,
       messages,
       storage,
+      storage_driver,
       tempDir,
     } as any)
 
-    expect(appendMessageToClassroom).toHaveBeenCalledTimes(1)
+    expect(transcribeAndAppend).toHaveBeenCalledTimes(1)
     expect(teacherGeneratesResponse).toHaveBeenCalledTimes(1)
-    expect(emitter.emit).not.toHaveBeenCalledWith(
-      'error:service',
-      expect.anything(),
+
+    // classroom:updated should be emitted for transcribeAndAppend and for teacher response
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      1,
+      'classroom:replying',
+      expect.objectContaining({
+        classroom_id: classroomWithTeacher.id,
+        participant_id,
+      }),
     )
-    expect(emitter.emit).not.toHaveBeenCalledWith(
-      'error:internal',
-      expect.anything(),
+
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      2,
+      'classroom:updated',
+      expect.objectContaining({
+        classroom: classroomWithTeacher,
+        message,
+        remainingConsumption: 40 * 60 * 1000,
+      }),
     )
 
     expect(emitter.emit).toHaveBeenNthCalledWith(
       3,
+      'classroom:replying',
+      expect.objectContaining({
+        classroom_id: classroomWithTeacher.id,
+        participant_id: teacher_id,
+      }),
+    )
+
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      4,
       'classroom:updated',
-      expect.objectContaining({ remainingConsumption: 20 * 60 * 1000 }), // 20 minutes
+      expect.objectContaining({
+        classroom: classroomWithTeacher,
+        message,
+        remainingConsumption: 20 * 60 * 1000,
+      }),
     )
 
     expect(result).toEqual(

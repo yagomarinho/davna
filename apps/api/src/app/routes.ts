@@ -167,6 +167,7 @@ export const routes = ({
       config,
       multimedia,
       validate: uploadValidation,
+      storage_driver: config.providers.storage.default_driver,
     },
   }),
   Route({

@@ -1,6 +1,6 @@
 import { Left, Repository, Right } from '@davna/core'
 import { InMemoryRepository } from '@davna/repositories'
-import { FakeAI } from '@davna/providers'
+import { FakeAI, STORAGE_TYPE } from '@davna/providers'
 
 import { AIGenerateResponse as AIGenerateResponseService } from '../../helpers/ai.generate.response'
 import { appendMessageToClassroom as appendMessageService } from '../append.message.to.classroom'
@@ -39,6 +39,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
   let storage: any
   let messageHandler: any
   let multimedia: any
+  const storage_driver = STORAGE_TYPE.MONGO_GRIDFS
   const gpt = FakeAI({
     textToRespond: 'to respond',
     pathToSpeech: '/path',
@@ -146,6 +147,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       multimedia,
       messageHandler,
       storage,
+      storage_driver,
     })
 
     expect(verifyConsume).toHaveBeenCalledTimes(1)
@@ -196,6 +198,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       multimedia,
       messageHandler,
       storage,
+      storage_driver,
     })
 
     expect(verifyConsume).toHaveBeenCalledTimes(1)
@@ -236,6 +239,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
       multimedia,
       messageHandler,
       storage,
+      storage_driver,
     })
 
     expect(appendMessageToClassroom).toHaveBeenCalledTimes(1)
@@ -266,6 +270,7 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
         multimedia,
         messageHandler,
         storage,
+        storage_driver,
       }),
     ).rejects.toThrow('AI failure')
 

@@ -9,6 +9,8 @@ import { uploadAudio } from '../upload.audio'
 import { StorageConstructor } from '../../utils/storage'
 
 describe('uploadAudio Service', () => {
+  const storage_driver = STORAGE_TYPE.MONGO_GRIDFS
+
   it('should return Left when MIME type is not supported', async () => {
     const uploadMock = jest.fn()
     const storage = (() => ({
@@ -22,7 +24,7 @@ describe('uploadAudio Service', () => {
       mime: 'text/plain',
       duration: 1000,
       buffer: Buffer.from('dummy-audio'),
-    })({ storage, audios })
+    })({ storage, audios, storage_driver })
 
     expect(isLeft(result)).toBeTruthy()
     expect(result.value).toEqual({
@@ -53,7 +55,7 @@ describe('uploadAudio Service', () => {
       mime: supportedMime,
       duration: 3000,
       buffer,
-    })({ storage, audios })
+    })({ storage, audios, storage_driver })
 
     expect(isRight(result)).toBeTruthy()
     expect(uploadMock).toHaveBeenCalledTimes(1)
@@ -90,7 +92,7 @@ describe('uploadAudio Service', () => {
       mime: supportedMime,
       duration: 2000,
       buffer: Buffer.from('audio'),
-    })({ storage, audios })
+    })({ storage, audios, storage_driver })
 
     expect(isRight(result)).toBeTruthy()
 
@@ -139,7 +141,7 @@ describe('uploadAudio Service', () => {
       mime: supportedMime,
       duration: 1500,
       buffer: Buffer.from('audio-binary'),
-    })({ storage, audios })
+    })({ storage, audios, storage_driver })
 
     expect(isRight(result)).toBeTruthy()
 

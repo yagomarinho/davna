@@ -19,8 +19,10 @@ export function createWsServer(server: HTTPServer, env: Env) {
   const {
     repositories: { audios, classrooms, messages },
     providers: { gpt, messageHandler, multimedia, storage },
-    constants: { tempDir },
+    constants: { tempDir, config },
   } = env
+
+  const storage_driver = config.providers.storage.default_driver
 
   io.on('connection', async socket => {
     const { account } = socket.data
@@ -37,6 +39,7 @@ export function createWsServer(server: HTTPServer, env: Env) {
         multimedia,
         messageHandler,
         storage,
+        storage_driver,
       })
 
       if (isLeft(initializeResult)) {
@@ -68,6 +71,7 @@ export function createWsServer(server: HTTPServer, env: Env) {
           multimedia,
           messageHandler,
           storage,
+          storage_driver,
           tempDir,
         })
 

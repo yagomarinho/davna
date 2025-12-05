@@ -6,6 +6,7 @@ import { uploadAudio as service } from '../../services/upload.audio'
 import { uploadAudioHandler } from '../upload.audio.handler'
 import { StorageConstructor } from '../../utils/storage'
 import { MultimediaProvider } from '../../providers'
+import { STORAGE_TYPE } from '@davna/providers'
 
 jest.mock('../../services/upload.audio', () => ({
   uploadAudio: jest.fn(),
@@ -21,6 +22,7 @@ describe('uploadAudioHandler', () => {
   let audios: Repository<Audio>
   let storage: jest.Mocked<StorageConstructor>
   let multimedia: jest.Mocked<MultimediaProvider>
+  const storage_driver = STORAGE_TYPE.MONGO_GRIDFS
 
   beforeEach(() => {
     audios = InMemoryRepository<Audio>()
@@ -62,6 +64,7 @@ describe('uploadAudioHandler', () => {
       audios,
       storage,
       multimedia,
+      storage_driver,
     })
 
     expect(result).toBeDefined()
@@ -93,6 +96,7 @@ describe('uploadAudioHandler', () => {
       audios,
       storage,
       multimedia,
+      storage_driver,
     })
 
     expect(result).toBeDefined()
@@ -127,6 +131,7 @@ describe('uploadAudioHandler', () => {
       audios,
       storage,
       multimedia,
+      storage_driver,
     })
 
     expect(result).toBeDefined()
@@ -179,6 +184,7 @@ describe('uploadAudioHandler', () => {
       audios,
       storage,
       multimedia,
+      storage_driver,
     })
 
     expect(result).toBeDefined()

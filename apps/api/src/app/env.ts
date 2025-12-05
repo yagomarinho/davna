@@ -2,6 +2,7 @@ import { resolve } from 'node:path'
 import {
   Auth,
   ChatGPT,
+  FakeAI,
   FirebaseAdminAuth,
   GPTModel,
   JWTSigner,
@@ -66,7 +67,10 @@ export const Env = async (): Promise<Env> => {
   const config = Config()
 
   const auth = FirebaseAdminAuth({ config })
-  const gpt = ChatGPT({ apiKey: process.env.OPENAI_API_KEY })
+  const gpt =
+    config.providers.gpt.default_driver === 'chatgpt'
+      ? ChatGPT(config.providers.gpt.chatgpt)
+      : FakeAI(config.providers.gpt['fake.ai'])
   const signer = JWTSigner({
     secret: config.auth.jwt.secret,
   })

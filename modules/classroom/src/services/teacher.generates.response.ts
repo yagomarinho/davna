@@ -1,5 +1,5 @@
 import { isLeft, Query, Repository, Right, Service } from '@davna/core'
-import { GPTModel } from '@davna/providers'
+import { GPTModel, STORAGE_TYPE } from '@davna/providers'
 
 import { Message, MESSAGE_TYPE } from '../entities/message'
 import { Classroom } from '../entities/classroom'
@@ -26,6 +26,7 @@ interface Env {
   messageHandler: MessageHandler
   multimedia: MultimediaProvider
   storage: StorageConstructor
+  storage_driver: STORAGE_TYPE
 }
 
 interface Response {
@@ -44,6 +45,7 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
       messageHandler,
       multimedia,
       storage,
+      storage_driver,
     }) => {
       const result = await verifyConsume({ classroom })({
         classrooms,
@@ -79,6 +81,7 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
         audios,
         gpt,
         multimedia,
+        storage_driver,
       })
 
       const { audio: data, transcription, translation } = AIResult

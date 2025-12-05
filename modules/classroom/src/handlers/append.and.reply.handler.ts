@@ -1,4 +1,4 @@
-import type { GPTModel } from '@davna/providers'
+import type { GPTModel, STORAGE_TYPE } from '@davna/providers'
 import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
 
 import { Audio } from '../entities/audio'
@@ -34,6 +34,7 @@ interface Env {
   multimedia: MultimediaProvider
   messageHandler: MessageHandler
   storage: StorageConstructor
+  storage_driver: STORAGE_TYPE
   tempDir: string
 }
 
@@ -49,12 +50,18 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
       messageHandler,
       storage,
       tempDir,
+      storage_driver,
     }) => {
       const { classroom_id, participant_id, data } =
         await messageSchema.validate({
           ...request.data,
           participant_id: request.metadata.account.id,
         })
+
+      emitter.emit('classroom:replying', {
+        classroom_id,
+        participant_id,
+      })
 
       const result = await transcribeAndAppend({
         audio: data as Audio,
@@ -116,6 +123,7 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
         multimedia,
         messageHandler,
         storage,
+        storage_driver,
       })
 
       if (isLeft(result2)) {

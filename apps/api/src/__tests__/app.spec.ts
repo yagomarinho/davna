@@ -30,10 +30,12 @@ interface ClassUpdated extends ClassStarted {
   message: Message
 }
 
-interface ClassReplying {
-  classroom_id: string
-  participant_id: string
-}
+// Utilizar em breve
+
+// interface ClassReplying {
+//   classroom_id: string
+//   participant_id: string
+// }
 
 describe('application integration tests', () => {
   const credentials = { email: 'john@example.com', password: '123456' }
@@ -277,18 +279,13 @@ describe('application integration tests', () => {
       data: audio,
     })
 
-    const [append, reply] = await Promise.all([
-      waitFor<ClassUpdated>(socket, 'classroom:updated'),
-      waitFor<ClassReplying>(socket, 'classroom:replying'),
-    ])
-
+    const append = await waitFor<ClassUpdated>(socket, 'classroom:updated')
     const agent = await waitFor<ClassUpdated>(socket, 'classroom:updated')
 
     expect(append.classroom.id).toBe(classroom.id)
     expect(append.message.participant_id).toBe('0')
     expect(append.message.data).toEqual(audio)
-    expect(reply.classroom_id).toBe(classroom.id)
-    expect(reply.participant_id).toBe('agent')
+
     expect(agent.classroom.id).toBe(classroom.id)
     expect(agent.message.participant_id).toBe('agent')
   }, 20_000)

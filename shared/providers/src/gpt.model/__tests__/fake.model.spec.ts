@@ -1,11 +1,17 @@
 import { readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { FakeAI } from '../fake.ai'
 
 jest.mock('node:fs/promises', () => ({
   readFile: jest.fn(),
 }))
 
+jest.mock('node:fs', () => ({
+  existsSync: jest.fn(),
+}))
+
 const readFileMock = readFile as unknown as jest.Mock
+const existsSyncMock = existsSync as unknown as jest.Mock
 
 describe('FakeAI', () => {
   const config = {
@@ -32,6 +38,7 @@ describe('FakeAI', () => {
   it('should call readFile and return the file buffer on synthesize', async () => {
     const fakeBuffer = Buffer.from([1, 2, 3])
     readFileMock.mockResolvedValueOnce(fakeBuffer)
+    existsSyncMock.mockReturnValueOnce(true)
 
     const ai = FakeAI(config)
 
@@ -50,9 +57,8 @@ describe('FakeAI', () => {
     expect(text).toEqual('transcribed text')
   })
 
-  it('should return a valid WAV buffer when readFile rejects (fallback)', async () => {
-    readFileMock.mockRejectedValueOnce(new Error('file not found'))
-
+  it('should return a valid WAV buffer when existSync returns false (fallback)', async () => {
+    existsSyncMock.mockReturnValueOnce(false)
     const ai = FakeAI(config)
 
     const result = await ai.synthesize({ text: 'ignored' })
@@ -87,22 +93,5 @@ describe('FakeAI', () => {
 
     expect(result.toString('ascii', 36, 40)).toEqual('data')
     expect(result.readUInt32LE(40)).toEqual(dataByteLength)
-  })
-
-  it('should return fallback WAV if readFile resolves to falsy value (undefined)', async () => {
-    readFileMock.mockResolvedValueOnce(undefined)
-
-    const ai = FakeAI(config)
-
-    const result = await ai.synthesize({ text: 'ignored' })
-
-    expect(Buffer.isBuffer(result)).toBe(true)
-    expect(result.toString('ascii', 0, 4)).toEqual('RIFF')
-    expect(result.toString('ascii', 8, 12)).toEqual('WAVE')
-
-    const dataSize = result.readUInt32LE(40)
-    expect(dataSize).toBeGreaterThan(0)
-
-    expect(dataSize).toEqual(176400)
   })
 })

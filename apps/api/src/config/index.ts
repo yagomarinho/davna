@@ -1,3 +1,4 @@
+import { STORAGE_TYPE } from '@davna/providers'
 import { resolve } from 'node:path'
 
 export const Config = () => ({
@@ -99,6 +100,10 @@ export const Config = () => ({
       },
     },
     storage: {
+      default_driver:
+        process.env.NODE_ENV === 'production'
+          ? STORAGE_TYPE.AWS_S3
+          : STORAGE_TYPE.MONGO_GRIDFS,
       awsS3: {
         region: process.env.AWS_S3_STORAGE_REGION,
         bucket: process.env.AWS_S3_STORAGE_BUCKET,
@@ -124,7 +129,7 @@ export const Config = () => ({
       'fake.ai': {
         textToRespond: 'this is a simple response',
         textFromSpeech: 'this is a simple transcription',
-        pathToSpeech: resolve(__dirname, '../../temp', 'audiotest1.m4a'),
+        pathToSpeech: resolve(__dirname, '../../temp', 'audiotest.m4a'),
       },
     },
   },

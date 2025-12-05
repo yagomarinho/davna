@@ -4,6 +4,7 @@ import { Left, Repository, Right, Service } from '@davna/core'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { StorageConstructor } from '../utils/storage'
+import { STORAGE_TYPE } from '@davna/providers'
 
 interface Request {
   owner_id: string
@@ -16,11 +17,12 @@ interface Request {
 interface Env {
   storage: StorageConstructor
   audios: Repository<Audio>
+  storage_driver: STORAGE_TYPE
 }
 
 export const uploadAudio = Service<Request, Env, Audio>(
   ({ owner_id, name, mime: MIME, duration, buffer }) =>
-    async ({ storage, audios }) => {
+    async ({ storage, audios, storage_driver }) => {
       let mime: SUPORTED_MIME_TYPE
 
       try {
@@ -38,7 +40,7 @@ export const uploadAudio = Service<Request, Env, Audio>(
       const source = Readable.from(buffer)
 
       const { identifier, storage_type } = await storage({
-        driver: process.env.STORAGE_DRIVER_DEFAULT! as any,
+        driver: storage_driver,
       }).upload({
         source,
         metadata: {

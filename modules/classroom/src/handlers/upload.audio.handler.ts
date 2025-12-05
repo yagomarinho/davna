@@ -5,11 +5,13 @@ import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { uploadAudio } from '../services/upload.audio'
 import { StorageConstructor } from '../utils/storage'
 import { MultimediaProvider } from '../providers'
+import { STORAGE_TYPE } from '@davna/providers'
 
 interface Env {
   audios: Repository<Audio>
   storage: StorageConstructor
   multimedia: MultimediaProvider
+  storage_driver: STORAGE_TYPE
 }
 
 export const uploadAudioHandler = Handler(request => async (env: Env) => {

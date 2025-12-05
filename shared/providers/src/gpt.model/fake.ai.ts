@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { generateSilentWavBuffer } from '@davna/utils'
+import { generateSilentWavBuffer, wait } from '@davna/utils'
 
 import { GPTModel } from './gpt.model'
 
@@ -8,16 +8,24 @@ export interface FakeAIConfig {
   textToRespond: string
   pathToSpeech: string
   textFromSpeech: string
+  milis?: number
 }
 
 export function FakeAI({
   textToRespond,
   pathToSpeech,
   textFromSpeech,
+  milis = 1000,
 }: FakeAIConfig): GPTModel {
-  const respond: GPTModel['respond'] = async () => textToRespond
+  const respond: GPTModel['respond'] = async () => {
+    await wait(milis)
+    return textToRespond
+  }
 
-  const transcribe: GPTModel['transcribe'] = async () => textFromSpeech
+  const transcribe: GPTModel['transcribe'] = async () => {
+    await wait(milis)
+    return textFromSpeech
+  }
 
   const synthesize: GPTModel['synthesize'] = async () => {
     try {
@@ -25,9 +33,10 @@ export function FakeAI({
 
       if (!exists) throw ''
 
+      await wait(milis)
       return readFile(pathToSpeech, { flag: 'r' })
     } catch {
-      await wait(100) // necessário para tornar a branch assincrono
+      await wait(milis)
 
       // fallback WAV
       // gerado com IA
@@ -46,10 +55,4 @@ export function FakeAI({
     transcribe,
     synthesize,
   }
-}
-
-function wait(milis: number = 1000) {
-  return new Promise(resolve => {
-    setTimeout(resolve, milis)
-  })
 }

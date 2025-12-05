@@ -1,4 +1,4 @@
-import type { GPTModel } from '@davna/providers'
+import type { GPTModel, STORAGE_TYPE } from '@davna/providers'
 import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
 
 import { Audio, Classroom, Message, PARTICIPANT_ROLE } from '../entities'
@@ -25,6 +25,7 @@ interface Env {
   multimedia: MultimediaProvider
   messageHandler: MessageHandler
   storage: StorageConstructor
+  storage_driver: STORAGE_TYPE
 }
 
 export const initializeClassroomHandler = Handler<Env, any, Metadata>(
@@ -38,6 +39,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
       multimedia,
       messageHandler,
       storage,
+      storage_driver,
     }) => {
       const { account } = metadata
 
@@ -90,6 +92,7 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         multimedia,
         messageHandler,
         storage,
+        storage_driver,
       })
 
       if (isLeft(result2)) {

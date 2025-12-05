@@ -1,5 +1,5 @@
 import { Left, Repository, Request, Right } from '@davna/core'
-import { FakeAI } from '@davna/providers'
+import { FakeAI, STORAGE_TYPE } from '@davna/providers'
 import { InMemoryRepository } from '@davna/repositories'
 
 import { initializeClassroomHandler } from '../initialize.classroom.handler'
@@ -31,6 +31,8 @@ describe('initializeClassroomHandler', () => {
   let storage: any
   let messageHandler: any
   let emitter: { emit: jest.Mock }
+  const storage_driver = STORAGE_TYPE.MONGO_GRIDFS
+
   const gpt = FakeAI({
     pathToSpeech: '',
     textFromSpeech: '',
@@ -77,6 +79,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      storage_driver,
       gpt,
     } as any)
 
@@ -120,6 +123,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      storage_driver,
       gpt,
     } as any)
 
@@ -164,6 +168,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      storage_driver,
       gpt,
     } as any)
 
@@ -214,6 +219,7 @@ describe('initializeClassroomHandler', () => {
       messages,
       messageHandler,
       storage,
+      storage_driver,
       gpt,
     } as any)
 

@@ -1,4 +1,4 @@
 export enum AUDIO_MESSAGE_ROLE {
-  TEACHER,
-  STUDENT,
+  TEACHER = 'teacher',
+  STUDENT = 'student',
 }
