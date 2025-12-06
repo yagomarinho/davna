@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import config from './config'
-import { ensureAuth } from './services/ensure.auth'
-import { refreshAuth } from './services/refresh.auth'
+
+import { ensureAuth, refreshAuth } from '@/modules/account'
 
 const routes = [
   {

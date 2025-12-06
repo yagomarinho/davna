@@ -2,34 +2,15 @@ import type { Metadata } from 'next'
 
 import React from 'react'
 import Script from 'next/script'
-import { Roboto, Space_Grotesk, Sora } from 'next/font/google'
+import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
 
 import config from '@/config'
-import { ConsentContent } from '@/components/consent.content'
-import { ConsentModal } from '@/components/consent.modal'
+import { grotesk, roboto, sora } from '@/shared/fonts'
+import { ConsentContent, ConsentModal } from '@/modules/feedback'
 
-import '@/styles/global.css'
-
-import { cookies } from 'next/headers'
-
-const roboto = Roboto({
-  subsets: ['latin'],
-  variable: '--font-roboto',
-  weight: ['300', '400', '500'],
-})
-
-const sora = Sora({
-  subsets: ['latin'],
-  variable: '--font-sora',
-  weight: ['400', '500', '700'],
-})
-
-const grotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-grotesk',
-  weight: ['300', '400', '500', '600', '700'],
-})
+import '@/shared/styles/global.css'
+import { mergeNames } from '@/shared/utils/merge.names'
 
 export const metadata: Metadata = {
   title: 'Davna | App',
@@ -108,7 +89,3 @@ const RootLayout = async ({
 }
 
 export default RootLayout
-
-function mergeNames(...names: (string | undefined | false)[]): string {
-  return names.filter(Boolean).join(' ')
-}
