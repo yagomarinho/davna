@@ -17,7 +17,12 @@ export const RecordState = () => {
         <FiTrash2 color="#972B38" size={24} />
       </IconButton>
       {capture.audioUrl && (
-        <audio aria-disabled controls crossOrigin="" className="w-full">
+        <audio
+          aria-disabled
+          controls
+          crossOrigin=""
+          className="w-full min-w-40"
+        >
           <source src={src} />
         </audio>
       )}
