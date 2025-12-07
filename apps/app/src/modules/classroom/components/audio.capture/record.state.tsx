@@ -17,14 +17,11 @@ export const RecordState = () => {
         <FiTrash2 color="#972B38" size={24} />
       </IconButton>
       {capture.audioUrl && (
-        <audio
-          aria-disabled
-          controls
-          crossOrigin=""
-          className="w-full min-w-40"
-        >
-          <source src={src} />
-        </audio>
+        <div className="w-full min-w-40">
+          <audio aria-disabled controls crossOrigin="" className="w-full">
+            <source src={src} />
+          </audio>
+        </div>
       )}
       {capture.state !== 'stopped' && (
         <IconButton
