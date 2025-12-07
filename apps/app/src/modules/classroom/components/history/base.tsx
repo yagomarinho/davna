@@ -2,10 +2,13 @@ import { PropsWithChildren } from 'react'
 import { AUDIO_MESSAGE_ROLE } from './audio.message.roles'
 import { BaseProps } from './base.props'
 
-export const Base = ({ role, children }: PropsWithChildren<BaseProps>) => {
+export const Base = ({
+  participant: { role },
+  children,
+}: PropsWithChildren<BaseProps>) => {
   const styles = {
-    [AUDIO_MESSAGE_ROLE.TEACHER]: { justifyContent: 'flex-start' },
-    [AUDIO_MESSAGE_ROLE.STUDENT]: { justifyContent: 'flex-end' },
+    [AUDIO_MESSAGE_ROLE.OWNER]: { justifyContent: 'flex-end' },
+    [AUDIO_MESSAGE_ROLE.OTHERS]: { justifyContent: 'flex-start' },
   }
 
   return (

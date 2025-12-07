@@ -16,7 +16,7 @@ export const ClassroomHeader = () => {
 
   return (
     <BaseHeader>
-      <div className="fixed bg-[#080808] z-10 top-0 left-0 flex flex-row justify-center items-center w-full p-4 md:p-8">
+      <div className="fixed bg-[#1D1D1D] z-10 top-0 left-0 flex flex-row justify-center items-center w-full h-[76px] p-4 md:p-8 border-b border-[#ffffff]/25 shadow-[0_4px_8px_rgba(0,0,0,0.65)]">
         <div className="flex flex-row justify-between items-center w-full max-w-screen-md">
           <Link href="/dashboard">
             <Button type="ghost">

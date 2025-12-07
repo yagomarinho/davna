@@ -18,13 +18,13 @@ export interface TextComponentProps extends BaseProps {
 }
 
 export const Text = ({
+  participant,
   transcription,
   translation,
-  role,
 }: TextComponentProps) => {
   const styles = {
-    [AUDIO_MESSAGE_ROLE.TEACHER]: { backgroundColor: '#202020' },
-    [AUDIO_MESSAGE_ROLE.STUDENT]: { backgroundColor: '#2A3345' },
+    [AUDIO_MESSAGE_ROLE.OWNER]: { backgroundColor: '#2A3345' },
+    [AUDIO_MESSAGE_ROLE.OTHERS]: { backgroundColor: '#202020' },
   }
 
   const [mode, setMode] = useState(TEXT_MODE.TRANSCRIPTION)
@@ -39,8 +39,8 @@ export const Text = ({
 
   return (
     <div
-      style={styles[role]}
-      className="flex flex-col justify-start items-start w-full rounded-lg p-2"
+      style={styles[participant.role]}
+      className="flex flex-col justify-start items-start w-full rounded-lg p-2 border border-[#FFFFFF]/10"
     >
       <p className="font-roboto text-xs text-[#C2C2C2] p-2">
         {mode === TEXT_MODE.TRANSCRIPTION ? transcription : translation}

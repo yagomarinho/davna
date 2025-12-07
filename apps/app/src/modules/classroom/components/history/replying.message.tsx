@@ -8,12 +8,12 @@ import { AUDIO_MESSAGE_ROLE } from './audio.message.roles'
 
 export interface ReplyingMessageProps extends BaseProps {}
 
-export const ReplyingMessage = ({ role }: ReplyingMessageProps) => (
-  <Base role={role}>
-    <AudioContainer role={role}>
-      <Header role={role} />
+export const ReplyingMessage = ({ participant }: ReplyingMessageProps) => (
+  <Base participant={participant}>
+    <AudioContainer participant={participant}>
+      <Header participant={participant} />
       <p className="font-roboto text-sm md:text-base leading-[150%]">
-        {role === AUDIO_MESSAGE_ROLE.TEACHER
+        {participant.role === AUDIO_MESSAGE_ROLE.OTHERS
           ? 'Gravando Resposta...'
           : 'Processando Áudio...'}
       </p>

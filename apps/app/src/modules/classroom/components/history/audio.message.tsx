@@ -11,13 +11,13 @@ import { Footer } from './footer'
 import { Text } from './text'
 
 export interface AudioMessageProps extends BaseProps {
+  audio_id: string
   transcription: string
   translation: string
-  audio_id: string
 }
 
 export const AudioMessage = ({
-  role,
+  participant,
   transcription,
   translation,
   audio_id,
@@ -29,15 +29,15 @@ export const AudioMessage = ({
   }
 
   return (
-    <Base role={role}>
-      <AudioContainer role={role}>
-        <Header role={role} />
-        <Audio id={audio_id} />
-        <Footer role={role} onClick={activeTextIsOpen} />
+    <Base participant={participant}>
+      <AudioContainer participant={participant}>
+        <Header participant={participant} />
+        <Audio id={audio_id} participant={participant} />
+        <Footer participant={participant} onClick={activeTextIsOpen} />
       </AudioContainer>
       {textIsOpen && (
         <Text
-          role={role}
+          participant={participant}
           transcription={transcription}
           translation={translation}
         />

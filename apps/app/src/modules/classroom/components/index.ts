@@ -1,5 +1,5 @@
 export * from './audio.capture'
-export * from './audio.chat'
 export * from './classroom'
 export * from './header.classroom'
+export * from './history'
 export * from './remaining.consumption'
