@@ -11,8 +11,7 @@ interface H<E = {}, D = any, M extends Metadata = any> {
 }
 
 export interface Handler<E = any, D = any, M extends Metadata = any>
-  extends H<E, D, M>,
-    Tagged<'handler'> {}
+  extends H<E, D, M>, Tagged<'handler'> {}
 
 export function Handler<E = {}, D = any, M extends Metadata = any>(
   handler: H<E, D, M>,

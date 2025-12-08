@@ -6,7 +6,7 @@ import { isLeft, Request } from '@davna/core'
 import { verifyWebsocketAuth } from '@davna/account'
 import {
   appendAndReplyHandler,
-  initializeClassroomHandler,
+  connectToClassroomHandler,
 } from '@davna/classroom'
 
 import { Env } from './env'
@@ -25,11 +25,12 @@ export function createWsServer(server: HTTPServer, env: Env) {
   const storage_driver = config.providers.storage.default_driver
 
   io.on('connection', async socket => {
+    const classroom_id = socket.handshake.headers['x-classroom-id'] as string
     const { account } = socket.data
 
     try {
-      const initializeResult = await initializeClassroomHandler(
-        Request.metadata({ account }),
+      const connect = await connectToClassroomHandler(
+        Request({ data: { classroom_id }, metadata: { account } }),
       )({
         emitter: socket,
         audios,
@@ -42,7 +43,7 @@ export function createWsServer(server: HTTPServer, env: Env) {
         storage_driver,
       })
 
-      if (isLeft(initializeResult)) {
+      if (isLeft(connect)) {
         return socket.disconnect(true)
       }
     } catch (e) {

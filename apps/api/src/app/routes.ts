@@ -13,6 +13,7 @@ import {
   verifyValidation,
 } from '@davna/account'
 import {
+  createClassroomHandler,
   downloadAudioHandler,
   downloadValidation,
   uploadAudioHandler,
@@ -29,7 +30,15 @@ import {
 import { Env } from './env'
 
 export const routes = ({
-  repositories: { accounts, leads, audios, sessions, suggestions },
+  repositories: {
+    accounts,
+    audios,
+    classrooms,
+    leads,
+    messages,
+    sessions,
+    suggestions,
+  },
   providers: { auth, signer, multimedia, storage },
   constants: { config },
 }: Env): Route[] => [
@@ -168,6 +177,23 @@ export const routes = ({
       multimedia,
       validate: uploadValidation,
       storage_driver: config.providers.storage.default_driver,
+    },
+  }),
+  Route({
+    method: 'post',
+    path: '/classroom',
+    handler: handlerPipe(
+      apiKeyAuthorization as any,
+      ensureAuthenticated as any,
+      createClassroomHandler,
+    ),
+    env: {
+      accounts,
+      sessions,
+      signer,
+      config,
+      classrooms,
+      messages,
     },
   }),
   Route({

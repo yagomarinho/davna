@@ -1,24 +1,14 @@
-import { isRight, Left, Repository, Right } from '@davna/core'
+import { isRight, Repository } from '@davna/core'
 import { InMemoryRepository } from '@davna/repositories'
 
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
-import { Message } from '../../entities/message'
-import { openClassroom } from '../open.classroom'
-import { verifyConsume as verifyConsumeService } from '../verify.consume'
+import { createClassroom } from '../create.classroom'
 
-jest.mock('../verify.consume', () => ({
-  verifyConsume: jest.fn(),
-}))
-
-const verifyConsume = verifyConsumeService as unknown as jest.Mock
-
-describe('openClassroom (service) - updated behavior', () => {
+describe('createClassroom (service) - updated behavior', () => {
   let classrooms: Repository<Classroom>
-  let messages: Repository<Message>
 
   beforeEach(async () => {
     classrooms = InMemoryRepository<Classroom>()
-    messages = InMemoryRepository<Message>()
 
     jest.clearAllMocks()
   })
@@ -29,16 +19,10 @@ describe('openClassroom (service) - updated behavior', () => {
 
   it('should return Right with a classroom containing teacher and student participants and consume from verifyConsume', async () => {
     // verifyConsume returns Right with consume
-    const consumePayload = { consume: 42 }
-    verifyConsume.mockImplementationOnce(
-      () => async () => Right(consumePayload),
-    )
-
     const participant_id = 'student-1'
 
-    const result = await openClassroom({ participant_id })({
+    const result = await createClassroom({ participant_id })({
       classrooms,
-      messages,
     })
 
     expect(isRight(result)).toBeTruthy()
@@ -48,7 +32,6 @@ describe('openClassroom (service) - updated behavior', () => {
     }
 
     const classroom = value.classroom
-    expect(value.consume).toEqual(consumePayload.consume)
 
     expect(classroom.participants).toEqual(
       expect.arrayContaining([
@@ -67,16 +50,11 @@ describe('openClassroom (service) - updated behavior', () => {
   })
 
   it('should persist and generate unique classrooms for different participants', async () => {
-    // verifyConsume returns Right so both calls proceed
-    verifyConsume.mockImplementation(() => async () => Right({ consume: 0 }))
-
-    const r1 = await openClassroom({ participant_id: 'alice' })({
+    const r1 = await createClassroom({ participant_id: 'alice' })({
       classrooms,
-      messages,
     })
-    const r2 = await openClassroom({ participant_id: 'bob' })({
+    const r2 = await createClassroom({ participant_id: 'bob' })({
       classrooms,
-      messages,
     })
 
     expect(isRight(r1)).toBeTruthy()
@@ -107,19 +85,5 @@ describe('openClassroom (service) - updated behavior', () => {
         }),
       ]),
     )
-  })
-
-  it('should forward Left from verifyConsume', async () => {
-    const errorPayload = { status: 'error', message: 'cannot consume' }
-    verifyConsume.mockImplementationOnce(() => async () => Left(errorPayload))
-
-    const participant_id = 'student-x'
-
-    const result = await openClassroom({ participant_id })({
-      classrooms,
-      messages,
-    })
-
-    expect(result).toEqual(Left(errorPayload))
   })
 })

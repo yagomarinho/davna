@@ -64,18 +64,27 @@ describe('application integration tests', () => {
     app = a.exposeApp()
     server = createWsServer(createServer(app), env)
 
-    const res = await request(app)
+    const sessionRes = await request(app)
       .post('/session')
       .send(credentials)
       .set(API_KEY_HEADER_NAME, API_KEY_TOKEN)
 
-    const ses = res.body
+    const ses = sessionRes.body
 
     connect({ server, port })
+
+    const classroomRes = await request(app)
+      .post('/classroom')
+      .send(credentials)
+      .set(API_KEY_HEADER_NAME, API_KEY_TOKEN)
+      .set(SESSION_TOKEN_HEADER_NAME, bearer(ses.token.value))
+
+    classroom = classroomRes.body.classroom
 
     socket = io(`http://localhost:${port}`, {
       path: '/socket.io',
       reconnectionAttempts: 2,
+      extraHeaders: { ['x-classroom-id']: classroom.id },
       auth: {
         token: ses.token.value,
       },
@@ -109,7 +118,15 @@ describe('application integration tests', () => {
       waitFor(socket, 'classroom:updated'),
     ])
 
-    classroom = started.classroom
+    expect(started.classroom).toEqual(
+      expect.objectContaining({
+        id: classroom.id,
+        owner_id: classroom.owner_id,
+        participants: classroom.participants,
+        created_at: classroom.created_at,
+        updated_at: classroom.updated_at,
+      }),
+    )
   }, 20_000)
 
   beforeEach(() => {

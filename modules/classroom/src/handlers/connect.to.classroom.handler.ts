@@ -4,16 +4,21 @@ import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
 import { Audio, Classroom, Message, PARTICIPANT_ROLE } from '../entities'
 import { Emitter } from '../helpers/emitter'
 
-import { openClassroom } from '../services/open.classroom'
 import { teacherGeneratesResponse } from '../services/teacher.generates.response'
 
 import { MessageHandler } from '../utils/message.handler'
 import { remainingConsumption } from '../helpers/remaining.consumption'
 import { StorageConstructor } from '../utils/storage'
 import { MultimediaProvider } from '../providers'
+import { showClassroom } from '../services/show.classroom'
+import { verifyConsume } from '../services/verify.consume'
 
 interface Metadata {
   account: Identifier
+}
+
+interface Data {
+  classroom_id: string
 }
 
 interface Env {
@@ -28,8 +33,8 @@ interface Env {
   storage_driver: STORAGE_TYPE
 }
 
-export const initializeClassroomHandler = Handler<Env, any, Metadata>(
-  ({ metadata }) =>
+export const connectToClassroomHandler = Handler<Env, Data, Metadata>(
+  ({ data, metadata }) =>
     async ({
       emitter,
       audios,
@@ -41,9 +46,11 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
       storage,
       storage_driver,
     }) => {
+      const { classroom_id } = data
       const { account } = metadata
 
-      const result = await openClassroom({
+      const result = await showClassroom({
+        classroom_id,
         participant_id: account.id,
       })({ classrooms, messages })
 
@@ -58,8 +65,21 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
 
       const { classroom } = result.value
 
+      const consume = await verifyConsume({
+        classroom: { ...classroom, history: classroom.history.map(m => m.id) },
+      })({ classrooms, messages })
+
+      if (isLeft(consume)) {
+        emitter.emit('error:service', {
+          status: 'error',
+          message: consume.value.message,
+        })
+
+        return Response.metadata({ status: 'error' })
+      }
+
       emitter.emit('classroom:started', {
-        remainingConsumption: remainingConsumption(result.value.consume),
+        remainingConsumption: remainingConsumption(consume.value.consume),
         classroom,
       })
 
@@ -76,41 +96,43 @@ export const initializeClassroomHandler = Handler<Env, any, Metadata>(
         return Response.metadata({ status: 'error' })
       }
 
-      emitter.emit('classroom:replying', {
-        classroom_id: classroom.id,
-        participant_id: teacher_id,
-      })
-
-      const result2 = await teacherGeneratesResponse({
-        classroom,
-        teacher_id,
-      })({
-        audios,
-        classrooms,
-        messages,
-        gpt,
-        multimedia,
-        messageHandler,
-        storage,
-        storage_driver,
-      })
-
-      if (isLeft(result2)) {
-        emitter.emit('error:service', {
-          status: 'error',
-          message: result2.value.message,
+      if (!classroom.history.length) {
+        emitter.emit('classroom:replying', {
+          classroom_id: classroom.id,
+          participant_id: teacher_id,
         })
 
-        return Response.metadata({ status: 'error' })
+        const result2 = await teacherGeneratesResponse({
+          classroom,
+          teacher_id,
+        })({
+          audios,
+          classrooms,
+          messages,
+          gpt,
+          multimedia,
+          messageHandler,
+          storage,
+          storage_driver,
+        })
+
+        if (isLeft(result2)) {
+          emitter.emit('error:service', {
+            status: 'error',
+            message: result2.value.message,
+          })
+
+          return Response.metadata({ status: 'error' })
+        }
+
+        const { classroom: updatedClassroom, message } = result2.value
+
+        emitter.emit('classroom:updated', {
+          remainingConsumption: remainingConsumption(result2.value.consume),
+          classroom: updatedClassroom,
+          message,
+        })
       }
-
-      const { classroom: updatedClassroom, message } = result2.value
-
-      emitter.emit('classroom:updated', {
-        remainingConsumption: remainingConsumption(result2.value.consume),
-        classroom: updatedClassroom,
-        message,
-      })
 
       return Response.metadata({ status: 'successful' })
     },

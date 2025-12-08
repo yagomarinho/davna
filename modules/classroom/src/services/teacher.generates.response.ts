@@ -1,4 +1,4 @@
-import { isLeft, Query, Repository, Right, Service } from '@davna/core'
+import { isLeft, Repository, Right, Service } from '@davna/core'
 import { GPTModel, STORAGE_TYPE } from '@davna/providers'
 
 import { Message, MESSAGE_TYPE } from '../entities/message'
@@ -14,7 +14,7 @@ import { StorageConstructor } from '../utils/storage'
 import { MultimediaProvider } from '../providers'
 
 interface Data {
-  classroom: Classroom
+  classroom: Omit<Classroom, 'history'> & { history: Message[] }
   teacher_id: string
 }
 
@@ -47,7 +47,9 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
       storage,
       storage_driver,
     }) => {
-      const result = await verifyConsume({ classroom })({
+      const result = await verifyConsume({
+        classroom: { ...classroom, history: classroom.history.map(m => m.id) },
+      })({
         classrooms,
         messages,
       })
@@ -57,9 +59,7 @@ export const teacherGeneratesResponse = Service<Data, Env, Response>(
       // pegar o histórico e montar o input do GPT
       const { history, participants } = classroom
 
-      const h = await messages.query(Query.where('id', 'in', history))
-
-      const input = h
+      const input = history
         .map(m => {
           let role: string | undefined = participants.find(
             p => p.participant_id === m.participant_id,

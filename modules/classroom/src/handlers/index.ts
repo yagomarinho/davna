@@ -1,4 +1,5 @@
 export * from './append.and.reply.handler'
+export * from './connect.to.classroom.handler'
+export * from './create.classroom.handler'
 export * from './download.audio.handler'
-export * from './initialize.classroom.handler'
 export * from './upload.audio.handler'

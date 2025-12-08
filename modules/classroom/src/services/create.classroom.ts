@@ -1,9 +1,6 @@
-import { isLeft, Repository, Right, Service } from '@davna/core'
+import { Repository, Right, Service } from '@davna/core'
 
 import { Classroom, PARTICIPANT_ROLE } from '../entities/classroom'
-import { Message } from '../entities/message'
-
-import { verifyConsume } from './verify.consume'
 
 interface Request {
   participant_id: string
@@ -11,17 +8,15 @@ interface Request {
 
 interface Env {
   classrooms: Repository<Classroom>
-  messages: Repository<Message>
 }
 
 interface Response {
   classroom: Classroom
-  consume: number
 }
 
-export const openClassroom = Service<Request, Env, Response>(
+export const createClassroom = Service<Request, Env, Response>(
   ({ participant_id }) =>
-    async ({ classrooms, messages }) => {
+    async ({ classrooms }) => {
       let classroom = Classroom.create({
         owner_id: participant_id,
         participants: [
@@ -39,15 +34,7 @@ export const openClassroom = Service<Request, Env, Response>(
 
       classroom = await classrooms.set(classroom)
 
-      const result = await verifyConsume({ classroom })({
-        classrooms,
-        messages,
-      })
-
-      if (isLeft(result)) return result
-
       return Right({
-        consume: result.value.consume,
         classroom,
       })
     },

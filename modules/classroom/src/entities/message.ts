@@ -24,8 +24,7 @@ export interface AudioMessageProps {
 export interface AudioMessage extends AudioMessageProps, Entity<URI> {}
 
 export interface CreateAudioMessage
-  extends AudioMessageProps,
-    Partial<Entity> {}
+  extends AudioMessageProps, Partial<Entity> {}
 
 export type Message = AudioMessage
 
