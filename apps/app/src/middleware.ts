@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import config from './config'
+import { serverConfig as config } from './config/server'
 
 import { ensureAuth, refreshAuth } from '@/modules/account'
 

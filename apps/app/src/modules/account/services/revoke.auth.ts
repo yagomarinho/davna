@@ -2,7 +2,7 @@ import 'server-only'
 
 import { apiKey, bearer } from '@/shared/utils'
 
-import config from '@/config'
+import { serverConfig as config } from '@/config'
 
 export async function revokeAuth(token: string): Promise<void> {
   const headers = new Headers()

@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers'
 import { string } from 'yup'
 
-import config from '@/config'
+import { serverConfig as config } from '@/config'
 
 import { appendSuggestion } from '../services'
 

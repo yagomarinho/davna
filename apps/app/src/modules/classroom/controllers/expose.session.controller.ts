@@ -1,6 +1,6 @@
 import 'server-only'
 
-import config from '@/config'
+import { serverConfig as config } from '@/config'
 import { NextRequest, NextResponse } from 'next/server'
 
 export function ExposeSessionController() {

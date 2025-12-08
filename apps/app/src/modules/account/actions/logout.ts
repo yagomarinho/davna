@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import config from '@/config'
+import { serverConfig as config } from '@/config'
 
 import { revokeAuth } from '../services'
 

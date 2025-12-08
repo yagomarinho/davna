@@ -84,9 +84,9 @@ describe('application integration tests', () => {
     socket = io(`http://localhost:${port}`, {
       path: '/socket.io',
       reconnectionAttempts: 2,
-      extraHeaders: { ['x-classroom-id']: classroom.id },
       auth: {
         token: ses.token.value,
+        classroom_id: classroom.id,
       },
       autoConnect: true,
       timeout: 5_000,
@@ -108,8 +108,8 @@ describe('application integration tests', () => {
       throw new Error(err)
     })
 
-    socket.on('error', (err: any) => {
-      throw new Error(err)
+    socket.on('connect', () => {
+      socket.emit('classroom:welcome')
     })
 
     const [started] = await Promise.all([

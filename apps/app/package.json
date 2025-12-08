@@ -17,6 +17,7 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
+    "@react-spring/web": "^10.0.3",
     "@vercel/analytics": "^1.5.0",
     "next": "15.5.7",
     "nookies": "^2.5.2",

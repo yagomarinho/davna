@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 import pluginReact from 'eslint-plugin-react'
+import pluginReactHooks from 'eslint-plugin-react-hooks'
 import jest from 'eslint-plugin-jest'
 
 import { defineConfig } from 'eslint/config'
@@ -11,6 +12,7 @@ import importPlugin from 'eslint-plugin-import'
 export default defineConfig([
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
+  pluginReactHooks.configs.flat.recommended,
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     plugins: {

@@ -1,3 +1,3 @@
-import { ClassroomPage } from '@/modules/classroom'
+import { CreateClassroomPage } from '@/modules/classroom'
 
-export default ClassroomPage
+export default CreateClassroomPage

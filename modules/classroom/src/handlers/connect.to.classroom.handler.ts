@@ -19,6 +19,7 @@ interface Metadata {
 
 interface Data {
   classroom_id: string
+  reply_strategy?: 'never' | 'always' | 'lax'
 }
 
 interface Env {
@@ -46,7 +47,7 @@ export const connectToClassroomHandler = Handler<Env, Data, Metadata>(
       storage,
       storage_driver,
     }) => {
-      const { classroom_id } = data
+      const { classroom_id, reply_strategy = 'lax' } = data
       const { account } = metadata
 
       const result = await showClassroom({
@@ -96,7 +97,10 @@ export const connectToClassroomHandler = Handler<Env, Data, Metadata>(
         return Response.metadata({ status: 'error' })
       }
 
-      if (!classroom.history.length) {
+      if (
+        reply_strategy === 'always' ||
+        (reply_strategy === 'lax' && !classroom.history.length)
+      ) {
         emitter.emit('classroom:replying', {
           classroom_id: classroom.id,
           participant_id: teacher_id,

@@ -10,6 +10,7 @@ import {
 } from '@davna/classroom'
 
 import { Env } from './env'
+import { showClassroom } from '@davna/classroom/src/services/show.classroom'
 
 export function createWsServer(server: HTTPServer, env: Env) {
   const io = new Server(server)
@@ -25,35 +26,55 @@ export function createWsServer(server: HTTPServer, env: Env) {
   const storage_driver = config.providers.storage.default_driver
 
   io.on('connection', async socket => {
-    const classroom_id = socket.handshake.headers['x-classroom-id'] as string
+    const { classroom_id } = socket.handshake.auth
     const { account } = socket.data
 
-    try {
-      const connect = await connectToClassroomHandler(
-        Request({ data: { classroom_id }, metadata: { account } }),
-      )({
-        emitter: socket,
-        audios,
-        classrooms,
-        gpt,
-        messages,
-        multimedia,
-        messageHandler,
-        storage,
-        storage_driver,
-      })
+    const show = await showClassroom({
+      classroom_id,
+      participant_id: account.id,
+    })({ classrooms, messages })
 
-      if (isLeft(connect)) {
+    if (isLeft(show)) {
+      socket.emit('error:service', {
+        status: 'error',
+        message: 'Invalid classroom_id',
+      })
+      return socket.disconnect()
+    }
+
+    console.log(classroom_id)
+
+    socket.on('classroom:welcome', async () => {
+      try {
+        const connect = await connectToClassroomHandler(
+          Request({
+            data: { classroom_id },
+            metadata: { account },
+          }),
+        )({
+          emitter: socket,
+          audios,
+          classrooms,
+          gpt,
+          messages,
+          multimedia,
+          messageHandler,
+          storage,
+          storage_driver,
+        })
+
+        if (isLeft(connect)) {
+          return socket.disconnect(true)
+        }
+      } catch (e) {
+        console.error(e)
+        socket.emit('error:internal', {
+          status: 'error',
+          message: 'Internal Server Error',
+        })
         return socket.disconnect(true)
       }
-    } catch (e) {
-      console.error(e)
-      socket.emit('error:internal', {
-        status: 'error',
-        message: 'Internal Server Error',
-      })
-      return socket.disconnect(true)
-    }
+    })
 
     // Receber evento do cliente
     socket.on('classroom:append-message', async data => {

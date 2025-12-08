@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { NextRequest, NextResponse } from 'next/server'
-import config from '@/config'
+import { serverConfig as config } from '@/config'
 import { downloadAudio, uploadAudio } from '../services'
 
 export function AudioController() {

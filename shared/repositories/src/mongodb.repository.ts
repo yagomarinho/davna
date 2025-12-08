@@ -92,10 +92,7 @@ export function MongoDBRepository<E extends Entity>({
   )
 
   const get = verifyConnectionProxy<Repository<E>['get']>(async id => {
-    const item = await coll.findOne(
-      { _id: MongoDB.ObjectId.createFromHexString(id) },
-      { projection },
-    )
+    const item = await coll.findOne({ _id: new ObjectId(id) }, { projection })
 
     if (item === null) return
 
@@ -120,7 +117,7 @@ export function MongoDBRepository<E extends Entity>({
 
   const remove = verifyConnectionProxy<Repository<E>['remove']>(
     async ({ id }) => {
-      await coll.deleteOne({ _id: MongoDB.ObjectId.createFromHexString(id) })
+      await coll.deleteOne({ _id: new ObjectId(id) })
     },
   )
 
@@ -148,7 +145,7 @@ export function MongoDBRepository<E extends Entity>({
       if (item.type === 'remove')
         return {
           deleteOne: {
-            filter: { _id: MongoDB.ObjectId.createFromHexString(item.data.id) },
+            filter: { _id: new ObjectId(item.data.id) },
           },
         }
 
@@ -238,8 +235,8 @@ function whereLeafAdapter(where: WhereLeaf<any>) {
   if (fieldname === 'id') {
     fieldname = '_id'
 
-    if (value instanceof Array) value = value.map(v => new MongoDB.ObjectId(v))
-    if (typeof value === 'string') value = new MongoDB.ObjectId(value)
+    if (value instanceof Array) value = value.map(v => new ObjectId(v))
+    if (typeof value === 'string') value = new ObjectId(value)
   }
 
   if (operator === 'array-contains') return { [fieldname]: value }

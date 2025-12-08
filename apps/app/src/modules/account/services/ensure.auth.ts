@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { apiKey, bearer } from '@/shared/utils'
-import config from '@/config'
+import { serverConfig as config } from '@/config'
 
 import { Session } from './login'
 

@@ -5,12 +5,12 @@ import Script from 'next/script'
 import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
 
-import config from '@/config'
 import { grotesk, roboto, sora } from '@/shared/fonts'
 import { ConsentContent, ConsentModal } from '@/modules/feedback'
 
 import '@/shared/styles/global.css'
 import { mergeNames } from '@/shared/utils/merge.names'
+import { clientConfig as config } from '@/config/client'
 
 export const metadata: Metadata = {
   title: 'Davna | App',

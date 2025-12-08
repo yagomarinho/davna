@@ -1,6 +1,6 @@
 import 'server-only'
 
-import config from '@/config'
+import { serverConfig as config } from '@/config'
 import { apiKey } from '@/shared/utils'
 
 export async function appendLead(lead: string): Promise<void> {

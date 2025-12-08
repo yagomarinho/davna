@@ -1,5 +1,12 @@
 import type { GPTModel, STORAGE_TYPE } from '@davna/providers'
-import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
+import {
+  Handler,
+  Identifier,
+  isLeft,
+  Query,
+  Repository,
+  Response,
+} from '@davna/core'
 
 import { Audio } from '../entities/audio'
 import { Message, MESSAGE_TYPE, messageSchema } from '../entities/message'
@@ -112,8 +119,15 @@ export const appendAndReplyHandler = Handler<Env, Data, Metadata>(
         participant_id: teacher_id,
       })
 
+      const c = {
+        ...classroom,
+        history: await messages.query(
+          Query.where('id', 'in', classroom.history),
+        ),
+      }
+
       const result2 = await teacherGeneratesResponse({
-        classroom,
+        classroom: c,
         teacher_id,
       })({
         audios,

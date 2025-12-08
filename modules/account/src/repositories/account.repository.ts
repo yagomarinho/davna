@@ -6,7 +6,7 @@ import { Account } from '../entities/account'
 const converter: Converter<Account> = {
   to: ({ id, ...props }: any) => ({
     ...props,
-    _id: id ? ObjectId.createFromHexString(id) : new ObjectId(),
+    _id: id ? new ObjectId(id) : new ObjectId(),
   }),
   from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
 }

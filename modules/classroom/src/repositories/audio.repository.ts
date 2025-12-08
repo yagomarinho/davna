@@ -6,7 +6,7 @@ import { Audio } from '../entities/audio'
 const converter: Converter<Audio> = {
   to: ({ id, ...props }: any) => ({
     ...props,
-    _id: id ? ObjectId.createFromHexString(id) : new ObjectId(),
+    _id: id ? new ObjectId(id) : new ObjectId(),
   }),
   from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
 }

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use client'
 
 import {
@@ -18,8 +17,13 @@ import { getClassroomSession } from '../logic'
 
 import { AUDIO_MESSAGE_ROLE } from '../components/history/audio.message.roles'
 
-import config from '@/config'
+import { clientConfig as config } from '@/config'
 
+export enum CONNECTION_STATUS {
+  CONNECTING,
+  CONNECTED,
+  DISCONNECTED,
+}
 interface Participant {
   participant_id: string
   role: 'teacher' | 'student'
@@ -32,7 +36,7 @@ interface ReplyingMessage {
 
 interface Classroom {
   id: string
-  history: string[]
+  history: Message[]
   participants: Participant[]
 }
 
@@ -61,6 +65,7 @@ export interface ClassroomContextProps {
   setRemaining: (remainingConsumption: number) => void
   getRemaining: () => number
   emitMessage: (audio: Audio) => any
+  getConnectionStatus: () => CONNECTION_STATUS
   history: Audio[]
   replying?: BaseProps
 }
@@ -69,11 +74,17 @@ export const ClassroomContext = createContext<ClassroomContextProps>(
   {} as ClassroomContextProps,
 )
 
-export const ClassroomProvider = ({ children }: PropsWithChildren<{}>) => {
+export const ClassroomProvider = ({
+  classroom_id,
+  children,
+}: PropsWithChildren<{ classroom_id: string }>) => {
   const [remaining, setRemaining] = useState(() => 0)
   const socketRef = useRef<Socket>(null)
   const classroomRef = useRef<Classroom>(null)
   const participantsRef = useRef<Participant[]>([])
+  const [connectionStatus, setConnectionStatus] = useState(
+    CONNECTION_STATUS.DISCONNECTED,
+  )
 
   const [history, setHistory] = useState<Audio[]>([])
   const [replying, setReplying] = useState<BaseProps>()
@@ -100,8 +111,14 @@ export const ClassroomProvider = ({ children }: PropsWithChildren<{}>) => {
     [socketRef, participantsRef],
   )
 
+  const getConnectionStatus = useCallback(
+    () => connectionStatus,
+    [connectionStatus],
+  )
+
   useEffect(() => {
     async function startClassroom() {
+      setConnectionStatus(CONNECTION_STATUS.CONNECTING)
       const token = await getClassroomSession()
 
       socketRef.current = io(config.api.wsBaseUrl, {
@@ -110,6 +127,7 @@ export const ClassroomProvider = ({ children }: PropsWithChildren<{}>) => {
         reconnectionAttempts: 5,
         auth: {
           token,
+          classroom_id,
         },
         autoConnect: true,
       })
@@ -123,6 +141,24 @@ export const ClassroomProvider = ({ children }: PropsWithChildren<{}>) => {
           participantsRef.current = classroom.participants
 
           setRemaining(remainingConsumption)
+          setHistory(
+            classroom.history.map(message => ({
+              id: message.id,
+              audio_id: message.data.id,
+              participant: {
+                participant_id: message.data.owner_id,
+                name: message.data.owner_id === 'agent' ? 'Teacher' : 'You',
+                role:
+                  participantsRef.current.find(
+                    p => p.participant_id === message.data.owner_id,
+                  )?.role === 'student'
+                    ? 'owner'
+                    : 'others',
+              },
+              transcription: '',
+              translation: '',
+            })),
+          )
 
           // recuperar o histórico quando for possível reiniciar uma conversa já iniciada
         },
@@ -189,17 +225,19 @@ export const ClassroomProvider = ({ children }: PropsWithChildren<{}>) => {
         })
       })
 
-      s.on('error:service', err => {
-        console.error('service error', err)
+      s.on('connect', async () => {
+        setConnectionStatus(CONNECTION_STATUS.CONNECTED)
+        socketRef.current?.emit('classroom:welcome')
       })
 
-      s.on('error:internal', err => {
-        console.error('internal error', err)
-      })
+      function disconnect() {
+        setConnectionStatus(CONNECTION_STATUS.DISCONNECTED)
+      }
 
-      s.on('connect_error', err => {
-        console.error('connect_error', err)
-      })
+      s.on('error', disconnect)
+      s.on('error:service', disconnect)
+      s.on('error:internal', disconnect)
+      s.on('connect_error', disconnect)
     }
 
     startClassroom()
@@ -210,7 +248,8 @@ export const ClassroomProvider = ({ children }: PropsWithChildren<{}>) => {
         socketRef.current = null
       }
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classroom_id])
 
   return (
     <ClassroomContext.Provider
@@ -218,6 +257,7 @@ export const ClassroomProvider = ({ children }: PropsWithChildren<{}>) => {
         setRemaining: set,
         getRemaining,
         emitMessage,
+        getConnectionStatus,
         history,
         replying,
       }}

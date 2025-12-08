@@ -4,7 +4,7 @@ import { PropsWithChildren, useEffect, useState } from 'react'
 import { parseCookies, setCookie } from 'nookies'
 
 import { Button } from '@/shared/components'
-import config from '@/config'
+import { clientConfig as config } from '@/config'
 
 enum CONSENT_STATUS {
   ACCEPTED = 'accepted',
