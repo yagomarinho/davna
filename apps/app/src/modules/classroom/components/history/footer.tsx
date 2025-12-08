@@ -21,7 +21,7 @@ export const Footer = ({ participant, onClick }: FooterProps) => {
     const updated = !isActive
     onClick(updated)
     setIsActive(updated)
-  }, [isActive])
+  }, [isActive, onClick])
 
   return (
     <footer

@@ -42,8 +42,6 @@ export function createWsServer(server: HTTPServer, env: Env) {
       return socket.disconnect()
     }
 
-    console.log(classroom_id)
-
     socket.on('classroom:welcome', async () => {
       try {
         const connect = await connectToClassroomHandler(

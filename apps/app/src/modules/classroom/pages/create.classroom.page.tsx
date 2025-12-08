@@ -6,16 +6,16 @@ import { createClassroom } from '../services'
 import { serverConfig as config } from '@/config/server'
 import { Replacer } from './replacer'
 
-export async function CreateClassroomPage() {
+export const CreateClassroomPage = async () => {
   const token = (await cookies()).get(config.session.token.cookieName)?.value
 
   if (!token) return redirect('/login')
 
+  let classroom: any
   try {
-    const classroom = await createClassroom({ token })
-
-    return <Replacer classroom_id={classroom.id} />
+    classroom = await createClassroom({ token })
   } catch {
     return redirect('/dashboard')
   }
+  return <Replacer classroom_id={classroom.id} />
 }

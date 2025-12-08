@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 interface Audio {
   id: string
@@ -37,21 +37,21 @@ export const AudioCapture = ({ afterUpload }: AudioCapture) => {
   const [mimeType, setMimeType] = useState('audio/webm')
   const [isUploading, setIsUploading] = useState(false)
 
+  const revokeAudioUrl = useCallback(() => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl)
+      setAudioUrl(undefined)
+    }
+  }, [audioUrl])
+
   useEffect(
     () => () => {
       stopStream()
       if (timerRef.current !== null) clearInterval(timerRef.current)
       revokeAudioUrl()
     },
-    [],
+    [revokeAudioUrl],
   )
-
-  function revokeAudioUrl() {
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl)
-      setAudioUrl(undefined)
-    }
-  }
 
   async function startRecording() {
     try {

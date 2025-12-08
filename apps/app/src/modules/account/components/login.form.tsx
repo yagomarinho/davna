@@ -49,7 +49,7 @@ export const LoginForm = () => {
         setHasError(true)
       }
     },
-    [],
+    [router],
   )
 
   useEffect(() => {

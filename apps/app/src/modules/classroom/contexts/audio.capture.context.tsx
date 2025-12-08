@@ -75,7 +75,7 @@ export const AudioCaptureProvider = ({ children }: PropsWithChildren<{}>) => {
       setState('paused')
       recorderRef.current.pause()
     }
-  }, [recorderRef, state])
+  }, [recorderRef, state, setUrl])
 
   const stop = useCallback(() => {
     if (recorderRef.current && ['recording', 'paused'].includes(state)) {
@@ -83,7 +83,7 @@ export const AudioCaptureProvider = ({ children }: PropsWithChildren<{}>) => {
       recorderRef.current.stop()
       setUrl()
     }
-  }, [recorderRef, state])
+  }, [recorderRef, state, setUrl])
 
   const remove = useCallback(() => {
     if (recorderRef.current && state !== 'ready') {
@@ -102,7 +102,7 @@ export const AudioCaptureProvider = ({ children }: PropsWithChildren<{}>) => {
 
     emitMessage(audio)
     remove()
-  }, [recorderRef, audioUrl])
+  }, [recorderRef, audioUrl, emitMessage, remove])
 
   const ctx = useMemo(
     () => ({ state, audioUrl, resume, pause, remove, send, start, stop }),

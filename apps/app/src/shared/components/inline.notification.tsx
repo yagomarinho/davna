@@ -37,7 +37,7 @@ export const InlineNotification = forwardRef<
     setIsOpen(false)
   }, [])
 
-  useImperativeHandle(ref, () => ({ open, close }), [])
+  useImperativeHandle(ref, () => ({ open, close }), [open, close])
 
   return isOpen ? (
     <div

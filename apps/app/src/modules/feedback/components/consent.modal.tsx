@@ -14,17 +14,6 @@ enum CONSENT_STATUS {
 export const ConsentModal = ({ children }: PropsWithChildren<{}>) => {
   const [isOpen, setIsOpen] = useState(false)
 
-  useEffect(() => {
-    const cookies = parseCookies()
-    const status = cookies[config.gtm.consent.cookieName]
-
-    if (!status) {
-      return setIsOpen(true)
-    }
-
-    setConsent(status)
-  }, [])
-
   function setConsent(status: unknown) {
     if (status !== CONSENT_STATUS.ACCEPTED && status !== CONSENT_STATUS.DENIED)
       throw new Error('Invalid Consent Status')
@@ -56,6 +45,18 @@ export const ConsentModal = ({ children }: PropsWithChildren<{}>) => {
 
     setIsOpen(false)
   }
+
+  useEffect(() => {
+    const cookies = parseCookies()
+    const status = cookies[config.gtm.consent.cookieName]
+
+    if (!status) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      return setIsOpen(true)
+    }
+
+    setConsent(status)
+  }, [])
 
   return isOpen ? (
     <div className="fixed bottom-0 left-0 flex justify-center items-center p-8 w-full bg-[#2C2C2C]">
