@@ -49,15 +49,6 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
   const teacher_id = 'teacher-1'
   const student_id = 'student-1'
 
-  const classroom: Classroom = {
-    id: 'class-1',
-    participants: [
-      { participant_id: student_id, role: 'student' },
-      { participant_id: teacher_id, role: 'teacher' },
-    ],
-    history: ['m1', 'm2'],
-  } as any
-
   const messagesSeed: Message[] = [
     {
       id: 'm1',
@@ -75,6 +66,15 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
     } as any,
   ]
 
+  const classroom: Omit<Classroom, 'history'> & { history: Message[] } = {
+    id: 'class-1',
+    participants: [
+      { participant_id: student_id, role: 'student' },
+      { participant_id: teacher_id, role: 'teacher' },
+    ],
+    history: [messagesSeed[0], messagesSeed[1]],
+  } as any
+
   beforeEach(async () => {
     messages = InMemoryRepository<Message>()
     classrooms = InMemoryRepository<Classroom>()
@@ -89,7 +89,10 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
     messageHandler = { process: jest.fn() }
     multimedia = { metadata: jest.fn(), convert: jest.fn() }
 
-    await classrooms.set(classroom)
+    await classrooms.set({
+      ...classroom,
+      history: classroom.history.map(m => m.id),
+    })
     for (const m of messagesSeed) await messages.set(m)
 
     jest.clearAllMocks()
@@ -119,16 +122,21 @@ describe('teacherGeneratesResponse (service) - updated behavior', () => {
 
     AIGenerateResponse.mockImplementationOnce(() => async () => fakeAIResult)
 
+    const mnew = {
+      id: 'm-new',
+      participant_id: teacher_id,
+      type: MESSAGE_TYPE.AUDIO,
+      data: {
+        duration: 10,
+      },
+    } as any
+
     const appendReturn = Right({
-      classroom: { ...classroom, history: classroom.history.concat('m-new') },
-      message: {
-        id: 'm-new',
-        participant_id: teacher_id,
-        type: MESSAGE_TYPE.AUDIO,
-        data: {
-          duration: 10,
-        },
-      } as any,
+      classroom: {
+        ...classroom,
+        history: classroom.history.concat(mnew).map(m => m.id),
+      },
+      message: mnew,
     })
     appendMessageToClassroom.mockImplementationOnce(
       () => async () => appendReturn,
