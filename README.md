@@ -1,6 +1,7 @@
 # Davna — AI Teacher para prática de conversação em inglês
 
 **Demo:** https://davna.yagomarinho.com.br/
+
 **Repositório:** https://github.com/yagomarinho/davna
 
 Davna é uma aplicação que ajuda pessoas a melhorar a conversação em inglês através de um **professor virtual alimentado por IA**, com interface moderna e dinâmica construída em **Next.js + React**, e backend estruturado em um **monorepo TypeScript** com módulos reutilizáveis e serviços especializados (como processamento de mídia via FFmpeg).
@@ -23,13 +24,13 @@ Davna é uma aplicação que ajuda pessoas a melhorar a conversação em inglês
 - **Docker & docker-compose**
 - **Monorepo** baseado em workspaces
 - Módulos reutilizáveis em `modules/` e `shared/`
-- Deploy em EC2 AWS com utilização de Storage
+- Deploy AWS **EC2 + S3**
 
 ---
 
 ## 🧠 Funcionalidades
 
-- Prática de conversação com um **IA Teacher** (voz, escrita e orientação guiada).
+- Prática de conversação com um **IA Teacher** (voz, orientação guiada).
 - Interface moderna, limpa e responsiva.
 - Processamento de áudio/vídeo via serviço isolado com FFmpeg.
 - Arquitetura modular para evolução constante:
@@ -45,10 +46,12 @@ Davna é uma aplicação que ajuda pessoas a melhorar a conversação em inglês
 ```bash
 davna/
 ├── apps/
-│   └── web/           # Aplicação Next.js
+│   └── api/           # Aplicação NodeJS (ExpressJS + Socket IO)
+│   └── app/           # Aplicação Next.js
+│   └── ffmpeg/        # Aplicação NodeJS (ExpressJS + FFMPEG Binary)
 ├── modules/           # Pacotes internos reutilizáveis
 ├── services/
-│   └── ffmpeg/        # Processamento de mídia
+│   └── ffmpeg/        # Processamento de mídia (SDK)
 ├── shared/            # Código compartilhado entre módulos/apps
 ├── docker-compose.yml
 ├── docker-compose.prod.yml
@@ -91,7 +94,7 @@ npm install
 Caso queira usar o serviço de processamento de mídia localmente:
 
 ```bash
-docker-compose up --build
+docker-compose -f docker-compose.yml up --build
 ```
 
 ### 5. Execute a aplicação web
@@ -99,7 +102,7 @@ docker-compose up --build
 Entre na pasta da aplicação (Next.js) e rode o servidor:
 
 ```bash
-cd apps/web
+cd apps/app
 yarn dev
 # ou
 npm run dev
