@@ -42,5 +42,6 @@
     "@types/supertest": "^6.0.3",
     "socket.io-client": "^4.8.1",
     "supertest": "^7.1.4"
-  }
+  },
+  "license": "MIT"
 }

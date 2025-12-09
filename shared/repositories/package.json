@@ -22,5 +22,6 @@
     "@davna/utils": "*",
     "googleapis": "^166.0.0",
     "mongodb": "^6.20.0"
-  }
+  },
+  "license": "MIT"
 }

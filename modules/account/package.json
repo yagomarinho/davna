@@ -21,5 +21,6 @@
     "@davna/providers": "*",
     "@davna/types": "*",
     "@davna/utils": "*"
-  }
+  },
+  "license": "MIT"
 }

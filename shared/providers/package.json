@@ -22,5 +22,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.20.0",
     "openai": "^6.9.1"
-  }
+  },
+  "license": "MIT"
 }

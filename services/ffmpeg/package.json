@@ -11,5 +11,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yagomarinho/davna.git"
-  }
+  },
+  "license": "MIT"
 }

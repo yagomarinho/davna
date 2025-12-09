@@ -15,5 +15,6 @@
   "dependencies": {
     "@davna/types": "*",
     "@davna/utils": "*"
-  }
+  },
+  "license": "MIT"
 }

@@ -32,5 +32,6 @@
   },
   "devDependencies": {
     "supertest": "^7.1.4"
-  }
+  },
+  "license": "MIT"
 }
