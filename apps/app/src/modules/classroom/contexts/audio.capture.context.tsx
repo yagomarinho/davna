@@ -13,6 +13,7 @@ import {
 import { Recorder, startRecorder } from '../logic/start.recorder'
 import { sendAudio } from '../logic'
 import { useClassroom } from './classroom.context'
+import { useToast } from '@/shared/contexts'
 
 interface AudioCaptureContext {
   state: 'ready' | 'recording' | 'paused' | 'stopped'
@@ -31,6 +32,7 @@ export const AudioCaptureContext = createContext<AudioCaptureContext>(
 
 export const AudioCaptureProvider = ({ children }: PropsWithChildren<{}>) => {
   const { emitMessage } = useClassroom()
+  const toast = useToast()
 
   const recorderRef = useRef<Recorder>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -98,11 +100,20 @@ export const AudioCaptureProvider = ({ children }: PropsWithChildren<{}>) => {
   const send = useCallback(async () => {
     if (!audioUrl) return
 
-    const audio = await sendAudio(audioUrl, recorderRef.current!.mime)
+    try {
+      const audio = await sendAudio(audioUrl, recorderRef.current!.mime)
 
-    emitMessage(audio)
-    remove()
-  }, [recorderRef, audioUrl, emitMessage, remove])
+      emitMessage(audio)
+      remove()
+    } catch {
+      toast.push({
+        type: 'error',
+        title: 'Download Inválido',
+        message:
+          'O download do áudio não foi concluído, por favor tente novamente',
+      })
+    }
+  }, [recorderRef, audioUrl, emitMessage, remove, toast])
 
   const ctx = useMemo(
     () => ({ state, audioUrl, resume, pause, remove, send, start, stop }),

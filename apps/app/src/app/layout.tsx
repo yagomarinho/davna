@@ -11,6 +11,7 @@ import { ConsentContent, ConsentModal } from '@/modules/feedback'
 import '@/shared/styles/global.css'
 import { mergeNames } from '@/shared/utils/merge.names'
 import { clientConfig as config } from '@/config/client'
+import { ToastManager } from '@/shared/contexts/toast.manager'
 
 export const metadata: Metadata = {
   title: 'Davna | App',
@@ -78,7 +79,7 @@ const RootLayout = async ({
           ></iframe>
         </noscript>
         {/*<!-- End Google Tag Manager (noscript) -->*/}
-        {children}
+        <ToastManager>{children}</ToastManager>
         <ConsentModal>
           <ConsentContent />
         </ConsentModal>

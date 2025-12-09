@@ -8,7 +8,7 @@ import { BaseHeader, Button, IconButton } from '@/shared/components'
 
 import { RemainingConsumption } from './remaining.consumption'
 import { CONNECTION_STATUS, useClassroom } from '../contexts'
-import { TopNotification } from './top.notification'
+import { TopNotification } from '@/shared/components'
 
 export const ClassroomHeader = () => {
   const {

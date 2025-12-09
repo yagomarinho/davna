@@ -81,7 +81,7 @@ export const ClassroomProvider = ({
   classroom_id,
   children,
 }: PropsWithChildren<{ classroom_id: string }>) => {
-  const RECONNECTION_ATTEMPTS = 1
+  const RECONNECTION_ATTEMPTS = 5
 
   const [remaining, setRemaining] = useState(() => 0)
   const socketRef = useRef<Socket>(null)
