@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -65,7 +66,9 @@ export interface ClassroomContextProps {
   setRemaining: (remainingConsumption: number) => void
   getRemaining: () => number
   emitMessage: (audio: Audio) => any
+  tryToReconnect: () => any
   getConnectionStatus: () => CONNECTION_STATUS
+  getReconnectionStatus: () => boolean
   history: Audio[]
   replying?: BaseProps
 }
@@ -78,16 +81,24 @@ export const ClassroomProvider = ({
   classroom_id,
   children,
 }: PropsWithChildren<{ classroom_id: string }>) => {
+  const RECONNECTION_ATTEMPTS = 1
+
   const [remaining, setRemaining] = useState(() => 0)
   const socketRef = useRef<Socket>(null)
   const classroomRef = useRef<Classroom>(null)
   const participantsRef = useRef<Participant[]>([])
+  const [retry, setRetry] = useState(0)
   const [connectionStatus, setConnectionStatus] = useState(
     CONNECTION_STATUS.DISCONNECTED,
   )
 
   const [history, setHistory] = useState<Audio[]>([])
   const [replying, setReplying] = useState<BaseProps>()
+
+  const reconnectionStatus = useMemo(
+    () => retry >= RECONNECTION_ATTEMPTS,
+    [retry],
+  )
 
   const set = useCallback((consumption: number) => {
     setRemaining(consumption)
@@ -116,6 +127,21 @@ export const ClassroomProvider = ({
     [connectionStatus],
   )
 
+  const getReconnectionStatus = useCallback(
+    () => reconnectionStatus,
+    [reconnectionStatus],
+  )
+
+  const tryToReconnect = useCallback(() => {
+    const s = socketRef.current
+    if (s) {
+      setRetry(0)
+      setConnectionStatus(CONNECTION_STATUS.CONNECTING)
+      s.connect()
+      s.once('connect', () => s.emit('classroom:welcome'))
+    }
+  }, [])
+
   useEffect(() => {
     async function startClassroom() {
       setConnectionStatus(CONNECTION_STATUS.CONNECTING)
@@ -124,7 +150,7 @@ export const ClassroomProvider = ({
       socketRef.current = io(config.api.wsBaseUrl, {
         path: '/socket.io',
         transports: ['websocket'],
-        reconnectionAttempts: 5,
+        reconnectionAttempts: RECONNECTION_ATTEMPTS,
         auth: {
           token,
           classroom_id,
@@ -226,8 +252,19 @@ export const ClassroomProvider = ({
       })
 
       s.on('connect', async () => {
+        setRetry(0)
         setConnectionStatus(CONNECTION_STATUS.CONNECTED)
         socketRef.current?.emit('classroom:welcome')
+      })
+
+      s.on('connect_error', () => {
+        setRetry(n => {
+          if (n >= RECONNECTION_ATTEMPTS - 1) {
+            s.disconnect()
+          }
+
+          return ++n
+        })
       })
 
       function disconnect() {
@@ -258,6 +295,8 @@ export const ClassroomProvider = ({
         getRemaining,
         emitMessage,
         getConnectionStatus,
+        getReconnectionStatus,
+        tryToReconnect,
         history,
         replying,
       }}

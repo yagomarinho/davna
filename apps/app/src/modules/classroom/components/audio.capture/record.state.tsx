@@ -1,11 +1,11 @@
 'use client'
 
+import { useMemo } from 'react'
 import { FiCircle, FiPause, FiSend, FiSquare, FiTrash2 } from 'react-icons/fi'
 
 import { useAudioCapture } from '../../contexts'
 
-import { IconButton } from './icon.button'
-import { useMemo } from 'react'
+import { IconButton } from '@/shared/components'
 
 export const RecordState = () => {
   const capture = useAudioCapture()

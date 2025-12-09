@@ -2,19 +2,28 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { FiArrowLeft } from 'react-icons/fi'
+import { FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 
-import { BaseHeader, Button } from '@/shared/components'
+import { BaseHeader, Button, IconButton } from '@/shared/components'
 
 import { RemainingConsumption } from './remaining.consumption'
 import { CONNECTION_STATUS, useClassroom } from '../contexts'
 import { TopNotification } from './top.notification'
 
 export const ClassroomHeader = () => {
-  const { getRemaining, getConnectionStatus } = useClassroom()
+  const {
+    getRemaining,
+    getConnectionStatus,
+    tryToReconnect,
+    getReconnectionStatus,
+  } = useClassroom()
 
   const remaining = useMemo(() => getRemaining(), [getRemaining])
   const status = useMemo(() => getConnectionStatus(), [getConnectionStatus])
+  const reconnectionStatus = useMemo(
+    () => getReconnectionStatus(),
+    [getReconnectionStatus],
+  )
 
   const notifications = {
     [CONNECTION_STATUS.CONNECTING]: {
@@ -44,7 +53,14 @@ export const ClassroomHeader = () => {
               <span className="font-sora font-medium text-sm ml-2">Sair</span>
             </Button>
           </Link>
-          <RemainingConsumption remainingConsumption={remaining} />
+          <div className="flex flex-row justify-center items-center gap-2">
+            {reconnectionStatus && (
+              <IconButton type="filled" onClick={tryToReconnect}>
+                <FiRefreshCw size={20} color="white" />
+              </IconButton>
+            )}
+            <RemainingConsumption remainingConsumption={remaining} />
+          </div>
         </div>
       </div>
       <TopNotification {...notifications[status]} />
