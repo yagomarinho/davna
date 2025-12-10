@@ -1,6 +1,7 @@
 {
   "name": "@davna/davna",
   "private": true,
+  "version": "0.1.0",
   "workspaces": {
     "packages": [
       "apps/*",
