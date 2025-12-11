@@ -29,6 +29,11 @@ export const Config = () => ({
       database: process.env.MONGODB_MESSAGE_DATABASE || 'db',
       collection: process.env.MONGODB_MESSAGE_COLLECTION || 'messages',
     },
+    role: {
+      uri: process.env.MONGODB_ROLE_CONNECT_URI || 'mongodb://localhost:27017',
+      database: process.env.MONGODB_ROLE_DATABASE || 'db',
+      collection: process.env.MONGODB_ROLE_COLLECTION || 'roles',
+    },
     session: {
       uri:
         process.env.MONGODB_SESSION_CONNECT_URI || 'mongodb://localhost:27017',

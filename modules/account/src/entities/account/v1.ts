@@ -27,7 +27,12 @@ const v1Schema = object({
     'no-roles',
     'A chave "roles" não é permitida',
     (value, ctx) => {
-      if (!ctx.originalValue || !('roles' in ctx.originalValue)) return true
+      if (!ctx.originalValue || !(ctx.originalValue instanceof Array))
+        return true
+
+      if (ctx.originalValue.length && typeof ctx.originalValue[0] !== 'string')
+        return true
+
       if (typeof value === 'undefined') return true
       return ctx.createError()
     },
