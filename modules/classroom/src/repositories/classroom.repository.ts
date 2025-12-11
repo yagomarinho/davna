@@ -4,12 +4,22 @@ import { MongoClient, MongoDBRepository, ObjectId } from '@davna/repositories'
 import { Classroom } from '../entities/classroom'
 
 const converter: Converter<Classroom> = {
-  to: ({ id, ...props }) => ({
+  to: ({
+    id,
+    owner_id,
+    history,
+    participants,
+    created_at,
+    updated_at,
+    __version,
+  }) => ({
     _id: id ? new ObjectId(id) : new ObjectId(),
-    history: props.history,
-    participants: props.participants,
-    created_at: props.created_at,
-    updated_at: new Date(),
+    owner_id,
+    history,
+    participants,
+    created_at,
+    updated_at,
+    __version,
   }),
   from: ({ _id, ...props }) =>
     Classroom.create({

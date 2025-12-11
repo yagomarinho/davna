@@ -2,11 +2,12 @@ import type { Signer } from '@davna/providers'
 import { Handler, isLeft, Repository, Response } from '@davna/core'
 import { tokenFromBearer } from '@davna/utils'
 
-import { Session } from '../entities/session'
+import { Account, Session } from '../entities'
 import { refreshSession } from '../services/refresh.session'
 import { ConfigDTO } from '../dtos/config'
 
 interface Env {
+  accounts: Repository<Account>
   sessions: Repository<Session>
   signer: Signer
   config: ConfigDTO
@@ -14,7 +15,7 @@ interface Env {
 
 export const refreshSessionHandler = Handler(
   request =>
-    async ({ sessions, signer, config }: Env) => {
+    async ({ accounts, sessions, signer, config }: Env) => {
       const user_agent: string = request.metadata.headers['user-agent']
       const bearer: string =
         request.metadata.headers[config.auth.jwt.refresh_token.headerName]
@@ -48,6 +49,7 @@ export const refreshSessionHandler = Handler(
         signature,
         user_agent,
       })({
+        accounts,
         sessions,
         signer,
         config,

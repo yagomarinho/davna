@@ -6,6 +6,7 @@ import { Session } from '../../entities/session'
 import { REFRESH_STRATEGY, verifySession } from '../verify.session'
 
 import { makeConfig } from '../../fakes/make.config'
+import { Account } from '../../entities'
 
 const dayTime = 24 * 60 * 60 * 1000
 
@@ -15,10 +16,12 @@ describe('verify session service', () => {
   const user_agent = 'Mozilla/5.0'
 
   let signer: jest.Mocked<Signer>
+  let accounts: Repository<Account>
   let sessions: Repository<Session>
   const config = makeConfig()
 
   beforeEach(() => {
+    accounts = InMemoryRepository<Account>()
     sessions = InMemoryRepository<Session>()
 
     signer = {
@@ -39,7 +42,7 @@ describe('verify session service', () => {
     const result = await verifySession({
       signature,
       user_agent,
-    })({ signer, sessions, config })
+    })({ signer, sessions, accounts, config })
 
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
@@ -54,7 +57,7 @@ describe('verify session service', () => {
     const result = await verifySession({
       signature,
       user_agent,
-    })({ signer, sessions, config })
+    })({ signer, sessions, accounts, config })
 
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
@@ -80,13 +83,42 @@ describe('verify session service', () => {
     const result = await verifySession({
       signature: 'any-session-signature',
       user_agent,
-    })({ signer, sessions, config })
+    })({ signer, sessions, accounts, config })
 
     expect(removeSpy).toHaveBeenCalledWith(
       expect.objectContaining({ id: expired.id }),
     )
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
+  })
+
+  it('should return Left and remove session with no related account', async () => {
+    let expired = Session.create({
+      account_id,
+      refresh_token: signature,
+      user_agent,
+      expiresIn: new Date(Date.now() + dayTime),
+    })
+
+    expired = await sessions.set(expired)
+
+    const removeSpy = jest.spyOn(sessions, 'remove')
+
+    signer.decode.mockReturnValue({
+      subject: expired.id,
+      expiresIn: expired.expiresIn.getTime(),
+    })
+
+    const result = await verifySession({
+      signature: 'any-session-signature',
+      user_agent,
+    })({ signer, sessions, accounts, config })
+
+    expect(removeSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: expired.id }),
+    )
+    expect(isLeft(result)).toBeTruthy()
+    expect(JSON.stringify(result)).toContain('Invalid Account Session')
   })
 
   it('should reuse refresh token under LAX strategy when more than 24h remains', async () => {
@@ -102,6 +134,14 @@ describe('verify session service', () => {
 
     session = await sessions.set(session)
 
+    const account = await accounts.set(
+      Account.create({
+        id: account_id,
+        name: 'john',
+        external_ref: 'external_ref',
+      }),
+    )
+
     const setSpy = jest.spyOn(sessions, 'set')
 
     signer.decode.mockReturnValue({
@@ -115,7 +155,7 @@ describe('verify session service', () => {
       signature,
       user_agent,
       refresh_strategy: REFRESH_STRATEGY.LAX,
-    })({ signer, sessions, config })
+    })({ signer, sessions, accounts, config })
 
     expect(setSpy).not.toHaveBeenCalled()
 
@@ -123,6 +163,7 @@ describe('verify session service', () => {
     // Deve emitir Right com novo token de acesso e refresh original
     expect(result.value).toEqual(
       expect.objectContaining({
+        account,
         token: expect.objectContaining({ value: new_token }),
         refresh_token: expect.objectContaining({ value: refresh_stable }),
       }),
@@ -143,6 +184,14 @@ describe('verify session service', () => {
 
     session = await sessions.set(session)
 
+    const account = await accounts.set(
+      Account.create({
+        id: account_id,
+        name: 'john',
+        external_ref: 'external_ref',
+      }),
+    )
+
     const setSpy = jest.spyOn(sessions, 'set')
 
     signer.decode.mockReturnValue({
@@ -157,13 +206,14 @@ describe('verify session service', () => {
       signature,
       user_agent,
       refresh_strategy: REFRESH_STRATEGY.LAX,
-    })({ signer, sessions, config })
+    })({ signer, sessions, accounts, config })
 
     expect(setSpy).toHaveBeenCalled()
 
     expect(isRight(result)).toBeTruthy()
     expect(result.value).toEqual(
       expect.objectContaining({
+        account,
         token: expect.objectContaining({ value: new_token }),
         refresh_token: expect.objectContaining({ value: new_refresh }),
       }),
@@ -183,6 +233,14 @@ describe('verify session service', () => {
 
     session = await sessions.set(session)
 
+    const account = await accounts.set(
+      Account.create({
+        id: account_id,
+        name: 'john',
+        external_ref: 'external_ref',
+      }),
+    )
+
     const setSpy = jest.spyOn(sessions, 'set')
 
     signer.decode.mockReturnValue({
@@ -197,13 +255,14 @@ describe('verify session service', () => {
       signature,
       user_agent,
       refresh_strategy: REFRESH_STRATEGY.FORCE,
-    })({ signer, sessions, config })
+    })({ signer, sessions, accounts, config })
 
     expect(setSpy).toHaveBeenCalled()
 
     expect(isRight(result)).toBeTruthy()
     expect(result.value).toEqual(
       expect.objectContaining({
+        account,
         token: expect.objectContaining({ value: new_token }),
         refresh_token: expect.objectContaining({ value: new_refresh }),
       }),

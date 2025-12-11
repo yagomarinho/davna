@@ -17,6 +17,7 @@ interface Token {
 }
 
 interface TokenResponse {
+  account: Account
   token: Token
   refresh_token: Token
 }
@@ -72,6 +73,7 @@ export const loginWithCredentials = Service<Request, Env, TokenResponse>(
         })
 
         const response = {
+          account,
           token: {
             value: token,
             expiresIn: now.getTime() + tokenConfig.expiresIn,

@@ -1,7 +1,7 @@
 import type { Signer } from '@davna/providers'
 import { Left, Repository, Right, Service } from '@davna/core'
 
-import { Session } from '../entities'
+import { Account, Session } from '../entities'
 import { ConfigDTO } from '../dtos/config'
 
 interface Token {
@@ -10,6 +10,7 @@ interface Token {
 }
 
 interface TokenResponse {
+  account: Account
   token: Token
   refresh_token: Token
 }
@@ -28,13 +29,14 @@ interface Request {
 
 interface Env {
   signer: Signer
+  accounts: Repository<Account>
   sessions: Repository<Session>
   config: ConfigDTO
 }
 
 export const verifySession = Service<Request, Env, TokenResponse>(
   ({ signature, user_agent, refresh_strategy = REFRESH_STRATEGY.LAX }) =>
-    async ({ signer, sessions, config }) => {
+    async ({ signer, accounts, sessions, config }) => {
       try {
         const now = new Date()
         const payload = signer.decode(signature)
@@ -44,6 +46,13 @@ export const verifySession = Service<Request, Env, TokenResponse>(
         if (!session || session.expiresIn < new Date()) {
           if (session) await sessions.remove(session)
           return Left({ status: 'error', message: 'Invalid Signature' })
+        }
+
+        const account = await accounts.get(session.account_id)
+
+        if (!account) {
+          if (session) await sessions.remove(session)
+          return Left({ status: 'error', message: 'Invalid Account Session' })
         }
 
         let token: string = signature
@@ -111,6 +120,7 @@ export const verifySession = Service<Request, Env, TokenResponse>(
         }
 
         const response = {
+          account,
           token: {
             value: token,
             expiresIn: tokenExpiresIn,

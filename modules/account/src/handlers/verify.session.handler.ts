@@ -2,11 +2,12 @@ import type { Signer } from '@davna/providers'
 import { Handler, isLeft, Repository, Response } from '@davna/core'
 import { tokenFromBearer } from '@davna/utils'
 
-import { Session } from '../entities/session'
+import { Account, Session } from '../entities'
 import { REFRESH_STRATEGY, verifySession } from '../services/verify.session'
 import { ConfigDTO } from '../dtos/config'
 
 interface Env {
+  accounts: Repository<Account>
   sessions: Repository<Session>
   signer: Signer
   config: ConfigDTO
@@ -14,7 +15,7 @@ interface Env {
 
 export const verifySessionHandler = Handler(
   request =>
-    async ({ sessions, signer, config }: Env) => {
+    async ({ accounts, sessions, signer, config }: Env) => {
       const refresh_strategy: REFRESH_STRATEGY =
         request.metadata.query.refreshStrategy
       const user_agent: string = request.metadata.headers['user-agent']
@@ -50,6 +51,7 @@ export const verifySessionHandler = Handler(
         user_agent,
         refresh_strategy,
       })({
+        accounts,
         sessions,
         signer,
         config,

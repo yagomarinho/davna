@@ -5,6 +5,7 @@ import { Session } from '../../entities/session'
 import { verifySession as service } from '../../services/verify.session'
 import { verifySessionHandler } from '../verify.session.handler'
 import { makeConfig } from '../../fakes/make.config'
+import { Account } from '../../entities'
 
 jest.mock('../../services/verify.session', () => ({
   verifySession: jest.fn(),
@@ -21,10 +22,12 @@ describe('verifySessionHandler', () => {
   const bearerToken = 'Bearer sometoken'
   const signature = 'sometoken'
 
+  let accounts: Repository<Account>
   let sessions: Repository<Session>
   let signer: any
 
   beforeEach(() => {
+    accounts = InMemoryRepository<Account>()
     sessions = InMemoryRepository<Session>()
 
     signer = {
@@ -50,7 +53,12 @@ describe('verifySessionHandler', () => {
       },
     })
 
-    const result = await verifySessionHandler(req)({ sessions, signer, config })
+    const result = await verifySessionHandler(req)({
+      accounts,
+      sessions,
+      signer,
+      config,
+    })
 
     expect(result).toBeDefined()
     expect(result).toEqual(
@@ -83,7 +91,12 @@ describe('verifySessionHandler', () => {
       () => async () => Left({ message: 'invalid' }),
     )
 
-    const result = await verifySessionHandler(req)({ sessions, signer, config })
+    const result = await verifySessionHandler(req)({
+      accounts,
+      sessions,
+      signer,
+      config,
+    })
 
     expect(result).toBeDefined()
     expect(result).toEqual(
@@ -126,7 +139,12 @@ describe('verifySessionHandler', () => {
 
     verifySession.mockImplementationOnce(() => async () => Right(payload))
 
-    const result = await verifySessionHandler(req)({ sessions, signer, config })
+    const result = await verifySessionHandler(req)({
+      accounts,
+      sessions,
+      signer,
+      config,
+    })
 
     expect(result).toBeDefined()
     expect(result).toEqual(

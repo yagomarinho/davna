@@ -8,7 +8,8 @@ const converter: Converter<Session> = {
     ...props,
     _id: id ? new ObjectId(id) : new ObjectId(),
   }),
-  from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
+  from: ({ _id, ...raw }: any) =>
+    Session.create({ ...raw, id: _id?.toString() ?? '' }),
 }
 
 export interface SessionRepositoryConfig {

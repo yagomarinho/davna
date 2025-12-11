@@ -13,8 +13,7 @@ interface M<E = {}, D = any, U extends Metadata = any> {
 }
 
 export interface Middleware<E = {}, D = any, U extends Metadata = any>
-  extends M<E, D, U>,
-    Tagged<'middleware'> {}
+  extends M<E, D, U>, Tagged<'middleware'> {}
 
 export function Middleware<E = {}, D = any, U extends Metadata = any>(
   middleware: M<E, D, U>,
@@ -22,6 +21,5 @@ export function Middleware<E = {}, D = any, U extends Metadata = any>(
   return applyTag('middleware')(middleware)
 }
 
-export const isMiddleware = (
-  middleware: unknown,
-): middleware is Middleware<any> => verifyTag('middleware')(middleware)
+export const isMiddleware = (middleware: unknown): middleware is Middleware =>
+  verifyTag('middleware')(middleware)

@@ -1,5 +1,5 @@
 import { Route } from '@davna/core'
-import { handlerPipe } from '@davna/applications'
+import { handlerPipe, PostprocessorsPipe } from '@davna/applications'
 import { apiKeyAuthorization, guardian } from '@davna/middlewares'
 
 import {
@@ -28,6 +28,7 @@ import {
 } from '@davna/feedback'
 
 import { Env } from './env'
+import { resolveAccountRoleNames } from './resolve.account.role.names'
 
 export const routes = ({
   repositories: {
@@ -36,6 +37,7 @@ export const routes = ({
     classrooms,
     leads,
     messages,
+    roles,
     sessions,
     suggestions,
   },
@@ -77,13 +79,18 @@ export const routes = ({
   }),
   Route({
     path: '/session',
-    handler: handlerPipe(
-      apiKeyAuthorization as any,
-      guardian as any,
-      verifySessionHandler,
+    handler: PostprocessorsPipe(
+      handlerPipe(
+        apiKeyAuthorization as any,
+        guardian as any,
+        verifySessionHandler,
+      ),
+      resolveAccountRoleNames as any,
     ),
     env: {
       sessions,
+      accounts,
+      roles,
       signer,
       config,
       validate: verifyValidation({
@@ -93,13 +100,18 @@ export const routes = ({
   }),
   Route({
     path: '/session/refresh',
-    handler: handlerPipe(
-      apiKeyAuthorization as any,
-      guardian as any,
-      refreshSessionHandler,
+    handler: PostprocessorsPipe(
+      handlerPipe(
+        apiKeyAuthorization as any,
+        guardian as any,
+        refreshSessionHandler,
+      ),
+      resolveAccountRoleNames as any,
     ),
     env: {
       sessions,
+      roles,
+      accounts,
       signer,
       config,
       validate: refreshValidation({
@@ -110,14 +122,18 @@ export const routes = ({
   Route({
     method: 'post',
     path: '/session',
-    handler: handlerPipe(
-      apiKeyAuthorization as any,
-      guardian as any,
-      loginWithCredentialsHandler,
+    handler: PostprocessorsPipe(
+      handlerPipe(
+        apiKeyAuthorization as any,
+        guardian as any,
+        loginWithCredentialsHandler,
+      ),
+      resolveAccountRoleNames as any,
     ),
     env: {
       accounts,
       sessions,
+      roles,
       auth,
       signer,
       config,

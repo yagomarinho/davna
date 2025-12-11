@@ -35,6 +35,7 @@ import {
   Suggestion,
   SuggestionRepository,
 } from '@davna/feedback'
+import { Role, RoleRepository } from '@davna/role'
 import { Multimedia } from './multimedia'
 
 import { Config } from '../config'
@@ -46,6 +47,7 @@ export interface Env {
     classrooms: Repository<Classroom>
     leads: Writable<Repository<Lead>>
     messages: Repository<Message>
+    roles: Repository<Role>
     sessions: Repository<Session>
     suggestions: Writable<Repository<Suggestion>>
   }
@@ -81,6 +83,7 @@ export const Env = async (): Promise<Env> => {
   const audios = AudioRepository({ client })
   const classrooms = ClassroomRepository({ client })
   const messages = MessageRepository({ client })
+  const roles = RoleRepository({ client })
   const sessions = SessionRepository({ client })
 
   const leads = LeadRepository({
@@ -98,6 +101,7 @@ export const Env = async (): Promise<Env> => {
     audios.connect(),
     classrooms.connect(),
     messages.connect(),
+    roles.connect(),
     sessions.connect(),
   ])
 
@@ -107,6 +111,7 @@ export const Env = async (): Promise<Env> => {
     classrooms,
     leads,
     messages,
+    roles,
     sessions,
     suggestions,
   }

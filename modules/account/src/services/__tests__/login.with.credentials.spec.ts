@@ -60,6 +60,14 @@ describe('login with credentials service', () => {
     const data = result.value
 
     expect(data).toEqual({
+      account: expect.objectContaining({
+        id: expect.any(String),
+        external_ref: 'external_ref',
+        name: 'john',
+        roles: expect.any(Array),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
+      }),
       token: {
         value: expected.token,
         expiresIn: expect.any(Number),
@@ -89,7 +97,7 @@ describe('login with credentials service', () => {
       name: 'john',
     })
 
-    accounts.set(Account.create({ external_ref, name: 'john' }))
+    const account = accounts.set(Account.create({ external_ref, name: 'john' }))
 
     const result = await loginWithCredentials(credentials)({
       signer,
@@ -104,6 +112,7 @@ describe('login with credentials service', () => {
     const data = result.value
 
     expect(data).toEqual({
+      account,
       token: {
         value: expected.token,
         expiresIn: expect.any(Number),

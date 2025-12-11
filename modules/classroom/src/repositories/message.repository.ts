@@ -1,14 +1,15 @@
 import type { Converter } from '@davna/types'
 import { MongoClient, MongoDBRepository, ObjectId } from '@davna/repositories'
 
-import { Message } from '../entities/message'
+import { AudioMessage, Message } from '../entities/message'
 
 const converter: Converter<Message> = {
   to: ({ id, ...props }: any) => ({
     ...props,
     _id: id ? new ObjectId(id) : new ObjectId(),
   }),
-  from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
+  from: ({ _id, ...raw }: any) =>
+    AudioMessage.create({ ...raw, id: _id?.toString() ?? '' }),
 }
 
 export interface MessageRepositoryConfig {

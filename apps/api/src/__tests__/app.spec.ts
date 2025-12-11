@@ -10,6 +10,7 @@ import { makeEnv } from './fakes/env'
 import { bearer } from './utils/bearer'
 import { connect } from './utils/connect'
 import { waitFor } from './utils/wait.for'
+import { Role } from '@davna/role'
 
 type Token = {
   value: string
@@ -155,6 +156,17 @@ describe('application integration tests', () => {
   })
 
   test('create session service', async () => {
+    const adminRole = await env.repositories.roles.set(
+      Role.create({ name: 'ADMIN', description: 'Admin Role' }),
+    )
+
+    const [account] = await env.repositories.accounts.query()
+
+    await env.repositories.accounts.set({
+      ...account,
+      roles: [adminRole.id],
+    })
+
     const res = await request(app)
       .post('/session')
       .send(credentials)
@@ -164,6 +176,9 @@ describe('application integration tests', () => {
     session = res.body
 
     expect(session).toEqual({
+      account: expect.objectContaining({
+        roles: ['ADMIN'],
+      }),
       token: {
         value: expect.any(String),
         expiresIn: expect.any(Number),

@@ -3,12 +3,13 @@ import { MongoDBRepository, MongoClient, ObjectId } from '@davna/repositories'
 import { Role } from '../entities'
 
 const converter: Converter<Role> = {
-  to: ({ id, name, description, created_at, updated_at }) => ({
+  to: ({ id, name, description, created_at, updated_at, __version }) => ({
     _id: id ? new ObjectId(id) : new ObjectId(),
     name,
     description,
     created_at,
     updated_at,
+    __version,
   }),
   from: ({ _id, name, description, created_at, updated_at }) =>
     Role.create({

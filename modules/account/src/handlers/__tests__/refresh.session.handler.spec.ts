@@ -7,6 +7,7 @@ import { refreshSessionHandler } from '../refresh.session.handler'
 
 import { refreshSession as service } from '../../services/refresh.session'
 import { makeConfig } from '../../fakes/make.config'
+import { Account } from '../../entities'
 
 jest.mock('../../services/refresh.session', () => ({
   refreshSession: jest.fn(),
@@ -17,11 +18,13 @@ const refreshSession = service as any as jest.Mock
 describe('refreshSessionHandler', () => {
   const user_agent = 'Mozilla/5.0 (test)'
 
+  let accounts: Repository<Account>
   let sessions: Repository<Session>
   let signer: jest.Mocked<Signer>
   const config = makeConfig()
 
   beforeEach(() => {
+    accounts = InMemoryRepository<Account>()
     sessions = InMemoryRepository<Session>()
 
     signer = {
@@ -37,6 +40,7 @@ describe('refreshSessionHandler', () => {
       headers: {},
     })
     const result = await refreshSessionHandler(req)({
+      accounts,
       sessions,
       signer,
       config,
@@ -67,6 +71,7 @@ describe('refreshSessionHandler', () => {
     })
 
     const result = await refreshSessionHandler(req)({
+      accounts,
       sessions,
       signer,
       config,
@@ -103,6 +108,7 @@ describe('refreshSessionHandler', () => {
     )
 
     const result = await refreshSessionHandler(req)({
+      accounts,
       sessions,
       signer,
       config,
@@ -147,6 +153,7 @@ describe('refreshSessionHandler', () => {
     )
 
     const result = await refreshSessionHandler(req)({
+      accounts,
       sessions,
       signer,
       config,
