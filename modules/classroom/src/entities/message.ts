@@ -1,5 +1,5 @@
 import { object, string } from 'yup'
-import { applyTag, Entity } from '@davna/core'
+import { applyTag, applyVersioning, Entity } from '@davna/core'
 
 import { Audio, audioSchema } from './audio'
 
@@ -21,7 +21,7 @@ export interface AudioMessageProps {
   translation: string
 }
 
-export interface AudioMessage extends AudioMessageProps, Entity<URI> {}
+export interface AudioMessage extends AudioMessageProps, Entity<URI, 'v1'> {}
 
 export interface CreateAudioMessage
   extends AudioMessageProps, Partial<Entity> {}
@@ -48,17 +48,19 @@ export function AudioMessage(
   created_at: Date,
   updated_at: Date,
 ): AudioMessage {
-  return applyTag(URI)({
-    id,
-    classroom_id,
-    participant_id,
-    type,
-    data,
-    transcription,
-    translation,
-    created_at,
-    updated_at,
-  })
+  return applyVersioning('v1')(
+    applyTag(URI)({
+      id,
+      classroom_id,
+      participant_id,
+      type,
+      data,
+      transcription,
+      translation,
+      created_at,
+      updated_at,
+    }),
+  )
 }
 
 AudioMessage.create = ({

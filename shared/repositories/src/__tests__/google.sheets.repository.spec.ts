@@ -1,5 +1,5 @@
 import { google } from 'googleapis'
-import { applyTag, Entity } from '@davna/core'
+import { applyTag, applyVersioning, Entity } from '@davna/core'
 import { OmitEntityProps } from '@davna/types'
 
 import {
@@ -9,7 +9,7 @@ import {
 
 jest.setTimeout(30000)
 
-interface E extends Entity<'E'> {
+interface E extends Entity<'E', 'v1'> {
   name: string
   value: number
 }
@@ -25,13 +25,15 @@ function E(
   created_at: Date,
   updated_at: Date,
 ): E {
-  return applyTag('E')({
-    id,
-    name,
-    value,
-    created_at,
-    updated_at,
-  })
+  return applyVersioning('v1')(
+    applyTag('E')({
+      id,
+      name,
+      value,
+      created_at,
+      updated_at,
+    }),
+  )
 }
 
 E.create = ({ id, name, value, created_at, updated_at }: CreateE) => {

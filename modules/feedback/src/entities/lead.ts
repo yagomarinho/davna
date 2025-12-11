@@ -1,4 +1,4 @@
-import { applyTag, Entity } from '@davna/core'
+import { applyTag, applyVersioning, Entity } from '@davna/core'
 
 const URI = 'lead'
 type URI = typeof URI
@@ -7,14 +7,16 @@ export interface CreateLead extends Partial<Entity> {
   id: string
 }
 
-export interface Lead extends Entity<URI> {}
+export interface Lead extends Entity<URI, 'v1'> {}
 
 export function Lead(id: string, created_at: Date, updated_at: Date): Lead {
-  return applyTag(URI)({
-    id,
-    created_at,
-    updated_at,
-  })
+  return applyVersioning('v1')(
+    applyTag(URI)({
+      id,
+      created_at,
+      updated_at,
+    }),
+  )
 }
 
 Lead.create = ({ id, created_at, updated_at }: CreateLead) => {

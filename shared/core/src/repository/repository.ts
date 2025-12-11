@@ -1,4 +1,5 @@
-import { Entity, Identifier } from '../entity'
+import { Entity } from '../entity'
+import { Identifier } from '../identifier'
 import { Query } from './query'
 import { Tagged } from '../tagged'
 import { Batch, WriteBatchResult } from './batch'
@@ -32,10 +33,7 @@ export interface Batchable<R extends Repository> extends Tagged<URI> {
 }
 
 export interface WriteonlyMode<R extends Repository>
-  extends Writable<R>,
-    Batchable<R> {}
+  extends Writable<R>, Batchable<R> {}
 
 export interface ReadonlyMode<R extends Repository>
-  extends Readable<R>,
-    Queryable<R>,
-    Tagged<URI> {}
+  extends Readable<R>, Queryable<R>, Tagged<URI> {}

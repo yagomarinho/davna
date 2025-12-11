@@ -16,9 +16,14 @@ type Token = {
   expiresIn: number
 }
 
+type Account = {
+  roles: string[]
+}
+
 type Session = {
   token: Token
   refresh_token: Token
+  account: Account
 }
 
 interface ClassStarted {

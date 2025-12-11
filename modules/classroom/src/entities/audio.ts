@@ -1,5 +1,5 @@
 import { date, mixed, number, object, string } from 'yup'
-import { applyTag, Entity } from '@davna/core'
+import { applyTag, applyVersioning, Entity } from '@davna/core'
 import { STORAGE_TYPE } from '@davna/providers'
 
 const URI = 'audio'
@@ -29,12 +29,11 @@ export interface AudioProps {
   duration: number
 }
 
-export interface Audio extends AudioProps, UploadedAudioProps, Entity<URI> {}
+export interface Audio
+  extends AudioProps, UploadedAudioProps, Entity<URI, 'v1'> {}
 
 export interface CreateAudio
-  extends AudioProps,
-    Partial<UploadedAudioProps>,
-    Partial<Entity> {}
+  extends AudioProps, Partial<UploadedAudioProps>, Partial<Entity> {}
 
 export const audioSchema = object({
   id: string().required(),
@@ -66,17 +65,19 @@ export function Audio(
   created_at: Date,
   updated_at: Date,
 ): Audio {
-  return applyTag('audio')({
-    id,
-    owner_id,
-    name,
-    mime,
-    src,
-    internal_ref,
-    duration,
-    created_at,
-    updated_at,
-  })
+  return applyVersioning('v1')(
+    applyTag('audio')({
+      id,
+      owner_id,
+      name,
+      mime,
+      src,
+      internal_ref,
+      duration,
+      created_at,
+      updated_at,
+    }),
+  )
 }
 
 Audio.create = ({

@@ -1,4 +1,4 @@
-import { Identifier } from '../entity'
+import { Identifier } from '../identifier'
 
 export interface UpsertBatchItem<E> {
   type: 'upsert'

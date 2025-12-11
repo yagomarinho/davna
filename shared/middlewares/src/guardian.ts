@@ -1,6 +1,7 @@
 import {
   Either,
   isLeft,
+  Left,
   Middleware,
   Next,
   Request,
@@ -19,18 +20,28 @@ export interface Validate {
 
 interface Env {
   validate: Validate
+  onLeft?: (
+    left: Left<any>,
+    originalRequest: Request,
+  ) => Response | Promise<Response>
 }
 
 export const guardian = Middleware(
   request =>
     async (env: Env): Promise<any> => {
+      const onLeft = env.onLeft ?? defaultGuardianResponse
+
       const validation = await env.validate(request)
 
       return isLeft(validation)
-        ? Response({
-            data: validation.value,
-            metadata: { headers: { status: 400 } },
-          })
+        ? onLeft(validation, request)
         : Next({ request: validation.value })
     },
 )
+
+function defaultGuardianResponse(left: Left<any>): Response {
+  return Response({
+    data: left.value,
+    metadata: { headers: { status: 400 } },
+  })
+}

@@ -2,13 +2,44 @@ import type { Converter } from '@davna/types'
 import { MongoDBRepository, MongoClient, ObjectId } from '@davna/repositories'
 
 import { Account } from '../entities/account'
+import { createAccount } from '../entities/account/factory'
 
 const converter: Converter<Account> = {
-  to: ({ id, ...props }: any) => ({
-    ...props,
+  to: ({
+    id,
+    name,
+    external_ref,
+    roles,
+    created_at,
+    updated_at,
+    __version,
+  }) => ({
     _id: id ? new ObjectId(id) : new ObjectId(),
+    name,
+    external_ref,
+    roles,
+    created_at,
+    updated_at,
+    __version,
   }),
-  from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
+  from: ({
+    _id,
+    name,
+    external_ref,
+    roles,
+    created_at,
+    updated_at,
+    __version,
+  }) =>
+    createAccount({
+      id: _id?.toString() ?? '',
+      name,
+      external_ref,
+      roles,
+      created_at,
+      updated_at,
+      __version,
+    }),
 }
 
 export interface AccountRepositoryConfig {

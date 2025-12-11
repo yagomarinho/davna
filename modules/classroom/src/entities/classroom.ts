@@ -1,4 +1,4 @@
-import { applyTag, Entity } from '@davna/core'
+import { applyTag, applyVersioning, Entity } from '@davna/core'
 
 const URI = 'classroom'
 type URI = typeof URI
@@ -19,7 +19,7 @@ export interface ClassroomProps {
   history: string[]
 }
 
-export interface Classroom extends ClassroomProps, Entity<URI> {}
+export interface Classroom extends ClassroomProps, Entity<URI, 'v1'> {}
 
 export interface CreateClassroom extends ClassroomProps, Partial<Entity> {}
 
@@ -31,14 +31,16 @@ export function Classroom(
   created_at: Date,
   updated_at: Date,
 ): Classroom {
-  return applyTag('classroom')({
-    id,
-    owner_id,
-    participants,
-    history,
-    created_at,
-    updated_at,
-  })
+  return applyVersioning('v1')(
+    applyTag('classroom')({
+      id,
+      owner_id,
+      participants,
+      history,
+      created_at,
+      updated_at,
+    }),
+  )
 }
 
 Classroom.create = ({

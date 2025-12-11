@@ -1,3 +1,4 @@
+export * from './apply.entry'
 export * from './clone.function'
 export * from './deep.clone'
 export * from './fallback.wav'

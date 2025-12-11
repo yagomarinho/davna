@@ -1,4 +1,4 @@
-import { cloneFunction, deepClone } from '@davna/utils'
+import { applyEntry } from '@davna/utils'
 
 export interface Tagged<V extends string> {
   readonly __tag: V
@@ -6,30 +6,8 @@ export interface Tagged<V extends string> {
 
 export const applyTag =
   <T extends string>(tag: T) =>
-  <V>(value: V): V & Tagged<T> => {
-    if (typeof value === 'function') {
-      const clonedValue = cloneFunction(value as any)
-      apply(clonedValue)
-      return clonedValue as V & Tagged<T>
-    }
-
-    if (typeof value === 'object' && value !== null) {
-      const clonedValue = deepClone(value)
-      apply(clonedValue)
-      return clonedValue as V & Tagged<T>
-    }
-
-    function apply(v: any) {
-      Reflect.defineProperty(v, '__tag', {
-        value: tag,
-        enumerable: true,
-        configurable: false,
-        writable: false,
-      })
-    }
-
-    throw new Error('Invalid element to tag')
-  }
+  <V>(value: V): V & Tagged<T> =>
+    applyEntry('__tag', tag)(value)
 
 export const verifyTag =
   <T extends string>(tag: T) =>

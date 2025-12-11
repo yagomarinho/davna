@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { MongoDBRepository } from '../mongodb.repository'
-import { applyTag, Entity, Filter, Query } from '@davna/core'
+import { applyTag, applyVersioning, Entity, Filter, Query } from '@davna/core'
 
 const URI = 'user'
 type URI = typeof URI
@@ -24,14 +24,16 @@ function User(
   created_at: Date,
   updated_at: Date,
 ): User {
-  return applyTag(URI)({
-    id,
-    name,
-    age,
-    interests,
-    created_at,
-    updated_at,
-  })
+  return applyVersioning('v1')(
+    applyTag(URI)({
+      id,
+      name,
+      age,
+      interests,
+      created_at,
+      updated_at,
+    }),
+  )
 }
 
 User.create = ({

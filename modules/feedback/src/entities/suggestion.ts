@@ -1,4 +1,4 @@
-import { applyTag, Entity } from '@davna/core'
+import { applyTag, applyVersioning, Entity } from '@davna/core'
 
 const URI = 'suggestion'
 type URI = typeof URI
@@ -7,7 +7,7 @@ export interface SuggestionProps {
   suggestion: string
 }
 
-export interface Suggestion extends SuggestionProps, Entity<URI> {}
+export interface Suggestion extends SuggestionProps, Entity<URI, 'v1'> {}
 
 export interface CreateSuggestion extends SuggestionProps, Partial<Entity> {}
 
@@ -17,12 +17,14 @@ export function Suggestion(
   created_at: Date,
   updated_at: Date,
 ): Suggestion {
-  return applyTag(URI)({
-    id,
-    suggestion,
-    created_at,
-    updated_at,
-  })
+  return applyVersioning('v1')(
+    applyTag(URI)({
+      id,
+      suggestion,
+      created_at,
+      updated_at,
+    }),
+  )
 }
 
 Suggestion.create = ({

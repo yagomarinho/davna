@@ -291,6 +291,7 @@ describe('InMemoryRepository', () => {
       {
         type: 'upsert',
         data: applyTag('user')({
+          __version: 'v1',
           id: '',
           name: 'Ana',
           age: 28,
@@ -303,6 +304,7 @@ describe('InMemoryRepository', () => {
       {
         type: 'upsert',
         data: applyTag('user')({
+          __version: 'v1',
           id: '',
           name: 'Miguel',
           age: 18,
@@ -315,6 +317,7 @@ describe('InMemoryRepository', () => {
       {
         type: 'upsert',
         data: applyTag('user')({
+          __version: 'v1',
           id: '',
           name: 'Pablo',
           age: 12,
@@ -342,6 +345,7 @@ describe('InMemoryRepository', () => {
 
     const user = repo.set(
       applyTag('user')({
+        __version: 'v1',
         id: '',
         name: 'Ana',
         age: 28,
@@ -362,6 +366,7 @@ describe('InMemoryRepository', () => {
       {
         type: 'upsert',
         data: applyTag('user')({
+          __version: 'v1',
           id: '',
           name: 'Miguel',
           age: 18,
@@ -374,6 +379,7 @@ describe('InMemoryRepository', () => {
       {
         type: 'upsert',
         data: applyTag('user')({
+          __version: 'v1',
           id: '',
           name: 'Pablo',
           age: 12,

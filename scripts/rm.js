@@ -3,6 +3,19 @@
 const { readdirSync, readFileSync, statSync, rmSync } = require('node:fs')
 const { resolve } = require('node:path')
 
+function readPackageJson(dirPath) {
+  try {
+    return JSON.parse(
+      readFileSync(resolve(dirPath, 'package.json'), {
+        encoding: 'utf-8',
+        flag: 'r',
+      }),
+    )
+  } catch {
+    return undefined
+  }
+}
+
 function main() {
   const folder = process.argv[2].trim()
   const folderToAvoidDelete = [
@@ -20,18 +33,28 @@ function main() {
     return process.exit(2)
   }
 
-  const nm = JSON.parse(
-    readFileSync(resolve(__dirname, '../package.json'), {
-      encoding: 'utf-8',
-      flag: 'r',
-    }),
-  )
+  // verificar se existe package.json no root do comando e se é mesmo workspace
 
-  const { packages } = nm.workspaces
+  const nm = readPackageJson(process.cwd())
+
+  if (!nm || !nm.workspaces) {
+    console.error('No workspaces found in root package.json')
+    return process.exit(2)
+  }
+
+  let packages = []
+  if (Array.isArray(nm.workspaces)) packages = nm.workspaces
+  else if (nm.workspaces && Array.isArray(nm.workspaces.packages))
+    packages = nm.workspaces.packages
+  else {
+    console.error('Unsupported workspaces configuration in root package.json')
+    return process.exit(2)
+  }
 
   const nms = packages
     .map(pkg => pkg.replace('/*', ''))
-    .map(package => resolve(__dirname, '../', package))
+    .map(package => resolve(process.cwd(), package))
+    .concat(resolve(process.cwd(), folder))
     .flatMap(path => {
       try {
         const folders = readdirSync(path, { withFileTypes: true })
@@ -42,7 +65,6 @@ function main() {
         return
       }
     })
-    .concat(resolve(__dirname, '../', folder))
     .filter(Boolean)
     .map(path => {
       try {
