@@ -1,0 +1,37 @@
+{
+  "name": "@davna/ffmpeg",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "rimraf ./dist && npm run typecheck && node build.js",
+    "dev": "tsnd --respawn --transpile-only --ignore-watch node_modules src/index.ts",
+    "test": "jest",
+    "test:handlers": "jest src/handlers/",
+    "test:services": "jest src/services/",
+    "typecheck": "tsc --noEmit --project ./tsconfig.build.json"
+  },
+  "author": {
+    "name": "Yago Marinho",
+    "email": "marinho.rj2@hotmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yagomarinho/davna.git"
+  },
+  "dependencies": {
+    "@davna/applications": "*",
+    "@davna/health": "*",
+    "@davna/middlewares": "*",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express-rate-limit": "^8.1.0",
+    "ffmpeg-static": "^5.3.0",
+    "ffprobe-static": "^3.1.0",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "supertest": "^7.1.4"
+  },
+  "license": "MIT"
+}

@@ -3,9 +3,6 @@ import { resolve } from 'node:path'
 import { rm, writeFile } from 'node:fs/promises'
 import { Repository } from '@davna/core'
 
-import { Audio } from '../entities/audio'
-import { StorageConstructor } from '../utils/storage'
-
 interface Env {
   audios: Repository<Audio>
   storage: StorageConstructor

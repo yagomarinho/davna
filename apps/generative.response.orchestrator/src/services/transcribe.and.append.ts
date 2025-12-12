@@ -1,17 +1,6 @@
 import { isLeft, Left, Repository, Right, Service } from '@davna/core'
 import { GPTModel } from '@davna/providers'
 
-import { Message, MESSAGE_TYPE } from '../entities/message'
-import { Classroom } from '../entities/classroom'
-import { Audio } from '../entities/audio'
-
-import { MessageHandler } from '../utils/message.handler'
-import { StorageConstructor } from '../utils/storage'
-
-import { appendMessageToClassroom } from './append.message.to.classroom'
-import { getTranscriptionFromAudio } from '../helpers/get.transcription.from.audio'
-import { verifyConsume } from './verify.consume'
-
 interface Data {
   audio: Audio
   classroom_id: string

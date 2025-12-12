@@ -1,12 +1,6 @@
 import type { GPTInput, GPTModel, STORAGE_TYPE } from '@davna/providers'
 import { isLeft, Repository } from '@davna/core'
 
-import { uploadAudio } from '../services/upload.audio'
-
-import { Audio } from '../entities/audio'
-import { StorageConstructor } from '../utils/storage'
-import { MultimediaProvider } from '../providers'
-
 interface Request {
   input: GPTInput[]
 }

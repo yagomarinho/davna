@@ -5,7 +5,6 @@ node_modules
 # production files
 dist
 build
-docs
 
 # test environment
 coverage

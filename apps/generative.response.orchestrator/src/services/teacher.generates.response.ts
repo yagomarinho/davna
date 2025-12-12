@@ -1,18 +1,6 @@
 import { isLeft, Repository, Right, Service } from '@davna/core'
 import { GPTModel, STORAGE_TYPE } from '@davna/providers'
 
-import { Message, MESSAGE_TYPE } from '../entities/message'
-import { Classroom } from '../entities/classroom'
-import { Audio } from '../entities/audio'
-
-import { MessageHandler } from '../utils/message.handler'
-import { AIGenerateResponse } from '../helpers/ai.generate.response'
-
-import { appendMessageToClassroom } from './append.message.to.classroom'
-import { verifyConsume } from './verify.consume'
-import { StorageConstructor } from '../utils/storage'
-import { MultimediaProvider } from '../providers'
-
 interface Data {
   classroom: Omit<Classroom, 'history'> & { history: Message[] }
   teacher_id: string
