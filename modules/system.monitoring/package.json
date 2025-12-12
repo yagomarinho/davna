@@ -1,5 +1,5 @@
 {
-  "name": "@davna/health",
+  "name": "@davna/system.monitoring",
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",

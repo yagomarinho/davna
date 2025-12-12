@@ -1,5 +1,5 @@
 {
-  "name": "@davna/ffmpeg",
+  "name": "@davna/multimedia.processing",
   "private": true,
   "version": "0.1.0",
   "scripts": {

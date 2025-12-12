@@ -1,5 +1,5 @@
 {
-  "name": "@davna/feedback",
+  "name": "@davna/identity.access",
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",
@@ -17,7 +17,10 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
-    "@davna/repositories": "*"
+    "@davna/repositories": "*",
+    "@davna/providers": "*",
+    "@davna/types": "*",
+    "@davna/utils": "*"
   },
   "license": "MIT"
 }

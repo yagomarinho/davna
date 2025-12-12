@@ -1,5 +1,5 @@
 {
-  "name": "@davna/classroom",
+  "name": "@davna/classroom.management",
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",

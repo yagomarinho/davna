@@ -1,5 +1,5 @@
 {
-  "name": "@davna/api",
+  "name": "@davna/monolith.api",
   "private": true,
   "version": "0.1.0",
   "scripts": {

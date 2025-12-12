@@ -1,5 +1,5 @@
 {
-  "name": "@davna/account",
+  "name": "@davna/costumers.insights",
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",
@@ -17,10 +17,7 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
-    "@davna/repositories": "*",
-    "@davna/providers": "*",
-    "@davna/types": "*",
-    "@davna/utils": "*"
+    "@davna/repositories": "*"
   },
   "license": "MIT"
 }

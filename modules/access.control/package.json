@@ -1,5 +1,5 @@
 {
-  "name": "@davna/role",
+  "name": "@davna/access.control",
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",
