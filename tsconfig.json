@@ -8,7 +8,7 @@
   "files": [],
   "references": [
     { "path": "./apps/client.app" },
-    { "path": "./apps/interaction.orchestrator" },
+    { "path": "./apps/interaction.conductor" },
     { "path": "./apps/monolith.api" },
     { "path": "./apps/multimedia.processing" },
     { "path": "./config/jest" },

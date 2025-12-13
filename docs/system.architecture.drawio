@@ -75,7 +75,7 @@
                         <mxPoint as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="fN4aWZS9lAAyOi2vzcID-14" value="Response Orchestrator&lt;div&gt;Microservice&lt;/div&gt;" style="html=1;whiteSpace=wrap;" parent="1" vertex="1">
+                <mxCell id="fN4aWZS9lAAyOi2vzcID-14" value="Interactions Conductor&lt;div&gt;Microservice&lt;/div&gt;" style="html=1;whiteSpace=wrap;" parent="1" vertex="1">
                     <mxGeometry x="550" y="200" width="110" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="fN4aWZS9lAAyOi2vzcID-19" value="Multimedia Processing&lt;div&gt;Microservice&lt;/div&gt;" style="html=1;whiteSpace=wrap;" parent="1" vertex="1">
