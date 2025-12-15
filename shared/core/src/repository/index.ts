@@ -1,4 +1,5 @@
 export * from './batch'
+export * from './id'
 export * from './operators'
 export * from './query'
 export * from './repository'

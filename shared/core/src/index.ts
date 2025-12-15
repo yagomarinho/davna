@@ -1,5 +1,5 @@
 export * from './either'
-export * from './entity'
+export * from './domain'
 export * from './handler'
 export * from './identifier'
 export * from './metadata'

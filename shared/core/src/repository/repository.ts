@@ -1,4 +1,4 @@
-import { Entity } from '../entity'
+import { Entity } from '../domain'
 import { Identifier } from '../identifier'
 import { Query } from './query'
 import { Tagged } from '../tagged'
