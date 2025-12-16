@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2025 Yago Marinho (Davna)
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 export async function sendAudio(url: string, mime: string) {
   // fetch the Blob from the object URL
   const blob = await (await fetch(url)).blob()

@@ -91,10 +91,7 @@ function walk(dir) {
     const filePath = join(dir, entry.name)
     const content = readFileSync(filePath, 'utf8')
 
-    if (hasLicense(content)) {
-      console.log(join(dir, entry.name))
-      continue
-    }
+    if (hasLicense(content)) continue
 
     writeFileSync(filePath, HEADER + content)
     console.log(`✔ License added: ${filePath}`)

@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2025 Yago Marinho (Davna)
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 // fallback-wav.ts
 // Gera um Buffer contendo um WAV válido com 2s de silêncio (16-bit PCM, 44100 Hz, mono).
 
