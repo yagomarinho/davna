@@ -1,10 +1,8 @@
-import { applyTag, Tagged, verifyTag } from './tagged'
-
-export interface Left<L> extends Tagged<'left'> {
+export interface Left<L> extends Tag<'left'> {
   readonly value: L
 }
 
-export interface Right<R> extends Tagged<'right'> {
+export interface Right<R> extends Tag<'right'> {
   readonly value: R
 }
 

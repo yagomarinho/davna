@@ -1,3 +1,4 @@
+import { isObject } from '@davna/utils'
 import { Resource } from './resource'
 import { Tag } from './tag'
 
@@ -12,4 +13,29 @@ export interface ValueObject<
 > extends Tag<T> {
   meta: ValueObjectMeta
   props: Readonly<P>
+}
+
+export function ValueObject<P extends {}, T extends string>(
+  props: P,
+  tag: T,
+): ValueObject<P, T> {
+  return {
+    _t: tag,
+    props,
+    meta: {
+      _r: ValueObjectURI,
+    },
+  }
+}
+
+ValueObject.isValueObject = isValueObject
+
+export function isValueObject(
+  valueObject: unknown,
+): valueObject is ValueObject {
+  return (
+    isObject(valueObject) &&
+    isObject((valueObject as any).meta) &&
+    (valueObject as any).meta._r === ValueObjectURI
+  )
 }

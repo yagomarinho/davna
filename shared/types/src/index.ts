@@ -1,4 +1,5 @@
 export * from './converter'
+export * from './metadata'
 export * from './omit.entity'
 export * from './reader'
 export * from './reader.task'
