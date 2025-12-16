@@ -5,24 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Entity } from '../../../../domain'
+import { DraftEntity, Entity } from '../../../../domain'
 import { RepositoryResult } from '../types'
 
 /**
  * Represents the write operation of a repository.
  *
- * Persists an entity in the underlying storage.
+ * Accepts a DraftEntity to allow creation of new entities
+ * as well as updates to existing ones.
  *
- * The operation may create a new entity or update
- * an existing one, depending on repository semantics.
- *
- * - E: the type of entity handled by the repository
- *
- * Returns:
- * - the persisted entity, potentially enriched
- *   with updated metadata
+ * Returns the fully persisted entity, including metadata.
  */
 
 export interface RepositorySetter<E extends Entity> {
-  (entity: E): RepositoryResult<E>
+  (entity: DraftEntity<E>): RepositoryResult<E>
 }

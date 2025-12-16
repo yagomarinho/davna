@@ -5,5 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './result'
+export * from './failure'
+export * from './operation.result'
+export * from './outcome'
 export * from './service'

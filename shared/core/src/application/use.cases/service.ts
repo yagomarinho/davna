@@ -5,32 +5,68 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Either } from './either'
-import { Result } from './result'
-import { applyTag, Tagged, verifyTag } from './tagged'
+import { applyEntry } from '@davna/utils'
 
-interface FailedResult {
-  message: string
-  data?: any
+import { Resource } from '../../domain'
+import { ServiceOutcome } from './outcome'
+
+/**
+ * Resource identifier for services.
+ *
+ * Used to discriminate service functions from other
+ * domain constructs at runtime.
+ */
+export const ServiceURI = 'service'
+export type ServiceURI = typeof ServiceURI
+
+/**
+ * Internal service handler signature.
+ *
+ * - Data: input data required to execute the service
+ * - Env: environment required by the service execution
+ * - Result: output produced by the service
+ *
+ * The handler returns a ServiceOutcome, allowing
+ * synchronous or asynchronous execution bound to an environment.
+ */
+interface ServiceHandler<Data, Env, Result> {
+  (data: Data): ServiceOutcome<Env, Result>
 }
 
-type ServiceResult<E, A> = Result<E, Either<FailedResult, A>>
+/**
+ * Public Service type.
+ *
+ * Represents a domain service entry point that:
+ * - may or may not accept input data
+ * - produces a context-aware outcome
+ * - carries a resource discriminator for runtime identification
+ *
+ * Services are treated as first-class domain operations.
+ */
+export type Service<Data = void, Env = {}, Result = void> = Data extends void
+  ? (() => ServiceOutcome<Env, Result>) & Resource<ServiceURI>
+  : ((data: Data) => ServiceOutcome<Env, Result>) & Resource<ServiceURI>
 
-interface S<D, E, A> {
-  (data: D): ServiceResult<E, A>
+/**
+ * Service factory function.
+ *
+ * Wraps a handler function and attaches the service
+ * resource identifier, ensuring consistent runtime shape.
+ */
+
+export function Service<Data = void, Env = {}, Result = void>(
+  handler: ServiceHandler<Data, Env, Result>,
+): Service<Data, Env, Result> {
+  return applyEntry('_r', ServiceURI)(handler) as any
 }
 
-export type Service<D = void, E = {}, A = void> = D extends void
-  ? (() => ServiceResult<E, A>) & Tagged<'service'>
-  : ((data: D) => ServiceResult<E, A>) & Tagged<'service'>
-
-export function Service<D = void, E = {}, A = void>(
-  service: S<D, E, A>,
-): Service<D, E, A> {
-  const taggedService = applyTag('service')(service)
-
-  return taggedService as any
-}
+/**
+ * Runtime type guard for services.
+ *
+ * Validates that a given value represents a service
+ * by checking its callable nature and resource identifier.
+ */
 
 export const isService = (service: unknown): service is Service =>
-  verifyTag('service')(service)
+  (typeof service === 'function' || typeof service === 'object') &&
+  (service as any)._r === ServiceURI
