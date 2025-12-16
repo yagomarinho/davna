@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@davna/applications": "*",
-    "@davna/health": "*",
     "@davna/middlewares": "*",
+    "@davna/system.monitoring": "*",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express-rate-limit": "^8.1.0",

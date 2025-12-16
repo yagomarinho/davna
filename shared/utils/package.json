@@ -12,5 +12,8 @@
     "type": "git",
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
+  "dependencies": {
+    "@davna/types": "*"
+  },
   "license": "MIT"
 }

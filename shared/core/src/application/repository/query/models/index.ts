@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface Writable<
-  R extends Repository,
-> extends Resource<RepositoryURI> {
-  readonly set: R['set']
-}
+export * from './operators'
+export * from './query'
+export * from './range'
+export * from './sort'
+export * from './where'

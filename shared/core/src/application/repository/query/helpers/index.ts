@@ -5,9 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValidObject } from '@davna/types'
-
-export interface Sort<A extends ValidObject> {
-  property: keyof A
-  direction: 'asc' | 'desc'
-}
+export * from './query.helpers'
+export * from './where.helpers'

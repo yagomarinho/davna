@@ -7,6 +7,7 @@
 
 export * from './apply.entry'
 export * from './clone.function'
+export * from './concatenate'
 export * from './deep.clone'
 export * from './fallback.wav'
 export * from './is.object'
