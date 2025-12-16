@@ -9,6 +9,15 @@ import { Entity } from '../../../../domain'
 import { Batch, BatchResult } from '../../batch'
 import { RepositoryResult } from '../types'
 
+/**
+ * Represents the batch operation entry point of a repository.
+ *
+ * Executes a batch of entity operations as a single unit
+ * and returns the aggregated result of the execution.
+ *
+ * - E: the type of entity handled by the repository
+ */
+
 export interface RepositoryBatcher<E extends Entity> {
   (b: Batch<E>): RepositoryResult<BatchResult>
 }

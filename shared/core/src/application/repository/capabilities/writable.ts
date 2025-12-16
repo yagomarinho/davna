@@ -5,8 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface Writable<
-  R extends Repository,
-> extends Resource<RepositoryURI> {
-  readonly set: R['set']
-}
+import { Repository } from '../contracts'
+
+/**
+ * Narrows a Repository type to its write-capable surface.
+ *
+ * Extracts only the write (set) operation from the repository methods,
+ * while preserving repository identity and metadata.
+ *
+ * Useful in contexts where entities can be created or updated,
+ * but other repository capabilities are intentionally restricted.
+ */
+
+export type Writable<R extends Repository> =
+  R extends Repository<infer E, infer T>
+    ? Omit<Repository<E, T>, 'methods'> & {
+        readonly methods: {
+          readonly set: R['methods']['set']
+        }
+      }
+    : never

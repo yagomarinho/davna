@@ -62,7 +62,7 @@ export interface RepositoryMethods<E extends Entity = Entity> {
  */
 
 export interface Repository<
-  E extends Entity = Entity,
+  E extends Entity = any,
   T extends string = string,
 > extends Tag<ExtractEntityTag<E>> {
   readonly methods: RepositoryMethods<E>

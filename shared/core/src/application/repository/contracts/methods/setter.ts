@@ -8,6 +8,21 @@
 import { Entity } from '../../../../domain'
 import { RepositoryResult } from '../types'
 
+/**
+ * Represents the write operation of a repository.
+ *
+ * Persists an entity in the underlying storage.
+ *
+ * The operation may create a new entity or update
+ * an existing one, depending on repository semantics.
+ *
+ * - E: the type of entity handled by the repository
+ *
+ * Returns:
+ * - the persisted entity, potentially enriched
+ *   with updated metadata
+ */
+
 export interface RepositorySetter<E extends Entity> {
   (entity: E): RepositoryResult<E>
 }

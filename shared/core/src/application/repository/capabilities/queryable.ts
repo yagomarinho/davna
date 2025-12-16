@@ -5,11 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Resource } from '../../../domain'
-import { Repository, RepositoryURI } from '../contracts'
+import { Repository } from '../contracts'
 
-export interface Queryable<
-  R extends Repository,
-> extends Resource<RepositoryURI> {
-  readonly query: R['query']
-}
+/**
+ * Narrows a Repository type to its query-capable surface.
+ *
+ * Extracts only the query operation from the repository methods,
+ * while preserving repository identity and metadata.
+ *
+ * Useful in read-oriented contexts where querying is the only
+ * allowed interaction with the repository.
+ */
+
+export type Queryable<R extends Repository> =
+  R extends Repository<infer E, infer T>
+    ? Omit<Repository<E, T>, 'methods'> & {
+        readonly methods: {
+          readonly query: R['methods']['query']
+        }
+      }
+    : never

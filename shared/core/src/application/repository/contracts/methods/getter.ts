@@ -8,6 +8,18 @@
 import { Entity } from '../../../../domain'
 import { RepositoryResult } from '../types'
 
+/**
+ * Represents the read operation of a repository.
+ *
+ * Retrieves an entity by its identifier.
+ *
+ * - E: the type of entity handled by the repository
+ *
+ * Returns:
+ * - the entity if found
+ * - undefined if no entity exists with the given identifier
+ */
+
 export interface RepositoryGetter<E extends Entity> {
   (id: string): RepositoryResult<E | undefined>
 }

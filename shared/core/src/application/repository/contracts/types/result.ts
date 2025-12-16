@@ -5,4 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/**
+ * Represents the result of a repository operation.
+ *
+ * Allows repository implementations to be either
+ * synchronous or asynchronous without changing
+ * the consumer contract.
+ */
+
 export type RepositoryResult<E> = E | Promise<E>

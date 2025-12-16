@@ -6,6 +6,7 @@
  */
 
 export * from './batchable'
+export * from './deletable'
 export * from './queryable'
 export * from './readable'
 export * from './writable'

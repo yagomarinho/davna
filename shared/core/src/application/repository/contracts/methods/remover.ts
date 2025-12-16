@@ -7,6 +7,14 @@
 
 import { RepositoryResult } from '../types'
 
+/**
+ * Represents the delete operation of a repository.
+ *
+ * Removes an entity identified by its identifier.
+ *
+ * Returns a result indicating the outcome of the operation.
+ */
+
 export interface RepositoryRemover {
   (id: string): RepositoryResult<void>
 }

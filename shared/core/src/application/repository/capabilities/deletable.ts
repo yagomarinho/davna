@@ -8,20 +8,20 @@
 import { Repository } from '../contracts'
 
 /**
- * Narrows a Repository type to its read-capable surface.
+ * Narrows a Repository type to its delete-capable surface.
  *
- * Extracts only the read (get) operation from the repository methods,
+ * Extracts only the remove operation from the repository methods,
  * while preserving repository identity and metadata.
  *
- * Useful in contexts where entities should only be retrieved
- * and not modified.
+ * Useful in contexts where entities are allowed to be deleted
+ * but other read or write capabilities are restricted.
  */
 
-export type Readable<R extends Repository> =
+export type Deletable<R extends Repository> =
   R extends Repository<infer E, infer T>
     ? Omit<Repository<E, T>, 'methods'> & {
         readonly methods: {
-          readonly get: R['methods']['get']
+          readonly remove: R['methods']['remove']
         }
       }
     : never

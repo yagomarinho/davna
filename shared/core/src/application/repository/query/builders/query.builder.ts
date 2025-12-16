@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValidObject } from '@davna/types'
+import { Merge, ValidObject } from '@davna/types'
 
 import { Sort } from '../models/sort'
 import { Query } from '../models/query'
@@ -20,6 +20,7 @@ import {
   withWhere,
   withWhereLeaf,
 } from '../helpers'
+import { Entity } from '../../../../..'
 
 /**
  * Function signature for applying filter conditions
@@ -118,11 +119,29 @@ function createQueryBuilder<A extends ValidObject>(
 }
 
 /**
+ * Extracts the set of searchable properties from an Entity.
+ *
+ * Combines:
+ * - the entity domain properties
+ * - technical metadata exposed for querying (id and timestamps)
+ *
+ * This type defines the shape of objects that can be safely
+ * used in query filters and sorting.
+ */
+
+export type ExtractSearchablePropertiesFromEntity<E extends Entity> =
+  E extends Entity<infer P>
+    ? Merge<P, { id: string; created_at: Date; updated_at: Date }>
+    : any
+
+/**
  * Public entry point for creating a QueryBuilder.
  *
  * Starts from an empty query with default values applied.
  */
 
-export function QueryBuilder<A extends ValidObject>(): QueryBuilder<A> {
+export function QueryBuilder<E extends Entity>(): QueryBuilder<
+  ExtractSearchablePropertiesFromEntity<E>
+> {
   return createQueryBuilder(createQuery())
 }

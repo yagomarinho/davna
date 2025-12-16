@@ -40,5 +40,5 @@ export interface RemoveBatchItem {
    * Identifier of the entity to be removed
    * No entity instance is required for this operation
    */
-  data: string // ID to remove
+  data: string
 }

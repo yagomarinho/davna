@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/*
+/**
  * Represents a bounded range between two values.
  *
  * Commonly used for range-based queries or comparisons,
