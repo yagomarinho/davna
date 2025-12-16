@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/**
+ * Represents an object that can be uniquely identified.
+ *
+ * The identifier must be stable and immutable for the lifetime
+ * of the object.
+ */
+
 export interface Identifiable {
   readonly id: string
 }

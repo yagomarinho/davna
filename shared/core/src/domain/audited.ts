@@ -8,4 +8,11 @@
 import { Timestamped } from './timestamped'
 import { Upgradable } from './upgradable'
 
+/**
+ * Represents an object whose lifecycle is auditable.
+ *
+ * Combines creation and update timestamps to enable
+ * change tracking and historical analysis.
+ */
+
 export interface Auditable extends Timestamped, Upgradable {}

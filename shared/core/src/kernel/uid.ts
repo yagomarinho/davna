@@ -5,6 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/**
+ * Unique Identifier (UID) service interface.
+ *
+ * Provides methods to:
+ * - generate stable and unique identifiers
+ * - validate existing identifiers for correctness
+ *
+ * Abstracted as an interface to allow flexible implementations
+ * across different storage or domain contexts.
+ */
 export interface UID {
   generate: () => string
   validate: (uid: string) => boolean

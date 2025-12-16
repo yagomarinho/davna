@@ -6,3 +6,5 @@
  */
 
 export * from './batch'
+export * from './batch.item'
+export * from './batch.result'

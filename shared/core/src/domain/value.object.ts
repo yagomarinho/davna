@@ -9,11 +9,33 @@ import { isObject } from '@davna/utils'
 import { Resource } from './resource'
 import { Tag } from './tag'
 
+/**
+ * Resource identifier for value objects.
+ *
+ * Used to discriminate value objects from other domain constructs
+ * at runtime.
+ */
 export const ValueObjectURI = 'value-object'
 export type ValueObjectURI = typeof ValueObjectURI
 
+/**
+ * Metadata associated with a value object.
+ *
+ * Value objects do not carry identity or lifecycle information,
+ * only a resource discriminator.
+ */
+
 export interface ValueObjectMeta extends Resource<ValueObjectURI> {}
 
+/**
+ * Core Value Object contract.
+ *
+ * - P: immutable value properties
+ * - T: semantic tag for specialization
+ *
+ * Value objects are defined by their values, not by identity.
+ * They must be treated as immutable and freely replaceable.
+ */
 export interface ValueObject<
   P extends {} = {},
   T extends string = string,
@@ -22,6 +44,26 @@ export interface ValueObject<
   props: Readonly<P>
 }
 
+/**
+ * Creates metadata for a value object.
+ *
+ * Value object metadata is minimal by design and exists
+ * solely to provide a resource discriminator.
+ */
+
+function createValueObjectMeta(): ValueObjectMeta {
+  return {
+    _r: ValueObjectURI,
+  }
+}
+
+/**
+ * Factory function for creating value objects.
+ *
+ * Ensures consistent structure, tagging, and metadata
+ * initialization.
+ */
+
 export function ValueObject<P extends {}, T extends string>(
   props: P,
   tag: T,
@@ -29,13 +71,21 @@ export function ValueObject<P extends {}, T extends string>(
   return {
     _t: tag,
     props,
-    meta: {
-      _r: ValueObjectURI,
-    },
+    meta: createValueObjectMeta(),
   }
 }
 
+/*
+ * Static helper for runtime value object detection.
+ */
 ValueObject.isValueObject = isValueObject
+
+/**
+ * Structural value object check.
+ *
+ * Validates shape and resource identity,
+ * without performing deep property validation.
+ */
 
 export function isValueObject(
   valueObject: unknown,

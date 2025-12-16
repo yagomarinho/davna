@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/**
+ * Represents an object that tracks update time.
+ *
+ * Indicates the most recent modification timestamp and may
+ * change over the object's lifecycle.
+ */
+
 export interface Upgradable {
   readonly updated_at: Date
 }
