@@ -5,26 +5,36 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HandlerResult } from './handler'
-import { Metadata } from './metadata'
-import { Response } from './response'
-import { applyTag, Tagged, verifyTag } from './tagged'
+import { Metadata } from '@davna/types'
+import { applyEntry } from '@davna/utils'
 
-export type PostResult<E> = HandlerResult<E>
+import { HandlerResult, Response } from '../ports'
+import { Resource, verifyResource } from '../../domain'
 
-interface P<E, D, M extends Metadata> {
-  (response: Response<D, M>): PostResult<E>
+export const PostprocessorURI = 'postprocessor'
+export type PostprocessorURI = typeof PostprocessorURI
+
+export type ProcessorResult<E> = HandlerResult<E>
+
+interface Processor<Env, Data, Meta extends Metadata> {
+  (response: Response<Data, Meta>): ProcessorResult<Env>
 }
 
-export interface Postprocessor<E = {}, D = any, M extends Metadata = any>
-  extends P<E, D, M>, Tagged<'postprocessor'> {}
+export interface Postprocessor<
+  Env = {},
+  Data = any,
+  Meta extends Metadata = any,
+>
+  extends Processor<Env, Data, Meta>, Resource<PostprocessorURI> {}
 
-export function Postprocessor<E = {}, D = any, M extends Metadata = any>(
-  processor: P<E, D, M>,
-): Postprocessor<E, D, M> {
-  return applyTag('postprocessor')(processor)
+export function Postprocessor<
+  Env = {},
+  Data = any,
+  Meta extends Metadata = any,
+>(processor: Processor<Env, Data, Meta>): Postprocessor<Env, Data, Meta> {
+  return applyEntry('_r', PostprocessorURI)(processor)
 }
 
 export const isPostprocessor = (
   processor: unknown,
-): processor is Postprocessor => verifyTag('postprocessor')(processor)
+): processor is Postprocessor => verifyResource(PostprocessorURI)(processor)

@@ -9,7 +9,7 @@ import { isObject } from '@davna/utils'
 
 import { Auditable } from './audited'
 import { Identifiable } from './identifiable'
-import { Resource } from './resource'
+import { Resource, verifyResource } from './resource'
 import { Tag } from './tag'
 import { Version, Versioned } from './versioned'
 
@@ -127,7 +127,7 @@ export function isEntity(entity: unknown): entity is Entity {
   return (
     isObject(entity) &&
     isObject((entity as any).meta) &&
-    (entity as any).meta._r === EntityURI
+    verifyResource(EntityURI)((entity as any).meta)
   )
 }
 

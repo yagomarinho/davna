@@ -6,6 +6,5 @@
  */
 
 export * from './failure'
-export * from './operation.result'
 export * from './outcome'
 export * from './service'

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Handler } from './handler'
+import { Handler } from '@davna/core'
 
 export type HTTPMethod = 'get' | 'post' | 'put' | 'patch' | 'delete'
 

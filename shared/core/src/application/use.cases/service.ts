@@ -7,7 +7,7 @@
 
 import { applyEntry } from '@davna/utils'
 
-import { Resource } from '../../domain'
+import { Resource, verifyResource } from '../../domain'
 import { ServiceOutcome } from './outcome'
 
 /**
@@ -68,5 +68,4 @@ export function Service<Data = void, Env = {}, Result = void>(
  */
 
 export const isService = (service: unknown): service is Service =>
-  (typeof service === 'function' || typeof service === 'object') &&
-  (service as any)._r === ServiceURI
+  verifyResource(ServiceURI)(service)

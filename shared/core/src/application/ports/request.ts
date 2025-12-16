@@ -5,32 +5,67 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Metadata } from './metadata'
-import { applyTag, Tagged, verifyTag } from './tagged'
+import { Metadata } from '@davna/types'
+import { Resource, verifyResource } from '../../domain'
 
-const URI = 'request'
-type URI = typeof URI
+/**
+ * Resource identifier for requests.
+ *
+ * Used to discriminate request objects from other
+ * domain constructs at runtime.
+ */
 
-export type Context = Record<string, any>
+export const RequestURI = 'request'
+export type RequestURI = typeof RequestURI
+
+/**
+ * Core properties of a request.
+ *
+ * - D: payload data carried by the request
+ * - M: metadata associated with the request
+ */
 
 export interface RequestProps<D = any, M extends Metadata = any> {
   data: D
   metadata: M
 }
 
+/**
+ * Request contract.
+ *
+ * Combines request properties with a resource discriminator
+ * to allow safe runtime identification.
+ */
+
 export interface Request<D = any, M extends Metadata = any>
-  extends RequestProps<D, M>,
-    Tagged<URI> {}
+  extends RequestProps<D, M>, Resource<RequestURI> {}
+
+/**
+ * Request factory function.
+ *
+ * Creates a new Request instance from data and metadata,
+ * attaching the request resource identifier.
+ */
 
 export function Request<D, M extends Metadata>({
   data,
   metadata,
 }: RequestProps<D, M>): Request<D, M> {
-  return applyTag(URI)({
+  return {
+    _r: RequestURI,
     data,
     metadata,
-  })
+  }
 }
+
+/**
+ * Helper for updating or creating request data.
+ *
+ * Supports:
+ * - creating an empty request
+ * - setting data on a new request
+ * - replacing data on an existing request
+ */
 
 function data(): Request
 function data<D>(data: D): Request<D>
@@ -42,6 +77,15 @@ function data(data?: any, request?: Request): Request {
   return Request({ data, metadata: request?.metadata })
 }
 
+/**
+ * Helper for updating or creating request metadata.
+ *
+ * Supports:
+ * - creating an empty request
+ * - setting metadata on a new request
+ * - replacing metadata on an existing request
+ */
+
 function metadata(): Request
 function metadata<M extends Metadata>(metadata: M): Request<any, M>
 function metadata<M extends Metadata, D>(
@@ -52,8 +96,22 @@ function metadata(metadata?: any, request?: Request): Request {
   return Request({ data: request?.data, metadata })
 }
 
+/*
+ * Namespace-style helpers attached to the Request factory.
+ *
+ * Enables functional-style composition of request data
+ * and metadata.
+ */
+
 Request.data = data
 Request.metadata = metadata
 
-export const isRequest = (value: unknown): value is Request =>
-  verifyTag(URI)(value)
+/**
+ * Runtime type guard for requests.
+ *
+ * Validates that a given value represents a request
+ * by checking its resource identifier.
+ */
+
+export const isRequest = (request: unknown): request is Request =>
+  verifyResource(RequestURI)(request)

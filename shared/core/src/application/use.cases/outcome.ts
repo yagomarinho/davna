@@ -6,8 +6,8 @@
  */
 
 import { Either } from '../../kernel'
+import { OperationResult } from '../contracts'
 import { Failure } from './failure'
-import { OperationResult } from './operation.result'
 
 /**
  * Represents the outcome of a service execution.

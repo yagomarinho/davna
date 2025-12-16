@@ -6,25 +6,76 @@
  */
 
 import { Metadata } from '@davna/types'
-import { HandlerResult } from '../ports/handler'
-import { NextResult } from '../ports/next'
 
-export type MiddlewareResult<E, D = any, M extends Metadata = any> =
-  | HandlerResult<E>
-  | NextResult<E, D, M>
+import { HandlerResult, NextResult, Request } from '../ports'
+import { Resource, verifyResource } from '../../domain'
+import { applyEntry } from '@davna/utils'
 
-interface M<E = {}, D = any, U extends Metadata = any> {
-  (request: Request<D, U>): MiddlewareResult<E, D, U>
+/**
+ * Resource identifier for middleware.
+ *
+ * Used to discriminate middleware functions from other
+ * handler-like constructs at runtime.
+ */
+
+export const MiddlewareURI = 'middleware'
+export type MiddlewareURI = typeof MiddlewareURI
+
+/**
+ * Result type produced by a middleware execution.
+ *
+ * A middleware may:
+ * - produce a final handler result (terminating the pipeline)
+ * - return a Next signal to continue processing
+ *
+ * Both outcomes may be synchronous or asynchronous
+ * and environment-dependent.
+ */
+
+export type MiddlewareResult<Env, Data = any, Meta extends Metadata = any> =
+  | HandlerResult<Env>
+  | NextResult<Env, Data, Meta>
+
+/**
+ * Middleware function signature.
+ *
+ * Receives a request and decides whether to:
+ * - handle it directly
+ * - forward it to the next middleware or handler
+ */
+
+interface MiddlewareFn<Env = {}, Data = any, Meta extends Metadata = any> {
+  (request: Request<Data, Meta>): MiddlewareResult<Env, Data, Meta>
 }
 
-export interface Middleware<E = {}, D = any, U extends Metadata = any>
-  extends M<E, D, U>, Tagged<'middleware'> {}
+/**
+ * Middleware contract.
+ *
+ * Combines the middleware function signature with a
+ * resource discriminator to allow runtime identification.
+ */
+export interface Middleware<Env = {}, Data = any, Meta extends Metadata = any>
+  extends MiddlewareFn<Env, Data, Meta>, Resource<MiddlewareURI> {}
 
-export function Middleware<E = {}, D = any, U extends Metadata = any>(
-  middleware: M<E, D, U>,
-): Middleware<E, D, U> {
-  return applyTag('middleware')(middleware)
+/**
+ * Middleware factory function.
+ *
+ * Wraps a middleware function and marks it as a middleware
+ * resource by attaching the middleware identifier.
+ */
+
+export function Middleware<Env = {}, Data = any, Meta extends Metadata = any>(
+  middleware: MiddlewareFn<Env, Data, Meta>,
+): Middleware<Env, Data, Meta> {
+  return applyEntry('_r', MiddlewareURI)(middleware)
 }
+
+/**
+ * Runtime type guard for middleware.
+ *
+ * Validates that a given value represents a middleware
+ * by checking its resource identifier.
+ */
 
 export const isMiddleware = (middleware: unknown): middleware is Middleware =>
-  verifyTag('middleware')(middleware)
+  verifyResource(MiddlewareURI)(middleware)

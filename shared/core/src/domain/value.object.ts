@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@davna/utils'
-import { Resource } from './resource'
+import { Resource, verifyResource } from './resource'
 import { Tag } from './tag'
 
 /**
@@ -93,6 +93,6 @@ export function isValueObject(
   return (
     isObject(valueObject) &&
     isObject((valueObject as any).meta) &&
-    (valueObject as any).meta._r === ValueObjectURI
+    verifyResource(ValueObjectURI)((valueObject as any).meta)
   )
 }

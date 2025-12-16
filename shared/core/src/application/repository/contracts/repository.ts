@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Entity, Resource, Tag } from '../../../domain'
+import { isObject } from '@davna/utils'
+import { Entity, Resource, Tag, verifyResource } from '../../../domain'
 
 import {
   RepositoryBatcher,
@@ -67,4 +68,22 @@ export interface Repository<
 > extends Tag<ExtractEntityTag<E>> {
   readonly methods: RepositoryMethods<E>
   readonly meta: RepositoryMeta<T>
+}
+
+/**
+ * Runtime type guard for repositories.
+ *
+ * Validates that a given value represents a repository by
+ * checking the presence of repository metadata and
+ * verifying its resource identifier.
+ *
+ * Ensures safe narrowing of unknown values to Repository.
+ */
+
+export function isRepository(repository: unknown): repository is Repository {
+  return (
+    isObject(repository) &&
+    isObject((repository as any).meta) &&
+    verifyResource(RepositoryURI)((repository as any).meta)
+  )
 }
