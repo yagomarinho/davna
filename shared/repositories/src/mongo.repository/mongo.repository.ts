@@ -5,56 +5,53 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Collection, MongoClient, ObjectId } from 'mongodb'
+import { Collection, Document, MongoClient, MongoClientOptions } from 'mongodb'
 
-import {
-  Entity,
-  QueryBuilder,
-  Repository,
-  RepositoryResult,
-  Sort,
-  Where,
-  WhereComposite,
-  WhereLeaf,
-} from '@davna/core'
+import { Entity, QueryBuilder, Repository, RepositoryResult } from '@davna/core'
+
 import { MongoClientConfig, MongoWithURIConfig } from './mongo.client.config'
 import { CONNECTION_STATUS } from './connection.status'
+import { fromDocument, isConnected, mongoId, toDocument } from './helpers'
+import { applySorts, whereAdaptToFindQuery } from './query'
 
-export const MongoDBRepositoryURI = 'mongodb.repo'
-export type MongoDBRepositoryURI = typeof MongoDBRepositoryURI
+export const MongoRepositoryURI = 'mongo.repo'
+export type MongoRepositoryURI = typeof MongoRepositoryURI
 
-export interface MongoDBRepository<E extends Entity> extends Repository<
+export interface MongoRepository<E extends Entity> extends Repository<
   E,
-  MongoDBRepositoryURI
+  MongoRepositoryURI
 > {
   readonly infra: Readonly<{
-    createClient: () => RepositoryResult<MongoClient>
+    createClient: (
+      uri: string,
+      options?: MongoClientOptions,
+    ) => RepositoryResult<MongoClient>
     connect: () => RepositoryResult<void>
     disconnect: () => RepositoryResult<void>
     clear: () => RepositoryResult<void>
   }>
 }
 
-export function MongoDBRepository<E extends Entity>(
+export function MongoRepository<E extends Entity>(
   config: MongoClientConfig<E>,
-): MongoDBRepository<E>
-export function MongoDBRepository<E extends Entity>(
+): MongoRepository<E>
+export function MongoRepository<E extends Entity>(
   config: MongoWithURIConfig<E>,
-): MongoDBRepository<E>
-export function MongoDBRepository<E extends Entity>({
+): MongoRepository<E>
+export function MongoRepository<E extends Entity>({
   database,
   collection,
   converter,
   projection,
   tag,
   ...rest
-}: MongoClientConfig<E> | MongoWithURIConfig<E>): MongoDBRepository<E> {
+}: MongoClientConfig<E> | MongoWithURIConfig<E>): MongoRepository<E> {
   const client: MongoClient =
     (rest as any).client ?? new MongoClient((rest as any).uri)
   let coll: Collection<Document>
   let status = CONNECTION_STATUS.READY
 
-  const connect: MongoDBRepository<E>['infra']['connect'] = async () => {
+  const connect: MongoRepository<E>['infra']['connect'] = async () => {
     if (status !== CONNECTION_STATUS.READY)
       throw new Error('Connection has been initialized')
 
@@ -72,7 +69,7 @@ export function MongoDBRepository<E extends Entity>({
   }
 
   const disconnect = verifyConnectionProxy<
-    MongoDBRepository<E>['infra']['disconnect']
+    MongoRepository<E>['infra']['disconnect']
   >(async () => {
     await client.close()
     status = CONNECTION_STATUS.DISCONNECTED
@@ -80,35 +77,38 @@ export function MongoDBRepository<E extends Entity>({
 
   const get = verifyConnectionProxy<Repository<E>['methods']['get']>(
     async id => {
-      const item = await coll.findOne({ _id: new ObjectId(id) }, { projection })
+      const item = await coll.findOne({ _id: mongoId(id) }, { projection })
 
       if (item === null) return
 
-      return converter.from(item)
+      return converter.from(fromDocument(item))
     },
   )
 
   const set = verifyConnectionProxy<Repository<E>['methods']['set']>(
     async entity => {
-      const { _id, ...props } = converter.to(entity)
+      const { _id, ...props } = toDocument(converter.to(entity))
 
       const result = await coll.updateOne(
-        { _id: _id },
+        { _id },
         { $set: props },
         { upsert: true },
       )
 
-      return result.upsertedCount
-        ? converter.from(
-            await coll.findOne({ _id: result.upsertedId! }, { projection }),
-          )
-        : entity
+      const doc = await coll.findOne(
+        { _id: result.upsertedId ? result.upsertedId! : _id },
+        { projection },
+      )
+
+      if (!doc) throw new Error('Internal MongoDB Error')
+
+      return converter.from(fromDocument(doc))
     },
   )
 
   const remove = verifyConnectionProxy<Repository<E>['methods']['remove']>(
     async id => {
-      await coll.deleteOne({ _id: new ObjectId(id) })
+      await coll.deleteOne({ _id: mongoId(id) })
     },
   )
 
@@ -129,7 +129,9 @@ export function MongoDBRepository<E extends Entity>({
 
       if (projection) find.project(projection)
 
-      return (await find.toArray()).map(converter.from)
+      return (await find.toArray()).map(doc =>
+        converter.from(fromDocument(doc)),
+      )
     },
   )
 
@@ -139,11 +141,11 @@ export function MongoDBRepository<E extends Entity>({
         if (item.type === 'remove')
           return {
             deleteOne: {
-              filter: { _id: new ObjectId(item.data.id) },
+              filter: { _id: mongoId(item.data) },
             },
           }
 
-        const { _id, ...props } = converter.to(item.data)
+        const { _id, ...props } = toDocument(converter.to(item.data))
 
         return {
           updateOne: {
@@ -163,11 +165,14 @@ export function MongoDBRepository<E extends Entity>({
     },
   )
 
-  const clear = verifyConnectionProxy<MongoDBRepository<E>['infra']['clear']>(
+  const clear = verifyConnectionProxy<MongoRepository<E>['infra']['clear']>(
     async () => {
       await coll.drop()
     },
   )
+
+  const createClient = (uri: string, options?: MongoClientOptions) =>
+    new MongoClient(uri, options)
 
   function verifyConnectionProxy<F extends (...args: any[]) => any>(
     fn: F,
@@ -184,7 +189,7 @@ export function MongoDBRepository<E extends Entity>({
     _t: tag,
     meta: {
       _r: 'repository',
-      _t: MongoDBRepositoryURI,
+      _t: MongoRepositoryURI,
     },
     methods: {
       get,
@@ -194,85 +199,10 @@ export function MongoDBRepository<E extends Entity>({
       batch,
     },
     infra: {
+      createClient,
       connect,
       disconnect,
       clear,
     },
   }
-}
-
-async function isConnected(client?: MongoDB.MongoClient) {
-  if (!client || !client.db()) {
-    return false
-  }
-  try {
-    const res = await client.db().admin().ping()
-    return res.ok === 1
-  } catch {
-    return false
-  }
-}
-
-// -------------
-// Where Helpers
-// -------------
-
-function whereAdaptToFindQuery(where: Where<any>): any {
-  return isComposite(where)
-    ? whereCompositeAdapter(where)
-    : whereLeafAdapter(where)
-}
-
-function whereCompositeAdapter(where: WhereComposite<any>) {
-  const operator = where.value === 'and' ? '$and' : '$or'
-  const wheres = [
-    whereAdaptToFindQuery(where.left),
-    whereAdaptToFindQuery(where.right),
-  ]
-  return { [operator]: wheres }
-}
-
-function whereLeafAdapter(where: WhereLeaf<any>) {
-  let { fieldname, value } = where.value
-  const { operator } = where.value
-
-  if (fieldname === 'id') {
-    fieldname = '_id'
-
-    if (value instanceof Array) value = value.map(v => new ObjectId(v))
-    if (typeof value === 'string') value = new ObjectId(value)
-  }
-
-  if (operator === 'array-contains') return { [fieldname]: value }
-
-  if (operator === 'between')
-    return { [fieldname]: { $gte: value.start, $lte: value.end } }
-
-  const operatorMapper = {
-    '==': '$eq',
-    '!=': '$ne',
-    '>': '$gt',
-    '>=': '$gte',
-    '<': '$lt',
-    '<=': '$lte',
-    in: '$in',
-    'not-in': '$nin',
-    'array-contains-any': '$in',
-  }
-
-  return { [fieldname]: { [operatorMapper[operator]]: value } }
-}
-
-// -------------
-// Sorts Helpers
-// -------------
-
-function applySorts(sorts: Sort<any>[]): any {
-  return sorts.reduce(
-    (acc, { property, direction }) => (
-      (acc[property as any] = direction === 'asc' ? 1 : -1),
-      acc
-    ),
-    {} as any,
-  )
 }

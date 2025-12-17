@@ -17,5 +17,4 @@ import { Entity } from '../../../../domain'
  * identifying the kind of entity.
  */
 
-export type ExtractEntityTag<E extends Entity> =
-  E extends Entity<any, infer T> ? T : string
+export type ExtractEntityTag<E extends Entity> = E['_t']

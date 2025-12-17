@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DraftEntity, Entity, ExtractEntityTag } from '@davna/core'
-import { Converter } from '@davna/types'
+import { Entity, ExtractEntityTag } from '@davna/core'
 
 import { MongoClient } from 'mongodb'
 import { ProjectionFields } from './projection.fields'
+import { MongoConverter } from './converter'
 
 export interface MongoConfigBaseProps<E extends Entity> {
   database: string
   collection: string
-  converter: Converter<DraftEntity<E>>
+  converter: MongoConverter<E>
   projection?: ProjectionFields<E>
   tag: ExtractEntityTag<E>
 }
