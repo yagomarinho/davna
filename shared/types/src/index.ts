@@ -8,5 +8,4 @@
 export * from './converter'
 export * from './merge'
 export * from './metadata'
-export * from './omit.entity'
 export * from './valid.object'

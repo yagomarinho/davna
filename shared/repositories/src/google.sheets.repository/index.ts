@@ -5,5 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './operation.result'
-export * from './resolvable'
+export * from './google.sheets.repository'

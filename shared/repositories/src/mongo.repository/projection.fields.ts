@@ -7,7 +7,6 @@
 
 import { Entity } from '@davna/core'
 
-export type OmitEntityProps<E extends Entity> = Omit<
-  E,
-  'id' | 'created_at' | 'updated_at' | '__tag' | '__version'
->
+export type ProjectionFields<E extends Entity> = {
+  [x in keyof E['props']]?: 0 | 1
+} & { [x: string]: 0 | 1 }

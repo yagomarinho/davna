@@ -15,6 +15,7 @@ import {
   RepositorySearcher,
   RepositorySetter,
 } from './methods'
+import { ExtractEntityTag } from './types'
 
 /**
  * Resource identifier for repositories.
@@ -25,9 +26,6 @@ import {
 
 export const RepositoryURI = 'repository'
 export type RepositoryURI = typeof RepositoryURI
-
-type ExtractEntityTag<E extends Entity> =
-  E extends Entity<any, infer T> ? T : string
 
 /**
  * Metadata associated with a repository.

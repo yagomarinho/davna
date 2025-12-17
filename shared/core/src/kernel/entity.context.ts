@@ -7,9 +7,11 @@
 
 import { isObject } from '@davna/utils'
 
-import { Timestamp, UID } from '../../kernel'
-import { Entity, EntityMeta, EntityURI } from '../base'
-import { verifyResource } from '../composition'
+import { Timestamp } from './timestamp'
+import { UID } from './uid'
+
+import { Entity, EntityMeta, EntityURI, verifyResource } from '../domain'
+import { Resolvable } from '../application'
 
 /**
  * Runtime services required to create and validate entity metadata.
@@ -28,7 +30,7 @@ export interface EntityContextProps {
  */
 
 export interface EntityContext {
-  meta: () => EntityMeta
+  meta: () => Resolvable<EntityMeta>
   isValid: (entity: unknown) => entity is Entity
 }
 

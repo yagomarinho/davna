@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Resolvable } from '../../../contracts'
+
 /**
  * Represents the result of a repository operation.
  *
@@ -13,4 +15,4 @@
  * the consumer contract.
  */
 
-export type RepositoryResult<E> = E | Promise<E>
+export type RepositoryResult<E> = Resolvable<E>
