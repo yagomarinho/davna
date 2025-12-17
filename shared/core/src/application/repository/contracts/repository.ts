@@ -46,7 +46,7 @@ export interface RepositoryMeta<T extends string>
  * removing, querying, and batching entities.
  */
 
-export interface RepositoryMethods<E extends Entity = Entity> {
+export interface RepositoryMethods<E extends Entity> {
   readonly get: RepositoryGetter<E>
   readonly set: RepositorySetter<E>
   readonly remove: RepositoryRemover

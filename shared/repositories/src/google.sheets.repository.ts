@@ -6,7 +6,7 @@
  */
 
 import { google } from 'googleapis'
-import { applyTag, Entity, Writable, Repository } from '@davna/core'
+import { Entity, Writable, Repository, EntityContext } from '@davna/core'
 
 export interface GCPCredentials {
   type: string
@@ -26,12 +26,14 @@ export interface GCPConfig {
   credentials: GCPCredentials
   spreadsheetId: string
   range: string
+  entityContext: EntityContext
 }
 
 export function GoogleSheetsRepository<E extends Entity>({
   spreadsheetId,
   range,
   credentials,
+  entityContext,
 }: GCPConfig): Writable<Repository<E>> {
   const auth = new google.auth.GoogleAuth({
     credentials,
@@ -41,11 +43,21 @@ export function GoogleSheetsRepository<E extends Entity>({
     ],
   })
 
-  const set: Repository<E>['set'] = async (entity: E) => {
+  const set: Repository<E>['methods']['set'] = async entity => {
     const sheets = google.sheets({ version: 'v4', auth })
 
+    const meta = entityContext.meta()
+    const { id, created_at, updated_at } = meta
+
+    const props = {
+      id,
+      ...entity.props,
+      created_at,
+      updated_at,
+    }
+
     const requestBody = {
-      values: [Object.values(entity).map(value => JSON.stringify(value))],
+      values: [Object.values(props).map(value => JSON.stringify(value))],
     }
 
     // Append the values to the spreadsheet.
@@ -60,10 +72,11 @@ export function GoogleSheetsRepository<E extends Entity>({
     if (!result.data.updates?.updatedRows)
       throw new Error('Invalid data to update')
 
-    return entity
+    return { ...entity, meta }
   }
 
-  return applyTag('repository')({
+  return {
+    _t: '',
     set,
-  })
+  }
 }

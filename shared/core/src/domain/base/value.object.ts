@@ -6,8 +6,7 @@
  */
 
 import { isObject } from '@davna/utils'
-import { Resource, verifyResource } from './resource'
-import { Tag } from './tag'
+import { Resource, Tag, verifyResource } from '../composition'
 
 /**
  * Resource identifier for value objects.

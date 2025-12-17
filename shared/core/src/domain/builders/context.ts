@@ -7,56 +7,9 @@
 
 import { isObject } from '@davna/utils'
 
-import { Auditable } from './audited'
-import { Identifiable } from './identifiable'
-import { Resource, verifyResource } from './resource'
-import { Tag } from './tag'
-import { Version, Versioned } from './versioned'
-
-import { UID } from '../kernel/uid'
-import { Timestamp } from '../kernel/timestamp'
-
-export const EntityURI = 'entity'
-export type EntityURI = typeof EntityURI
-
-/**
- * Metadata shared by all entities.
- *
- * This structure is responsible for identity, auditing
- * and resource discrimination.
- */
-export interface EntityMeta
-  extends Resource<EntityURI>, Identifiable, Auditable {}
-
-/**
- * Core Entity contract.
- *
- * - P: immutable domain properties
- * - T: entity tag/type discriminator
- * - V: versioning strategy
- *
- * Entities are immutable by design:
- * props and meta must never be mutated directly.
- */
-export interface Entity<
-  P extends {} = {},
-  T extends string = string,
-  V extends Version = Version,
->
-  extends Tag<T>, Versioned<V> {
-  readonly meta: EntityMeta
-  readonly props: Readonly<P>
-}
-
-/**
- * Draft version of an entity.
- *
- * Used during creation or reconstruction phases
- * where metadata may not yet exist.
- */
-export type DraftEntity<E extends Entity> = Omit<E, 'meta'> & {
-  meta?: E['meta']
-}
+import { Timestamp, UID } from '../../kernel'
+import { Entity, EntityMeta, EntityURI } from '../base'
+import { verifyResource } from '../composition'
 
 /**
  * Runtime services required to create and validate entity metadata.
