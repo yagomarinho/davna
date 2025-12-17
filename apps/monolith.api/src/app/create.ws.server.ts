@@ -10,7 +10,7 @@ import type { Server as HTTPServer } from 'node:http'
 import { Server } from 'socket.io'
 
 import { isLeft, Request } from '@davna/core'
-import { verifyWebsocketAuth } from '@davna/account'
+import { verifyWebsocketAuth } from '@davna/identity.access'
 import {
   appendAndReplyHandler,
   connectToClassroomHandler,

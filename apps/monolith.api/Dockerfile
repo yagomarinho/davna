@@ -9,10 +9,10 @@ COPY . ./
 RUN yarn install --frozen-lockfile
 
 ENV NODE_ENV=development
-RUN yarn workspace @davna/account run test
+RUN yarn workspace @davna/identity.access run test
 RUN yarn workspace @davna/classroom run test
 RUN yarn workspace @davna/feedback run test
-RUN yarn workspace @davna/role run test
+RUN yarn workspace @davna/access.control run test
 RUN yarn workspace @davna/api run test
 
 RUN yarn workspace @davna/api run build

@@ -18,7 +18,7 @@ import {
   revokeSessionHandler,
   verifySessionHandler,
   verifyValidation,
-} from '@davna/account'
+} from '@davna/identity.access'
 import {
   createClassroomHandler,
   downloadAudioHandler,
@@ -26,7 +26,7 @@ import {
   uploadAudioHandler,
   uploadValidation,
 } from '@davna/classroom'
-import { healthCheckHandler } from '@davna/health'
+import { healthCheckHandler } from '@davna/system.monitoring'
 import {
   appendLeadHandler,
   appendSuggestionHandler,

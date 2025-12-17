@@ -26,7 +26,6 @@
     "@davna/ffmpeg.sdk": "*",
     "@davna/identity.access": "*",
     "@davna/infra": "*",
-    "@davna/infra": "*",
     "@davna/system.monitoring": "*",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",

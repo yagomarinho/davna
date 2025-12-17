@@ -23,7 +23,7 @@ import {
   AccountRepository,
   Session,
   SessionRepository,
-} from '@davna/account'
+} from '@davna/identity.access'
 import {
   Audio,
   AudioRepository,
@@ -42,7 +42,7 @@ import {
   Suggestion,
   SuggestionRepository,
 } from '@davna/feedback'
-import { Role, RoleRepository } from '@davna/role'
+import { Role, RoleRepository } from '@davna/access.control'
 import { Multimedia } from './multimedia'
 
 import { Config } from '../config'

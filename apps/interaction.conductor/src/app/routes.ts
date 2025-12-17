@@ -9,7 +9,7 @@ import { handlerPipe } from '@davna/application'
 import { Route } from '@davna/core'
 import { apiKeyAuthorization, guardian } from '@davna/infra'
 
-import { healthCheckHandler } from '@davna/health'
+import { healthCheckHandler } from '@davna/system.monitoring'
 import { Env } from './env'
 import { getAudioMetadataHandler } from '../handlers/get.audio.metadata.handler'
 import { convertAudioToAACtaHandler } from '../handlers/convert.audio.to.aac.handler'

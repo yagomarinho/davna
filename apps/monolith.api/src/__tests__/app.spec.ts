@@ -10,7 +10,7 @@ import { makeEnv } from './fakes/env'
 import { bearer } from './utils/bearer'
 import { connect } from './utils/connect'
 import { waitFor } from './utils/wait.for'
-import { Role } from '@davna/role'
+import { Role } from '@davna/access.control'
 
 type Token = {
   value: string

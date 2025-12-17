@@ -9,7 +9,7 @@ COPY . ./
 RUN yarn install --frozen-lockfile
 
 ENV NODE_ENV=development
-RUN yarn workspace @davna/health run test
+RUN yarn workspace @davna/system.monitoring run test
 
 RUN yarn workspace @davna/ffmpeg run build
 

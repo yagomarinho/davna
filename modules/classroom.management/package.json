@@ -18,8 +18,6 @@
   },
   "dependencies": {
     "@davna/infra": "*",
-    "@davna/infra": "*",
-    "@davna/kernel": "*",
     "@davna/kernel": "*"
   },
   "license": "MIT"

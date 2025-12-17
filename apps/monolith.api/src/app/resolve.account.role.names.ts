@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Account } from '@davna/account'
+import { Account } from '@davna/identity.access'
 import { Postprocessor, Query, Repository, Response } from '@davna/core'
-import { Role } from '@davna/role'
+import { Role } from '@davna/access.control'
 
 interface Data {
   account: Account
