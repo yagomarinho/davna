@@ -42,8 +42,8 @@ export function toDocument({ id, data }: MongoDocument): Document {
  * Useful for converting entity IDs into MongoDB-compatible IDs.
  */
 
-export function mongoId(id: string) {
-  return new ObjectId(id)
+export function mongoId(id?: string) {
+  return id ? new ObjectId(id) : new ObjectId()
 }
 
 /**

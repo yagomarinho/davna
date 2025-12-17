@@ -7,7 +7,13 @@
 
 import { Collection, Document, MongoClient, MongoClientOptions } from 'mongodb'
 
-import { Entity, QueryBuilder, Repository, RepositoryResult } from '@davna/core'
+import {
+  Entity,
+  EntityContext,
+  QueryBuilder,
+  Repository,
+  RepositoryResult,
+} from '@davna/core'
 
 import { MongoClientConfig, MongoWithURIConfig } from './mongo.client.config'
 import { CONNECTION_STATUS } from './connection.status'
@@ -88,6 +94,7 @@ export function MongoRepository<E extends Entity>({
   converter,
   projection,
   tag,
+  entityContext = mongoEntityContext(),
   ...rest
 }: MongoClientConfig<E> | MongoWithURIConfig<E>): MongoRepository<E> {
   const client: MongoClient =
@@ -131,7 +138,11 @@ export function MongoRepository<E extends Entity>({
 
   const set = verifyConnectionProxy<Repository<E>['methods']['set']>(
     async entity => {
-      const { _id, ...props } = toDocument(converter.to(entity))
+      const e = entityContext.isValid(entity)
+        ? (entity as E)
+        : entity._b(entity.props, await entityContext.meta())
+
+      const { _id, ...props } = toDocument(converter.to(e))
 
       const result = await coll.updateOne(
         { _id },
@@ -248,5 +259,26 @@ export function MongoRepository<E extends Entity>({
       disconnect,
       clear,
     },
+  }
+}
+
+function isValidObjectId(id) {
+  return /^[a-fA-F0-9]{24}$/.test(id)
+}
+
+function mongoEntityContext(): EntityContext {
+  const isValid: EntityContext['isValid'] = (entity): entity is Entity =>
+    isValid(entity) && isValidObjectId(entity.meta.id)
+
+  const meta: EntityContext['meta'] = () => ({
+    id: '',
+    _r: 'entity',
+    created_at: new Date(),
+    updated_at: new Date(),
+  })
+
+  return {
+    isValid,
+    meta,
   }
 }

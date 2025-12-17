@@ -3,7 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "main": "index.ts",
-  "scripts": {},
+  "scripts": {
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
+    "test:middlewares": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest src/middlewares",
+    "test:providers": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest src/providers",
+    "test:repositories": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest src/repositories"
+  },
   "author": {
     "name": "Yago Marinho",
     "email": "marinho.rj2@hotmail.com"

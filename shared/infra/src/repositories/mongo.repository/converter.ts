@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DraftEntity, Entity, Identifiable } from '@davna/core'
+import { Entity, Identifiable } from '@davna/core'
 
 /**
  * Represents a raw MongoDB document with typed data.
@@ -32,6 +32,6 @@ export interface MongoDocument<P extends {} = any> extends Identifiable {
  */
 
 export interface MongoConverter<E extends Entity, P extends {} = any> {
-  to: (entity: DraftEntity<E>) => MongoDocument<P>
+  to: (entity: E) => MongoDocument<P>
   from: (doc: MongoDocument<P>) => E
 }

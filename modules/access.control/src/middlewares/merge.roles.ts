@@ -9,7 +9,7 @@ import {
   Entity,
   Middleware,
   Next,
-  Query,
+  QueryBuilder,
   Repository,
   Request,
 } from '@davna/core'
@@ -32,8 +32,8 @@ export const mergeRoles = Middleware<Env, any, Metadata>(
     async (env): Promise<any> => {
       const { account } = request.metadata
 
-      const roles = await env.roles.query(
-        Query.where('id', 'in', account.roles),
+      const roles = await env.roles.methods.query(
+        QueryBuilder().filterBy('id', 'in', account.roles).build(),
       )
 
       return Next({

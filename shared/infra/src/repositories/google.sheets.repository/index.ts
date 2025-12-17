@@ -5,4 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export * from './gcp.credentials'
 export * from './google.sheets.repository'

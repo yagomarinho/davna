@@ -1,46 +1,14 @@
 import { google } from 'googleapis'
-import { applyTag, applyVersioning, Entity } from '@davna/core'
-import { OmitEntityProps } from '@davna/kernel'
+
+import { EntityContext, EntityMeta } from '@davna/core'
 
 import {
-  GCPCredentials,
   GoogleSheetsRepository,
+  GCPCredentials,
 } from '../google.sheets.repository'
+import { En, EnURI } from './fakes/fake.entity'
 
-jest.setTimeout(30000)
-
-interface E extends Entity<'E', 'v1'> {
-  name: string
-  value: number
-}
-
-interface CreateE extends OmitEntityProps<E>, Partial<Entity> {
-  id: string
-}
-
-function E(
-  id: string,
-  name: string,
-  value: number,
-  created_at: Date,
-  updated_at: Date,
-): E {
-  return applyVersioning('v1')(
-    applyTag('E')({
-      id,
-      name,
-      value,
-      created_at,
-      updated_at,
-    }),
-  )
-}
-
-E.create = ({ id, name, value, created_at, updated_at }: CreateE) => {
-  const now = new Date()
-
-  return E(id, name, value, created_at ?? now, updated_at ?? now)
-}
+jest.setTimeout(20_000)
 
 async function getLastValue(
   auth: Awaited<ReturnType<typeof getAuth>>,
@@ -91,39 +59,68 @@ async function getAuth(credentials: GCPCredentials) {
 describe('GoogleSheetsRepository — integration', () => {
   let auth: Awaited<ReturnType<typeof getAuth>>
   const credentials = makeCred()
-  const range = process.env.GCP_SPREADSHEET_RANGE ?? ''
-  const spreadsheetId = process.env.GCP_SPREADSHEET_ID ?? ''
+  const range = process.env.GCP_LEAD_SPREADSHEET_RANGE ?? ''
+  const spreadsheetId = process.env.GCP_LEAD_SPREADSHEET_ID ?? ''
+
+  const entityContext = {
+    meta: jest.fn(),
+    isValid: jest.fn().mockImplementation(() => true),
+  } as any as jest.Mocked<EntityContext>
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
 
   beforeAll(async () => {
     auth = await getAuth(credentials)
   })
 
   it('should append an entity and then clean it up', async () => {
-    const repo = GoogleSheetsRepository<E>({
+    const repo = GoogleSheetsRepository<En>({
       credentials,
       range,
       spreadsheetId,
+      entityContext,
+      tag: EnURI,
     })
 
-    const uniqueId = `itest-${Date.now()}}`
-    const entity: E = E.create({
-      id: uniqueId,
+    const now = new Date()
+    const meta: EntityMeta = {
+      id: `itest-${now.getTime()}}`,
+      _r: 'entity',
+      created_at: now,
+      updated_at: now,
+    }
+
+    entityContext.meta.mockResolvedValueOnce(meta)
+
+    const entity = En({
       name: 'Integration Test',
       value: 123,
     })
 
-    const result = await repo.set(entity)
+    const result = await repo.methods.set(entity)
 
     expect(result).toBeDefined()
-    expect(result.id).toBe(uniqueId)
+    expect(result.meta.id).toBe(meta.id)
 
     const found = await getLastValue(auth, spreadsheetId, range)
     expect(found).toBeDefined()
 
-    expect(found).toEqual(
-      expect.arrayContaining(
-        Object.values(result).map(value => JSON.stringify(value)),
-      ),
+    expect(JSON.stringify(found)).toEqual(
+      expect.stringContaining(result.meta.id),
+    )
+    expect(JSON.stringify(found)).toEqual(
+      expect.stringContaining(result.meta.created_at.toISOString()),
+    )
+    expect(JSON.stringify(found)).toEqual(
+      expect.stringContaining(result.meta.updated_at.toISOString()),
+    )
+    expect(JSON.stringify(found)).toEqual(
+      expect.stringContaining(result.props.name),
+    )
+    expect(JSON.stringify(found)).toEqual(
+      expect.stringContaining(result.props.value.toString()),
     )
   })
 })

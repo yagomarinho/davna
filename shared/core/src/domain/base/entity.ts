@@ -6,7 +6,7 @@
  */
 
 import { Buildable, Tag, Version, Versioned } from '../composition'
-import { EntityURIS } from '../types'
+import { EntityURIS, EntityURItoKind } from '../types'
 import { EntityMeta } from './meta'
 
 /**
@@ -40,4 +40,48 @@ export interface Entity<
  */
 export type DraftEntity<E extends Entity> = Omit<E, 'meta'> & {
   meta?: E['meta']
+}
+
+/**
+ * Creates a new entity instance, either as a draft (without metadata)
+ * or as a fully materialized entity (with metadata).
+ *
+ * - tag: the entity type identifier
+ * - version: the version of the entity
+ * - builder: the `_b` function used to rebuild the entity
+ * - props: the entity properties
+ * - meta (optional): the entity metadata; if not provided, the entity is a draft
+ *
+ * Returns a `DraftEntity` when metadata is not provided, or a fully typed entity otherwise.
+ */
+
+export function createEntity<T extends EntityURIS>(
+  tag: T,
+  version: EntityURItoKind[T]['_v'],
+  builder: Buildable<EntityURItoKind[T]['props'], T>['_b'],
+  props: EntityURItoKind[T]['props'],
+): DraftEntity<EntityURItoKind[T]>
+
+export function createEntity<T extends EntityURIS>(
+  tag: T,
+  version: EntityURItoKind[T]['_v'],
+  builder: Buildable<EntityURItoKind[T]['props'], T>['_b'],
+  props: EntityURItoKind[T]['props'],
+  meta: EntityMeta,
+): EntityURItoKind[T]
+
+export function createEntity<T extends EntityURIS>(
+  tag: T,
+  version: EntityURItoKind[T]['_v'],
+  builder: Buildable<EntityURItoKind[T]['props'], T>['_b'],
+  props: EntityURItoKind[T]['props'],
+  meta?: EntityMeta,
+): any {
+  return {
+    _b: builder,
+    _t: tag,
+    _v: version,
+    props,
+    meta,
+  }
 }

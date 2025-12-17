@@ -77,7 +77,7 @@ export function GoogleSheetsRepository<E extends Entity>({
       throw new Error('Invalid data to update')
 
     // Return the fully built entity with metadata
-    return entity._b(entity.props, meta)
+    return entity._b(entity.props, meta) as any
   }
 
   return {

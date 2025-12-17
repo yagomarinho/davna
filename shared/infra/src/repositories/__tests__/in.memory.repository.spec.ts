@@ -1,4 +1,4 @@
-import { applyTag, Entity, Filter, Query } from '@davna/core'
+import { Entity, Filter, Query } from '@davna/core'
 
 import { InMemoryRepository } from '../in.memory.repository'
 
@@ -12,13 +12,13 @@ interface User extends Entity {
 describe('InMemoryRepository', () => {
   it('should create a new entity without id and assign id/created_at/updated_at', () => {
     const repo = InMemoryRepository<User>({})
-    const saved: any = repo.set({
+    const saved: any = repo.methods.set({
       id: '' as any,
       name: 'Ana',
       age: 28,
       score: 10,
       tags: [],
-    } as any)
+    })
 
     expect(saved.id).toBe('0')
     expect(saved.created_at).toEqual(expect.any(Date))

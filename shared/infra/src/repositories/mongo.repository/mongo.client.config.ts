@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Entity, ExtractEntityTag } from '@davna/core'
+import { Entity, EntityContext, ExtractEntityTag } from '@davna/core'
 
 import { MongoClient } from 'mongodb'
 import { ProjectionFields } from './projection.fields'
@@ -35,6 +35,17 @@ export interface MongoConfigBaseProps<E extends Entity> {
 
   /** Tag identifying the kind of entity stored */
   tag: ExtractEntityTag<E>
+
+  /**
+   * Optional context providing lifecycle operations for the entity.
+   *
+   * Includes metadata resolution and structural/identity validation,
+   * allowing the repository to interact with entities in a controlled way.
+   *
+   * If not provided, the system can either manage entity metadata automatically
+   * or allow the database to handle it directly.
+   */
+  entityContext?: EntityContext
 }
 
 /**
