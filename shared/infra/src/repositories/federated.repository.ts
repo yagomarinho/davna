@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { applyTag, applyVersioning, Entity, Repository } from '@davna/core'
+import { Entity, Repository } from '@davna/core'
 
 export interface FederatedRepository<E extends Entity> extends Repository<E> {}
 
-type RepoEntry<E extends Entity> = readonly [E['__tag'], Repository<E>]
+type RepoEntry<E extends Entity> = readonly [E['_t'], Repository<E>]
 
 type EntitiesOf<R extends readonly RepoEntry<Entity>[]> =
   R[number] extends readonly [any, Repository<infer E>] ? E : never

@@ -54,7 +54,6 @@ function main() {
   const nms = packages
     .map(pkg => pkg.replace('/*', ''))
     .map(package => resolve(process.cwd(), package))
-    .concat(resolve(process.cwd(), folder))
     .flatMap(path => {
       try {
         const folders = readdirSync(path, { withFileTypes: true })
@@ -65,12 +64,15 @@ function main() {
         return
       }
     })
+    .concat(resolve(process.cwd(), folder))
     .filter(Boolean)
     .map(path => {
       try {
+        const isDirectory = statSync(path).isDirectory()
+
         return {
           path,
-          isDirectory: statSync(path).isDirectory(),
+          isDirectory,
         }
       } catch {
         return {

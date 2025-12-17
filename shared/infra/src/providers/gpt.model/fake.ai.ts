@@ -7,6 +7,7 @@
 
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
+
 import { generateSilentWavBuffer, wait } from '@davna/kernel'
 
 import { GPTModel } from './gpt.model'

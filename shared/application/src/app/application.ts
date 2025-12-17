@@ -8,9 +8,8 @@
 import type { Server } from 'node:http'
 import express from 'express'
 
-import { Route } from '@davna/core'
-
 import { expressHandlerAdapter } from './express.handler.adapter'
+import { Route } from './route'
 
 export interface Options {
   port: number

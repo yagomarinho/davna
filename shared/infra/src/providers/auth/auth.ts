@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Identifier } from '@davna/core'
+import { Identifiable } from '@davna/core'
 
-export interface User extends Identifier {
+export interface User extends Identifiable {
   name: string
 }
 
