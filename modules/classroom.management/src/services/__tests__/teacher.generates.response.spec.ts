@@ -1,6 +1,6 @@
 import { Left, Repository, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
-import { FakeAI, STORAGE_TYPE } from '@davna/providers'
+import { InMemoryRepository } from '@davna/infra'
+import { FakeAI, STORAGE_TYPE } from '@davna/infra'
 
 import { AIGenerateResponse as AIGenerateResponseService } from '../../helpers/ai.generate.response'
 import { appendMessageToClassroom as appendMessageService } from '../append.message.to.classroom'

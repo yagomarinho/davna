@@ -1,6 +1,6 @@
-import type { Signer } from '@davna/providers'
+import type { Signer } from '@davna/infra'
 import { Left, Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Session } from '../../entities/session'
 import { refreshSessionHandler } from '../refresh.session.handler'

@@ -1,8 +1,8 @@
-import type { GPTModel } from '@davna/providers'
+import type { GPTModel } from '@davna/infra'
 import { Left, Right, Request, Repository } from '@davna/core'
 
-import { InMemoryRepository } from '@davna/repositories'
-import { FakeAI, STORAGE_TYPE as _STORAGE_TYPE } from '@davna/providers'
+import { InMemoryRepository } from '@davna/infra'
+import { FakeAI, STORAGE_TYPE as _STORAGE_TYPE } from '@davna/infra'
 
 import { appendAndReplyHandler } from '../append.and.reply.handler'
 

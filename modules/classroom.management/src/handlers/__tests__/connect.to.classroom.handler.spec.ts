@@ -1,5 +1,5 @@
 import { Left, Repository, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { connectToClassroomHandler } from '../connect.to.classroom.handler'
 

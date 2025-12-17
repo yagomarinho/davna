@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValidObject } from '@davna/types'
+import { ValidObject } from '@davna/kernel'
 import { ArrayOperators, Operators, RangeOperators } from './operators'
 import { Range } from './range'
 

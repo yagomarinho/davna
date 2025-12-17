@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValidObject } from '@davna/types'
+import { ValidObject } from '@davna/kernel'
 
 import { Sort } from './sort'
 import { Where } from './where'

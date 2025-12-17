@@ -19,8 +19,8 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
-    "@davna/applications": "*",
-    "@davna/middlewares": "*",
+    "@davna/application": "*",
+    "@davna/infra": "*",
     "@davna/system.monitoring": "*",
     "dotenv": "^17.2.2",
     "multer": "^2.0.2"

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { GPTModel, STORAGE_TYPE } from '@davna/providers'
+import type { GPTModel, STORAGE_TYPE } from '@davna/infra'
 import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
 
 import { Audio, Classroom, Message, PARTICIPANT_ROLE } from '../entities'

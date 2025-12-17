@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Auth, Signer } from '@davna/providers'
+import type { Auth, Signer } from '@davna/infra'
 import { Left, Query, Repository, Right, Service } from '@davna/core'
 
 import { Session } from '../entities/session'

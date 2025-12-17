@@ -13,8 +13,7 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
-    "@davna/types": "*",
-    "@davna/utils": "*"
+    "@davna/kernel": "*"
   },
   "license": "MIT"
 }

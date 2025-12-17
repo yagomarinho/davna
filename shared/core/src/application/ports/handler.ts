@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Metadata } from '@davna/types'
-import { applyEntry } from '@davna/utils'
+import { Metadata, applyEntry } from '@davna/kernel'
 
 import { OperationResult } from '../contracts'
 import { Request } from './request'

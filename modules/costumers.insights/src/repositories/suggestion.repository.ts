@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { GCPCredentials, GoogleSheetsRepository } from '@davna/repositories'
+import { GCPCredentials, GoogleSheetsRepository } from '@davna/infra'
 import { Suggestion } from '../entities/suggestion'
 
 interface SuggestionRepositoryConfig {

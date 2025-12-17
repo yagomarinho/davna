@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Auth } from '@davna/providers'
+import { Auth } from '@davna/infra'
 
 export function makeAuth(): Auth {
   const getUser: Auth['getUser'] = async id => {

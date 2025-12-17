@@ -1,6 +1,6 @@
 import { Left, Repository } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
-import { STORAGE_TYPE } from '@davna/providers'
+import { InMemoryRepository } from '@davna/infra'
+import { STORAGE_TYPE } from '@davna/infra'
 
 import { appendMessageToClassroom } from '../append.message.to.classroom'
 

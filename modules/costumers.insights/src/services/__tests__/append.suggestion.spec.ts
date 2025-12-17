@@ -1,5 +1,5 @@
 import { isRight } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Suggestion } from '../../entities/suggestion'
 import { appendSuggestion } from '../append.suggestion'

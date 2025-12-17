@@ -1,6 +1,6 @@
 import { Left, Repository, Right } from '@davna/core'
-import { FakeAI } from '@davna/providers'
-import { InMemoryRepository } from '@davna/repositories'
+import { FakeAI } from '@davna/infra'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Audio } from '../../entities/audio'
 import { Classroom } from '../../entities/classroom'

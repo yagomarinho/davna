@@ -12,7 +12,7 @@ import helmet from 'helmet'
 import multer from 'multer'
 import rateLimit from 'express-rate-limit'
 
-import { Application } from '@davna/applications'
+import { Application } from '@davna/application'
 import { routes } from './routes'
 
 interface Config {

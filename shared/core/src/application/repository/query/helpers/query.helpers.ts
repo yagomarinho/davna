@@ -12,8 +12,7 @@
  * is always structurally complete.
  */
 
-import { ValidObject } from '@davna/types'
-import { concatenate } from '@davna/utils'
+import { ValidObject, concatenate } from '@davna/kernel'
 
 import {
   ExtractValueByOperator,

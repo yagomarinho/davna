@@ -10,7 +10,7 @@ import {
   MongoDBStorage,
   Storage as StorageProvider,
   STORAGE_TYPE,
-} from '@davna/providers'
+} from '@davna/infra'
 
 interface Config {
   driver: STORAGE_TYPE

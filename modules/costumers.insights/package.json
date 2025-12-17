@@ -17,7 +17,7 @@
     "url": "git+https://github.com/yagomarinho/davna.git"
   },
   "dependencies": {
-    "@davna/repositories": "*"
+    "@davna/infra": "*"
   },
   "license": "MIT"
 }

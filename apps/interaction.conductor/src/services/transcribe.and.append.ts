@@ -6,7 +6,7 @@
  */
 
 import { isLeft, Left, Repository, Right, Service } from '@davna/core'
-import { GPTModel } from '@davna/providers'
+import { GPTModel } from '@davna/infra'
 
 interface Data {
   audio: Audio

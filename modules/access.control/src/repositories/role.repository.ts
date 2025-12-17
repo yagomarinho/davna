@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Converter } from '@davna/types'
-import { MongoDBRepository, MongoClient, ObjectId } from '@davna/repositories'
+import type { Converter } from '@davna/kernel'
+import { MongoDBRepository, MongoClient, ObjectId } from '@davna/infra'
 import { Role } from '../entities'
 
 const converter: Converter<Role> = {

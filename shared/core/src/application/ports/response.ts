@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Metadata } from '@davna/types'
+import { Metadata } from '@davna/kernel'
 import { Resource, verifyResource } from '../../domain'
 
 /**

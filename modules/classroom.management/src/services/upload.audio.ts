@@ -11,7 +11,7 @@ import { Left, Repository, Right, Service } from '@davna/core'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { StorageConstructor } from '../utils/storage'
-import { STORAGE_TYPE } from '@davna/providers'
+import { STORAGE_TYPE } from '@davna/infra'
 
 interface Request {
   owner_id: string

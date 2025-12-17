@@ -6,7 +6,7 @@
  */
 
 import { isLeft, Repository, Right, Service } from '@davna/core'
-import { GPTModel, STORAGE_TYPE } from '@davna/providers'
+import { GPTModel, STORAGE_TYPE } from '@davna/infra'
 
 interface Data {
   classroom: Omit<Classroom, 'history'> & { history: Message[] }

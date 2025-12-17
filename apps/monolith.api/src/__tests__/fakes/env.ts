@@ -8,8 +8,8 @@
 import { resolve } from 'node:path'
 import type { Env } from '../../app'
 
-import { InMemoryRepository } from '@davna/repositories'
-import { FakeAI } from '@davna/providers'
+import { InMemoryRepository } from '@davna/infra'
+import { FakeAI } from '@davna/infra'
 import { MessageHandler } from '@davna/classroom'
 
 import { makeAuth } from './auth'

@@ -1,5 +1,5 @@
 import { Left, Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Session } from '../../entities/session'
 import { revokeSession as service } from '../../services/revoke.session'

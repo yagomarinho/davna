@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Signer } from '@davna/providers'
+import { Signer } from '@davna/infra'
 
 export function makeSigner(): Signer {
   const decode: Signer['decode'] = signature => JSON.parse(signature)

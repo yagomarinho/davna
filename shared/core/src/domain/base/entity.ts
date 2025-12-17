@@ -23,7 +23,7 @@ import { EntityMeta } from './meta'
  */
 
 export interface Entity<
-  P extends {} = {},
+  P extends {} = any,
   T extends EntityURIS = EntityURIS,
   V extends Version = Version,
 >

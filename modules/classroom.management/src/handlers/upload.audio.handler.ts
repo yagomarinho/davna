@@ -12,7 +12,7 @@ import { Audio, SUPORTED_MIME_TYPE } from '../entities/audio'
 import { uploadAudio } from '../services/upload.audio'
 import { StorageConstructor } from '../utils/storage'
 import { MultimediaProvider } from '../providers'
-import { STORAGE_TYPE } from '@davna/providers'
+import { STORAGE_TYPE } from '@davna/infra'
 
 interface Env {
   audios: Repository<Audio>

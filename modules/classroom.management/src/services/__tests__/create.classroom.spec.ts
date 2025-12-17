@@ -1,5 +1,5 @@
 import { isRight, Repository } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { createClassroom } from '../create.classroom'

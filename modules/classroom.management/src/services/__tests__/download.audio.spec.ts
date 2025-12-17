@@ -1,9 +1,9 @@
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
 
 import { downloadAudio } from '../download.audio'
 import { isLeft, isRight } from '@davna/core'
-import { STORAGE_TYPE } from '@davna/providers'
+import { STORAGE_TYPE } from '@davna/infra'
 import { StorageConstructor } from '../../utils/storage'
 
 describe('downloadAudio Service', () => {

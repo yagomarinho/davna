@@ -1,8 +1,8 @@
 import { Readable } from 'node:stream'
 
 import { isLeft, isRight } from '@davna/core'
-import { STORAGE_TYPE } from '@davna/providers'
-import { InMemoryRepository } from '@davna/repositories'
+import { STORAGE_TYPE } from '@davna/infra'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
 import { uploadAudio } from '../upload.audio'

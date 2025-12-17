@@ -5,12 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Merge, ValidObject } from '@davna/types'
+import { Merge, ValidObject } from '@davna/kernel'
 
-import { Sort } from '../models/sort'
-import { Query } from '../models/query'
-import { Operators } from '../models/operators'
-import { ExtractValueByOperator, Where } from '../models/where'
+import {
+  Sort,
+  Query,
+  Operators,
+  ExtractValueByOperator,
+  Where,
+} from '../models'
+
 import {
   createQuery,
   isWhere,
@@ -20,7 +24,7 @@ import {
   withWhere,
   withWhereLeaf,
 } from '../helpers'
-import { Entity } from '../../../../..'
+import { Entity } from '../../../../domain'
 
 /**
  * Function signature for applying filter conditions

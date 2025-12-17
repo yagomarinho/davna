@@ -34,15 +34,24 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'error',
       'arrow-body-style': ['error', 'as-needed'],
+      'import/no-duplicates': 'error',
+      'import/no-relative-parent-imports': 'error',
       'no-console': 'warn',
+      'no-duplicate-imports': 'error',
       'no-redeclare': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['../../', '../../../'],
+        },
+      ],
       'no-unused-vars': 'off',
       'prettier/prettier': 'error',
       'react/function-component-definition': [
         'error',
         {
           namedComponents: 'arrow-function',
-          unamedComponents: 'function-expression',
+          unnamedComponents: 'function-expression',
         },
       ],
       'react/react-in-jsx-scope': 'off',

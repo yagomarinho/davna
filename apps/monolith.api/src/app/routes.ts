@@ -6,8 +6,8 @@
  */
 
 import { Route } from '@davna/core'
-import { handlerPipe, PostprocessorsPipe } from '@davna/applications'
-import { apiKeyAuthorization, guardian } from '@davna/middlewares'
+import { handlerPipe, PostprocessorsPipe } from '@davna/application'
+import { apiKeyAuthorization, guardian } from '@davna/infra'
 
 import {
   ensureAuthenticated,

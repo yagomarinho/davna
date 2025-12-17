@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValidObject } from '@davna/types'
+import { ValidObject } from '@davna/kernel'
 
 /**
  * Represents a sorting rule for query results.

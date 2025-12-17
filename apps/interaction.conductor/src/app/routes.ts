@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { handlerPipe } from '@davna/applications'
+import { handlerPipe } from '@davna/application'
 import { Route } from '@davna/core'
-import { apiKeyAuthorization, guardian } from '@davna/middlewares'
+import { apiKeyAuthorization, guardian } from '@davna/infra'
 
 import { healthCheckHandler } from '@davna/health'
 import { Env } from './env'

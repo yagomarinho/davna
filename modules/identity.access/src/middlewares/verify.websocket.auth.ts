@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Signer } from '@davna/providers'
+import type { Signer } from '@davna/infra'
 
 import { Socket } from 'socket.io'
 import { isLeft, Repository } from '@davna/core'

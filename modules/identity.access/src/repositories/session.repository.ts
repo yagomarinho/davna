@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Converter } from '@davna/types'
-import { MongoClient, MongoDBRepository, ObjectId } from '@davna/repositories'
+import type { Converter } from '@davna/kernel'
+import { MongoClient, MongoDBRepository, ObjectId } from '@davna/infra'
 
 import { Session } from '../entities/session'
 

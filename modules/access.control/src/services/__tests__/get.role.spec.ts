@@ -1,5 +1,5 @@
 import { isLeft, isRight, Left, Right, Repository } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 import { Role } from '../../entities'
 import { getRole } from '../get.role'
 

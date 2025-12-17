@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { GPTModel } from '@davna/providers'
+import type { GPTModel } from '@davna/infra'
 import { resolve } from 'node:path'
 import { rm, writeFile } from 'node:fs/promises'
 import { Repository } from '@davna/core'

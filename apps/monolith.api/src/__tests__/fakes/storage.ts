@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Storage, STORAGE_TYPE } from '@davna/providers'
+import { Storage, STORAGE_TYPE } from '@davna/infra'
 import { readFileAsBuffer } from '../utils/read.file.as.buffer'
 import { resolve } from 'node:path'
-import { generateSilentWavBuffer } from '@davna/utils'
+import { generateSilentWavBuffer } from '@davna/kernel'
 import { existsSync } from 'node:fs'
 
 export function makeStorage() {

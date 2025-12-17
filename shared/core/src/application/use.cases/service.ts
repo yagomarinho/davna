@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { applyEntry } from '@davna/utils'
+import { applyEntry } from '@davna/kernel'
 
 import { Resource, verifyResource } from '../../domain'
 import { ServiceOutcome } from './outcome'

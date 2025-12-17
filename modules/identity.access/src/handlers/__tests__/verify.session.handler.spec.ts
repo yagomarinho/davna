@@ -1,5 +1,5 @@
 import { Left, Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Session } from '../../entities/session'
 import { verifySession as service } from '../../services/verify.session'

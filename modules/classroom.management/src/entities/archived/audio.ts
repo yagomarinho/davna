@@ -7,7 +7,7 @@
 
 import { date, mixed, number, object, string } from 'yup'
 import { applyTag, applyVersioning, Entity } from '@davna/core'
-import { STORAGE_TYPE } from '@davna/providers'
+import { STORAGE_TYPE } from '@davna/infra'
 
 const URI = 'audio'
 type URI = typeof URI

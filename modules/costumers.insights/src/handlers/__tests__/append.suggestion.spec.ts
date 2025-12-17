@@ -1,5 +1,5 @@
 import { Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { appendSuggestionHandler } from '../append.suggestion.handler'
 import { appendSuggestion as service } from '../../services/append.suggestion'

@@ -1,5 +1,5 @@
 import { Left, Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Audio } from '../../entities/audio'
 import { downloadAudio as service } from '../../services/download.audio'

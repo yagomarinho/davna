@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Signer } from '@davna/providers'
+import type { Signer } from '@davna/infra'
 import { Left, Query, Repository, Right, Service } from '@davna/core'
 
 import { ConfigDTO } from '../dtos/config'

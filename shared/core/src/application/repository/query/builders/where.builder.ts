@@ -5,14 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ValidObject } from '@davna/types'
+import { ValidObject } from '@davna/kernel'
 import {
   ExtractValueByOperator,
   Where,
   WhereComposite,
   WhereLeaf,
-} from '../models/where'
-import { Operators } from '../models/operators'
+  Operators,
+} from '../models'
 
 /**
  * Creates a composite Where node.

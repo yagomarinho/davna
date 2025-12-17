@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Metadata } from '@davna/types'
+import { Metadata, applyEntry } from '@davna/kernel'
 
 import { HandlerResult, NextResult, Request } from '../ports'
 import { Resource, verifyResource } from '../../domain'
-import { applyEntry } from '@davna/utils'
 
 /**
  * Resource identifier for middleware.

@@ -14,9 +14,9 @@ import {
   GPTModel,
   JWTSigner,
   Signer,
-} from '@davna/providers'
+} from '@davna/infra'
 import { Repository, Writable } from '@davna/core'
-import { MongoClient } from '@davna/repositories'
+import { MongoClient } from '@davna/infra'
 
 import {
   Account,

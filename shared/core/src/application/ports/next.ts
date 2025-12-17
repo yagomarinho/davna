@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Metadata } from '@davna/types'
+import { Metadata } from '@davna/kernel'
 import { Request } from './request'
-import { OperationResult, Resource, verifyResource } from '../../..'
+
+import { OperationResult } from '../contracts'
+import { Resource, verifyResource } from '../../domain'
 
 /**
  * Resource identifier for the "next" control flow object.

@@ -1,5 +1,5 @@
 import { Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/repositories'
+import { InMemoryRepository } from '@davna/infra'
 
 import { Lead } from '../../entities/lead'
 import { appendLeadHandler } from '../append.lead.handler'

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { STORAGE_TYPE } from '@davna/providers'
+import { STORAGE_TYPE } from '@davna/infra'
 import { resolve } from 'node:path'
 
 export const Config = () => ({

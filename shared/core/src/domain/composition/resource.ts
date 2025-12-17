@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { isObject } from '@davna/utils'
+import { isObject } from '@davna/kernel'
 
 /**
  * Represents a typed resource discriminator.
