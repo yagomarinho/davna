@@ -12,6 +12,7 @@
     ]
   },
   "scripts": {
+    "add:header": "node ./scripts/add.header.js",
     "api:down": "docker compose -f ./docker-compose.yml down",
     "api:up": "docker compose -f ./docker-compose.yml up -d",
     "rm": "node ./scripts/rm.js",
