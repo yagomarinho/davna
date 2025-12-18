@@ -20,14 +20,14 @@ interface Env {
 export const revokeSession = Service<Request, Env, void>(
   ({ session_id }) =>
     async ({ sessions }) => {
-      const session = await sessions.get(session_id)
+      const session = await sessions.methods.get(session_id)
 
-      if (!session || session.expiresIn < new Date()) {
-        if (session) await sessions.remove(session)
+      if (!session || session.props.expiresIn < new Date()) {
+        if (session) await sessions.methods.remove(session.meta.id)
         return Left({ status: 'error', message: 'Session already revoked' })
       }
 
-      await sessions.remove(session)
+      await sessions.methods.remove(session.meta.id)
 
       return Right()
     },

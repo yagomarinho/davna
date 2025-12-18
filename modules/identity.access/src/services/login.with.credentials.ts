@@ -6,10 +6,10 @@
  */
 
 import type { Auth, Signer } from '@davna/infra'
-import { Left, Query, Repository, Right, Service } from '@davna/core'
+import { Left, QueryBuilder, Repository, Right, Service } from '@davna/core'
 
-import { Session } from '../entities/session'
-import { Account } from '../entities/account'
+import { createSession, Session } from '../entities/session'
+import { Account, createAccount } from '../entities/account'
 import { ConfigDTO } from '../dtos/config'
 
 interface Request {
@@ -44,38 +44,39 @@ export const loginWithCredentials = Service<Request, Env, TokenResponse>(
         const now = new Date()
         const user = await auth.authenticate(email, password)
 
-        let [account] = await accounts.query(
-          Query.where('external_ref', '==', user.id),
+        let [account] = await accounts.methods.query(
+          QueryBuilder().filterBy('external_ref', '==', user.id).build(),
         )
 
         if (!account) {
-          account = Account.create({
-            name: user.name,
-            external_ref: user.id,
-          })
-
-          account = await accounts.set(account)
+          account = await accounts.methods.set(
+            createAccount({
+              name: user.name,
+              external_ref: user.id,
+              roles: [],
+            }),
+          )
         }
 
         const { token: tokenConfig, refresh_token: refreshTokenConfig } =
           config.auth.jwt
 
         const refresh_token = signer.sign({
-          subject: account.id,
+          subject: account.meta.id,
           expiresIn: refreshTokenConfig.expiresIn,
         })
 
-        let session = Session.create({
-          account_id: account.id,
-          user_agent,
-          refresh_token,
-          expiresIn: new Date(Date.now() + refreshTokenConfig.expiresIn),
-        })
-
-        session = await sessions.set(session)
+        const session = await sessions.methods.set(
+          createSession({
+            account_id: account.meta.id,
+            user_agent,
+            refresh_token,
+            expiresIn: new Date(Date.now() + refreshTokenConfig.expiresIn),
+          }),
+        )
 
         const token = signer.sign({
-          subject: session.id,
+          subject: session.meta.id,
           expiresIn: tokenConfig.expiresIn,
         })
 

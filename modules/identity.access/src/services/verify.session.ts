@@ -8,7 +8,7 @@
 import type { Signer } from '@davna/infra'
 import { Left, Repository, Right, Service } from '@davna/core'
 
-import { Account, Session } from '../entities'
+import { Account, createSession, Session } from '../entities'
 import { ConfigDTO } from '../dtos/config'
 
 interface Token {
@@ -48,25 +48,24 @@ export const verifySession = Service<Request, Env, TokenResponse>(
         const now = new Date()
         const payload = signer.decode(signature)
 
-        let session = await sessions.get(payload.subject)
+        let session = await sessions.methods.get(payload.subject)
 
-        if (!session || session.expiresIn < new Date()) {
-          if (session) await sessions.remove(session)
+        if (!session || session.props.expiresIn < new Date()) {
+          if (session) await sessions.methods.remove(session.meta.id)
           return Left({ status: 'error', message: 'Invalid Signature' })
         }
 
-        const account = await accounts.get(session.account_id)
-
+        const account = await accounts.methods.get(session.props.account_id)
         if (!account) {
-          if (session) await sessions.remove(session)
+          if (session) await sessions.methods.remove(session.meta.id)
           return Left({ status: 'error', message: 'Invalid Account Session' })
         }
 
         let token: string = signature
-        let refresh_token: string = session.refresh_token
+        let refresh_token: string = session.props.refresh_token
 
         let tokenExpiresIn = payload.expiresIn
-        let refreshTokenExpiresIn = session.expiresIn.getTime()
+        let refreshTokenExpiresIn = session.props.expiresIn.getTime()
 
         const { token: tokenConfig, refresh_token: refreshTokenConfig } =
           config.auth.jwt
@@ -76,52 +75,55 @@ export const verifySession = Service<Request, Env, TokenResponse>(
           refreshTokenExpiresIn = now.getTime() + refreshTokenConfig.expiresIn
 
           refresh_token = signer.sign({
-            subject: session.account_id,
+            subject: session.props.account_id,
             expiresIn: refreshTokenConfig.expiresIn,
           })
 
-          session = Session.create({
-            ...session,
-            account_id: session.account_id,
-            user_agent,
-            refresh_token,
-            expiresIn: new Date(refreshTokenExpiresIn),
-            updated_at: now,
-          })
+          session = createSession(
+            {
+              account_id: session.props.account_id,
+              user_agent,
+              refresh_token,
+              expiresIn: new Date(refreshTokenExpiresIn),
+            },
+            session.meta,
+          )
 
-          session = await sessions.set(session)
+          session = await sessions.methods.set(session)
 
           token = signer.sign({
-            subject: session.id,
+            subject: session.meta.id,
             expiresIn: tokenConfig.expiresIn,
           })
         } else if (refresh_strategy === REFRESH_STRATEGY.LAX) {
           tokenExpiresIn = now.getTime() + tokenConfig.expiresIn
 
           if (
-            session.expiresIn < new Date(now.getTime() + 24 * 60 * 60 * 1000)
+            session.props.expiresIn <
+            new Date(now.getTime() + 24 * 60 * 60 * 1000)
           ) {
             refreshTokenExpiresIn = now.getTime() + refreshTokenConfig.expiresIn
 
             refresh_token = signer.sign({
-              subject: session.account_id,
+              subject: session.props.account_id,
               expiresIn: refreshTokenConfig.expiresIn,
             })
 
-            session = Session.create({
-              ...session,
-              account_id: session.account_id,
-              user_agent,
-              refresh_token,
-              expiresIn: new Date(refreshTokenExpiresIn),
-              updated_at: new Date(),
-            })
+            session = createSession(
+              {
+                account_id: session.props.account_id,
+                user_agent,
+                refresh_token,
+                expiresIn: new Date(refreshTokenExpiresIn),
+              },
+              session.meta,
+            )
 
-            session = await sessions.set(session)
+            session = await sessions.methods.set(session)
           }
 
           token = signer.sign({
-            subject: session.id,
+            subject: session.meta.id,
             expiresIn: tokenConfig.expiresIn,
           })
         }

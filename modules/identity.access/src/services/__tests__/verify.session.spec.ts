@@ -1,12 +1,11 @@
-import type { Signer } from '@davna/infra'
 import { isLeft, isRight, Repository } from '@davna/core'
-import { InMemoryRepository } from '@davna/infra'
+import { InMemoryRepository, type Signer } from '@davna/infra'
 
-import { Session } from '../../entities/session'
+import { createSession, Session } from '../../entities/session'
 import { REFRESH_STRATEGY, verifySession } from '../verify.session'
 
 import { makeConfig } from '../../fakes/make.config'
-import { Account } from '../../entities'
+import { Account, createAccount } from '../../entities'
 
 const dayTime = 24 * 60 * 60 * 1000
 
@@ -64,20 +63,20 @@ describe('verify session service', () => {
   })
 
   it('should return Left and remove expired session', async () => {
-    let expired = Session.create({
+    let expired = createSession({
       account_id,
       refresh_token: signature,
       user_agent,
       expiresIn: new Date(Date.now() - dayTime),
     })
 
-    expired = await sessions.set(expired)
+    expired = await sessions.methods.set(expired)
 
-    const removeSpy = jest.spyOn(sessions, 'remove')
+    const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
     signer.decode.mockReturnValue({
-      subject: expired.id,
-      expiresIn: expired.expiresIn.getTime(),
+      subject: expired.meta!.id,
+      expiresIn: expired.props.expiresIn.getTime(),
     })
 
     const result = await verifySession({
@@ -85,28 +84,26 @@ describe('verify session service', () => {
       user_agent,
     })({ signer, sessions, accounts, config })
 
-    expect(removeSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ id: expired.id }),
-    )
+    expect(removeSpy).toHaveBeenCalledWith(expired.meta!.id)
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
   })
 
   it('should return Left and remove session with no related account', async () => {
-    let expired = Session.create({
+    let expired = createSession({
       account_id,
       refresh_token: signature,
       user_agent,
       expiresIn: new Date(Date.now() + dayTime),
     })
 
-    expired = await sessions.set(expired)
+    expired = await sessions.methods.set(expired)
 
-    const removeSpy = jest.spyOn(sessions, 'remove')
+    const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
     signer.decode.mockReturnValue({
-      subject: expired.id,
-      expiresIn: expired.expiresIn.getTime(),
+      subject: expired.meta!.id,
+      expiresIn: expired.props.expiresIn.getTime(),
     })
 
     const result = await verifySession({
@@ -114,9 +111,7 @@ describe('verify session service', () => {
       user_agent,
     })({ signer, sessions, accounts, config })
 
-    expect(removeSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ id: expired.id }),
-    )
+    expect(removeSpy).toHaveBeenCalledWith(expired.meta!.id)
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Account Session')
   })
@@ -125,28 +120,36 @@ describe('verify session service', () => {
     const new_token = 'new_token'
     const refresh_stable = 'refresh-stable'
 
-    let session = Session.create({
+    let session = createSession({
       account_id,
       user_agent,
       expiresIn: new Date(Date.now() + 3 * dayTime),
       refresh_token: refresh_stable,
     })
 
-    session = await sessions.set(session)
+    session = await sessions.methods.set(session)
 
-    const account = await accounts.set(
-      Account.create({
-        id: account_id,
-        name: 'john',
-        external_ref: 'external_ref',
-      }),
+    const account = await accounts.methods.set(
+      createAccount(
+        {
+          name: 'john',
+          external_ref: 'external_ref',
+          roles: [],
+        },
+        {
+          id: account_id,
+          _r: 'entity',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ),
     )
 
-    const setSpy = jest.spyOn(sessions, 'set')
+    const setSpy = jest.spyOn(sessions.methods, 'set')
 
     signer.decode.mockReturnValue({
-      subject: session.id,
-      expiresIn: session.expiresIn.getTime(),
+      subject: session.meta!.id,
+      expiresIn: session.props.expiresIn.getTime(),
     })
 
     signer.sign.mockReturnValue(new_token)
@@ -175,28 +178,36 @@ describe('verify session service', () => {
     const new_refresh = 'new_refresh'
     const lessThan24h = new Date(Date.now() + dayTime / 2) // +12h
 
-    let session = Session.create({
+    let session = createSession({
       account_id,
       user_agent,
       expiresIn: lessThan24h,
       refresh_token: 'refresh-old',
     })
 
-    session = await sessions.set(session)
+    session = await sessions.methods.set(session)
 
-    const account = await accounts.set(
-      Account.create({
-        id: account_id,
-        name: 'john',
-        external_ref: 'external_ref',
-      }),
+    const account = await accounts.methods.set(
+      createAccount(
+        {
+          name: 'john',
+          external_ref: 'external_ref',
+          roles: [],
+        },
+        {
+          id: account_id,
+          _r: 'entity',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ),
     )
 
-    const setSpy = jest.spyOn(sessions, 'set')
+    const setSpy = jest.spyOn(sessions.methods, 'set')
 
     signer.decode.mockReturnValue({
-      subject: session.id,
-      expiresIn: session.expiresIn.getTime(),
+      subject: session.meta!.id,
+      expiresIn: session.props.expiresIn.getTime(),
     })
 
     signer.sign.mockReturnValueOnce(new_refresh)
@@ -224,28 +235,36 @@ describe('verify session service', () => {
     const new_token = 'new_token'
     const new_refresh = 'new_refresh'
 
-    let session = Session.create({
+    let session = createSession({
       account_id,
       user_agent,
       refresh_token: 'refresh-old',
       expiresIn: new Date(Date.now() + 5 * dayTime),
     })
 
-    session = await sessions.set(session)
+    session = await sessions.methods.set(session)
 
-    const account = await accounts.set(
-      Account.create({
-        id: account_id,
-        name: 'john',
-        external_ref: 'external_ref',
-      }),
+    const account = await accounts.methods.set(
+      createAccount(
+        {
+          name: 'john',
+          external_ref: 'external_ref',
+          roles: [],
+        },
+        {
+          id: account_id,
+          _r: 'entity',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ),
     )
 
-    const setSpy = jest.spyOn(sessions, 'set')
+    const setSpy = jest.spyOn(sessions.methods, 'set')
 
     signer.decode.mockReturnValue({
-      subject: session.id,
-      expiresIn: session.expiresIn.getTime(),
+      subject: session.meta!.id,
+      expiresIn: session.props.expiresIn.getTime(),
     })
 
     signer.sign.mockReturnValueOnce(new_refresh)

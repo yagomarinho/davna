@@ -1,8 +1,7 @@
-import type { Signer } from '@davna/infra'
-import { isLeft, isRight, Left, Right, Repository } from '@davna/core'
-import { InMemoryRepository } from '@davna/infra'
+import { isLeft, isRight, Left, Repository } from '@davna/core'
+import { InMemoryRepository, type Signer } from '@davna/infra'
 
-import { Account, Session } from '../../entities'
+import { Account, createAccount, createSession, Session } from '../../entities'
 import { getSessionInfo } from '../../services/get.session.info'
 
 describe('getSessionInfo service', () => {
@@ -27,11 +26,32 @@ describe('getSessionInfo service', () => {
   })
 
   it('should return Right with account and session when session and account exist', async () => {
-    const session = { id: session_id, account_id } as unknown as Session
-    const account = { id: account_id, name: 'john' } as unknown as Account
+    const session = createSession(
+      {
+        account_id,
+        expiresIn: new Date(Date.now() + 1000 * 60 * 60),
+        refresh_token: 'refresh-token-value',
+        user_agent: 'unit-test-agent',
+      },
+      {
+        id: session_id,
+        _r: 'entity',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    )
+    const account = createAccount(
+      { name: 'john', external_ref: 'external_ref', roles: [] },
+      {
+        id: account_id,
+        _r: 'entity',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    )
 
-    await sessionsRepo.set(session)
-    await accountsRepo.set(account)
+    await sessionsRepo.methods.set(session)
+    await accountsRepo.methods.set(account)
     ;(signer.decode as jest.Mock).mockReturnValue({ subject: session_id })
 
     const result = await getSessionInfo(token)({
@@ -41,14 +61,7 @@ describe('getSessionInfo service', () => {
     })
 
     expect(isRight(result)).toBeTruthy()
-    expect(result).toEqual(
-      expect.objectContaining(
-        Right({
-          account,
-          session,
-        } as any),
-      ),
-    )
+    expect(result.value).toEqual(expect.objectContaining({ account, session }))
   })
 
   it('should return Left when session is not found', async () => {
@@ -69,8 +82,21 @@ describe('getSessionInfo service', () => {
   })
 
   it('should return Left when account is not found', async () => {
-    const session = { id: session_id, account_id } as unknown as Session
-    await sessionsRepo.set(session)
+    const session = createSession(
+      {
+        account_id,
+        expiresIn: new Date(Date.now() + 1000 * 60 * 60),
+        refresh_token: 'refresh-token-value',
+        user_agent: 'unit-test-agent',
+      },
+      {
+        id: session_id,
+        _r: 'entity',
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    )
+    await sessionsRepo.methods.set(session)
     // accountsRepo remains empty
     ;(signer.decode as jest.Mock).mockReturnValue({ subject: session_id })
 

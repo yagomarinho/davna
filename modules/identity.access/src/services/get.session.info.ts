@@ -22,11 +22,11 @@ export const getSessionInfo = Service(
       try {
         const { subject: session_id } = signer.decode(token)
 
-        const session = await sessions.get(session_id)
+        const session = await sessions.methods.get(session_id)
 
         if (!session) throw new Error('No session founded')
 
-        const account = await accounts.get(session.account_id)
+        const account = await accounts.methods.get(session.props.account_id)
 
         if (!account) throw new Error('No account founded')
 

@@ -1,8 +1,7 @@
-import type { Auth, Signer } from '@davna/infra'
 import { isLeft, isRight, Repository } from '@davna/core'
-import { InMemoryRepository } from '@davna/infra'
+import { InMemoryRepository, type Auth, type Signer } from '@davna/infra'
 
-import { Account } from '../../entities/account'
+import { Account, createAccount } from '../../entities/account'
 import { Session } from '../../entities/session'
 import { loginWithCredentials } from '../login.with.credentials'
 
@@ -61,12 +60,17 @@ describe('login with credentials service', () => {
 
     expect(data).toEqual({
       account: expect.objectContaining({
-        id: expect.any(String),
-        external_ref: 'external_ref',
-        name: 'john',
-        roles: expect.any(Array),
-        created_at: expect.any(Date),
-        updated_at: expect.any(Date),
+        props: {
+          external_ref: 'external_ref',
+          name: 'john',
+          roles: expect.any(Array),
+        },
+        meta: {
+          id: expect.any(String),
+          _r: 'entity',
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+        },
       }),
       token: {
         value: expected.token,
@@ -97,7 +101,9 @@ describe('login with credentials service', () => {
       name: 'john',
     })
 
-    const account = accounts.set(Account.create({ external_ref, name: 'john' }))
+    const account = await accounts.methods.set(
+      createAccount({ external_ref, name: 'john', roles: [] }),
+    )
 
     const result = await loginWithCredentials(credentials)({
       signer,
@@ -123,7 +129,7 @@ describe('login with credentials service', () => {
       },
     })
 
-    const all = await accounts.query()
+    const all = await accounts.methods.query()
 
     expect(all.length).toBe(1)
   })
