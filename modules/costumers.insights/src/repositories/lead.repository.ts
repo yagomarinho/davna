@@ -6,18 +6,21 @@
  */
 
 import { GCPCredentials, GoogleSheetsRepository } from '@davna/infra'
-import { Lead } from '../entities/lead'
+import { Lead, LeadURI } from '../entities/lead'
+import { EntityContext } from '@davna/core'
 
 interface LeadRepositoryConfig {
   credentials?: GCPCredentials
   range?: string
   spreadsheetId?: string
+  entityContext?: EntityContext
 }
 
 export const LeadRepository = ({
   credentials,
   spreadsheetId = process.env.GCP_LEAD_SPREADSHEET_ID!,
   range = process.env.GCP_LEAD_SPREADSHEET_RANGE!,
+  entityContext,
 }: LeadRepositoryConfig = {}) => {
   const DEFAULT_CREDENTIALS = {
     type: process.env.GCP_TYPE ?? '',
@@ -38,5 +41,7 @@ export const LeadRepository = ({
     credentials: credentials || DEFAULT_CREDENTIALS,
     range,
     spreadsheetId,
+    entityContext,
+    tag: LeadURI,
   })
 }

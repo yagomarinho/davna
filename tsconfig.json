@@ -18,12 +18,9 @@
     { "path": "./modules/identity.access" },
     { "path": "./modules/system.monitoring" },
     { "path": "./services/ffmpeg" },
-    { "path": "./shared/applications" },
+    { "path": "./shared/application" },
     { "path": "./shared/core" },
-    { "path": "./shared/middlewares" },
-    { "path": "./shared/providers" },
-    { "path": "./shared/repositories" },
-    { "path": "./shared/types" },
-    { "path": "./shared/utils" }
+    { "path": "./shared/infra" },
+    { "path": "./shared/kernel" }
   ]
 }

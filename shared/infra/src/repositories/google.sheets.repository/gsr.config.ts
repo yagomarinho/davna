@@ -28,7 +28,7 @@ export interface GSRepoConfig<E extends Entity> {
   range: string
 
   /** Context provider for entity metadata and validation */
-  entityContext: EntityContext
+  entityContext?: EntityContext
 
   /** Tag identifying the kind of entity stored in this repository */
   tag: ExtractEntityTag<E>

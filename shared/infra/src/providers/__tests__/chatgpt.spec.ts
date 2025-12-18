@@ -1,7 +1,6 @@
 import OpenAI from 'openai'
 import { createReadStream } from 'fs'
-import { ChatGPT } from '../chatgpt'
-import { GPTInput } from '../gpt.model'
+import { ChatGPT, GPTInput } from '../gpt.model'
 
 jest.mock('openai', () => ({
   __esModule: true,

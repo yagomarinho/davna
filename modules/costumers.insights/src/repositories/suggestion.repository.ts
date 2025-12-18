@@ -6,18 +6,21 @@
  */
 
 import { GCPCredentials, GoogleSheetsRepository } from '@davna/infra'
-import { Suggestion } from '../entities/suggestion'
+import { Suggestion, SuggestionURI } from '../entities/suggestion'
+import { EntityContext } from '@davna/core'
 
 interface SuggestionRepositoryConfig {
   credentials?: GCPCredentials
   range?: string
   spreadsheetId?: string
+  entityContext?: EntityContext
 }
 
 export const SuggestionRepository = ({
   credentials,
   spreadsheetId = process.env.GCP_SUGGESTION_SPREADSHEET_ID!,
   range = process.env.GCP_SUGGESTION_SPREADSHEET_RANGE!,
+  entityContext,
 }: SuggestionRepositoryConfig = {}) => {
   const DEFAULT_CREDENTIALS = {
     type: process.env.GCP_TYPE ?? '',
@@ -38,5 +41,7 @@ export const SuggestionRepository = ({
     credentials: credentials || DEFAULT_CREDENTIALS,
     range,
     spreadsheetId,
+    tag: SuggestionURI,
+    entityContext,
   })
 }

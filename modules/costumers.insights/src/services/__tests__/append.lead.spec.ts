@@ -7,16 +7,18 @@ import { appendLead } from '../append.lead'
 describe('appendLead Service', () => {
   it('should persist it', async () => {
     const leads = InMemoryRepository<Lead>()
-    const setSpy = jest.spyOn(leads, 'set')
+    const setSpy = jest.spyOn(leads.methods, 'set')
 
     const result = await appendLead({ lead: '21999998888' })({ leads })
 
     expect(isRight(result)).toBeTruthy()
 
     expect(setSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ id: '21999998888' }),
+      expect.objectContaining({ props: { lead: '21999998888' } }),
     )
 
-    expect(result.value).toEqual(expect.objectContaining({ id: '21999998888' }))
+    expect(result.value).toEqual(
+      expect.objectContaining({ props: { lead: '21999998888' } }),
+    )
   })
 })

@@ -5,28 +5,41 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { applyTag, applyVersioning, Entity } from '@davna/core'
+import { createEntity, DraftEntity, Entity, EntityMeta } from '@davna/core'
 
-const URI = 'lead'
-type URI = typeof URI
+export const LeadURI = 'lead'
+export type LeadURI = typeof LeadURI
 
-export interface CreateLead extends Partial<Entity> {
-  id: string
+export const LeadVersion = 'v1'
+export type LeadVersion = typeof LeadVersion
+
+export interface LeadProps {
+  lead: string
 }
 
-export interface Lead extends Entity<URI, 'v1'> {}
+export interface Lead extends Entity<LeadProps, LeadURI, LeadVersion> {}
 
-export function Lead(id: string, created_at: Date, updated_at: Date): Lead {
-  return applyVersioning('v1')(
-    applyTag(URI)({
-      id,
-      created_at,
-      updated_at,
-    }),
-  )
+declare module '@davna/core' {
+  interface EntityURItoKind {
+    readonly [LeadURI]: Lead
+  }
 }
 
-Lead.create = ({ id, created_at, updated_at }: CreateLead) => {
-  const now = new Date()
-  return Lead(id, created_at ?? now, updated_at ?? now)
+export function createLead(props: LeadProps): DraftEntity<Lead>
+export function createLead(
+  props: LeadProps,
+  meta: undefined,
+  _version: LeadVersion,
+): DraftEntity<Lead>
+export function createLead(
+  props: LeadProps,
+  meta: EntityMeta,
+  _version?: LeadVersion,
+): Lead
+export function createLead(
+  { lead }: LeadProps,
+  meta?: EntityMeta,
+  _version: LeadVersion = LeadVersion,
+): Lead {
+  return createEntity(LeadURI, _version, createLead, { lead }, meta as any)
 }

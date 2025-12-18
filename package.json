@@ -18,7 +18,8 @@
     "rm": "node ./scripts/rm.js",
     "test:api-tsc": "node scripts/api.tsc.monitor.js",
     "test:modules": "tsnd --respawn=false --no-watch scripts/run.command.ts modules test",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "typecheck:only-files": "yarn tsc -b --noEmit --pretty false 2>&1 | grep -E \"^[^ ]+.ts\" | cut -d'(' -f1 | sort -u"
   },
   "author": {
     "name": "Yago Marinho",

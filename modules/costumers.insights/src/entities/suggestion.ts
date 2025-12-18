@@ -5,41 +5,52 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { applyTag, applyVersioning, Entity } from '@davna/core'
+import { createEntity, DraftEntity, Entity, EntityMeta } from '@davna/core'
 
-const URI = 'suggestion'
-type URI = typeof URI
+export const SuggestionURI = 'suggestion'
+export type SuggestionURI = typeof SuggestionURI
+
+export const SuggestionVersion = 'v1'
+export type SuggestionVersion = typeof SuggestionVersion
 
 export interface SuggestionProps {
   suggestion: string
 }
 
-export interface Suggestion extends SuggestionProps, Entity<URI, 'v1'> {}
+export interface Suggestion
+  extends
+    SuggestionProps,
+    Entity<SuggestionProps, SuggestionURI, SuggestionVersion> {}
 
-export interface CreateSuggestion extends SuggestionProps, Partial<Entity> {}
-
-export function Suggestion(
-  id: string,
-  suggestion: string,
-  created_at: Date,
-  updated_at: Date,
-): Suggestion {
-  return applyVersioning('v1')(
-    applyTag(URI)({
-      id,
-      suggestion,
-      created_at,
-      updated_at,
-    }),
-  )
+declare module '@davna/core' {
+  interface EntityURItoKind {
+    readonly [SuggestionURI]: Suggestion
+  }
 }
 
-Suggestion.create = ({
-  id = '',
-  suggestion,
-  created_at,
-  updated_at,
-}: CreateSuggestion) => {
-  const now = new Date()
-  return Suggestion(id, suggestion, created_at ?? now, updated_at ?? now)
+export function createSuggestion(
+  props: SuggestionProps,
+): DraftEntity<Suggestion>
+export function createSuggestion(
+  props: SuggestionProps,
+  meta: undefined,
+  _version: SuggestionVersion,
+): DraftEntity<Suggestion>
+export function createSuggestion(
+  props: SuggestionProps,
+  meta: EntityMeta,
+  _version?: SuggestionVersion,
+): Suggestion
+export function createSuggestion(
+  { suggestion }: SuggestionProps,
+  meta?: EntityMeta,
+  _version: SuggestionVersion = SuggestionVersion,
+): Suggestion {
+  return createEntity(
+    SuggestionURI,
+    _version,
+    createSuggestion,
+    { suggestion },
+    meta as any,
+  )
 }

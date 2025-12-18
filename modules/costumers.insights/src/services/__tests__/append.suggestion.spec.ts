@@ -7,7 +7,7 @@ import { appendSuggestion } from '../append.suggestion'
 describe('appendLead Service', () => {
   it('should persist it', async () => {
     const suggestions = InMemoryRepository<Suggestion>()
-    const setSpy = jest.spyOn(suggestions, 'set')
+    const setSpy = jest.spyOn(suggestions.methods, 'set')
 
     const data = {
       suggestion: 'This is a suggestion',
@@ -18,15 +18,19 @@ describe('appendLead Service', () => {
     expect(isRight(result)).toBeTruthy()
 
     expect(setSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ suggestion: data.suggestion }),
+      expect.objectContaining({ props: { suggestion: data.suggestion } }),
     )
 
     expect(result.value).toEqual(
       expect.objectContaining({
-        id: expect.any(String),
-        suggestion: data.suggestion,
-        created_at: expect.any(Date),
-        updated_at: expect.any(Date),
+        meta: expect.objectContaining({
+          id: expect.any(String),
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+        }),
+        props: {
+          suggestion: data.suggestion,
+        },
       }),
     )
   })

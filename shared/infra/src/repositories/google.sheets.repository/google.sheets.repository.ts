@@ -10,6 +10,7 @@ import { Entity, Writable, Repository } from '@davna/core'
 
 import { GSRepoConfig } from './gsr.config'
 import { serializeEntity } from './serialize.entity'
+import { GSRepoEntityContext } from './gsr.entity.context'
 
 /**
  * Resource identifier for Google Sheets repositories.
@@ -45,9 +46,11 @@ export function GoogleSheetsRepository<E extends Entity>({
   spreadsheetId,
   range,
   credentials,
-  entityContext,
+  entityContext: ec,
   tag,
 }: GSRepoConfig<E>): Writable<Repository<E, GoogleSheetsRepositoryURI>> {
+  const entityContext =
+    ec ?? GSRepoEntityContext({ credentials, spreadsheetId, range })
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: [

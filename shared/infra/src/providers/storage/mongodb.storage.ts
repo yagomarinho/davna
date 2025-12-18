@@ -82,8 +82,8 @@ export function MongoDBStorage(config: any): MongoDBStorage {
     }): Promise<StorageResult> =>
       new Promise((resolve, reject) => {
         const target = bucket.openUploadStream(name, {
-          contentType: mime,
           metadata: {
+            mime,
             duration,
             owner_id,
           },
