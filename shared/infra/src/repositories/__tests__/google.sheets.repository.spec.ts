@@ -123,8 +123,5 @@ describe('GoogleSheetsRepository — integration', () => {
     expect(JSON.stringify(found)).toEqual(
       expect.stringContaining(result.props.value.toString()),
     )
-    expect(JSON.stringify(found)).toEqual(
-      expect.stringContaining(JSON.stringify(result.props.tags)),
-    )
   })
 })

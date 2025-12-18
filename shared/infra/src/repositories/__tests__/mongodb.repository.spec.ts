@@ -1,244 +1,314 @@
-import { ObjectId } from 'mongodb'
-import { MongoDBRepository } from '../mongodb.repository'
-import { applyTag, applyVersioning, Entity, Filter, Query } from '@davna/core'
+import { Filter, QueryBuilder } from '@davna/core'
+import { MongoConverter, MongoRepository } from '../mongo.repository'
+import { createEn, En, EnURI } from './fakes/fake.entity'
+import { MongoWithURIConfig } from '../mongo.repository/mongo.client.config'
 
-const URI = 'user'
-type URI = typeof URI
-interface User extends Entity<URI> {
-  name: string
-  age: number
-  interests: string[]
-}
-
-interface CreateUserData extends Partial<Entity> {
-  name: string
-  age: number
-  interests?: string[]
-}
-
-function User(
-  id: string,
-  name: string,
-  age: number,
-  interests: string[],
-  created_at: Date,
-  updated_at: Date,
-): User {
-  return applyVersioning('v1')(
-    applyTag(URI)({
-      id,
-      name,
-      age,
-      interests,
-      created_at,
-      updated_at,
-    }),
-  )
-}
-
-User.create = ({
-  id = '',
-  name,
-  age,
-  interests = [],
-  created_at = new Date(),
-  updated_at = new Date(),
-}: CreateUserData) => User(id, name, age, interests, created_at, updated_at)
-
-const converter = {
-  to: (e: any) => ({
-    ...e,
-    _id: e.id ? new ObjectId(e.id) : new ObjectId(),
+const converter: MongoConverter<En> = {
+  to: ({
+    props: { name, tags, value },
+    meta: { id, created_at, updated_at },
+  }) => ({
+    id,
+    data: { name, tags, value, created_at, updated_at },
   }),
-  from: ({ _id, ...raw }: any) => ({ ...raw, id: _id?.toString() ?? '' }),
+  from: ({ id, data: { name, tags, value, created_at, updated_at } }) =>
+    createEn(
+      { name, value, tags },
+      { _r: 'entity', id, created_at, updated_at },
+    ),
 }
 
-const baseConfig = {
+const baseConfig: MongoWithURIConfig<En> = {
   uri: process.env.MONGODB_DEFAULT_CONNECT_URI || 'mongodb://localhost:27017',
   database: 'db',
-  collection: 'col',
+  collection: 'en',
   converter,
+  tag: EnURI,
 }
 
 describe('mongo db repository', () => {
-  const users = MongoDBRepository<User>(baseConfig)
-  let entity: User
+  const repo = MongoRepository<En>(baseConfig)
+  let entity: En
 
   beforeAll(async () => {
-    await users.connect()
-    await users.clear()
+    await repo.infra.connect()
+    await repo.infra.clear()
   })
 
   it('get() busca por _id e aplica converter.from', async () => {
-    const saved = await users.set(
-      User.create({
+    entity = await repo.methods.set(
+      createEn({
         name: 'Carlos',
-        age: 35,
-        interests: ['moda masculina', 'viagens internacionais'],
+        value: 35,
+        tags: ['moda masculina', 'viagens internacionais'],
       }),
     )
 
-    const user = await users.get(saved.id)
+    const en = await repo.methods.get(entity.meta.id)
 
-    expect(user).toEqual({
-      __tag: 'user',
-      id: expect.any(String),
-      name: 'Carlos',
-      age: 35,
-      interests: expect.any(Array),
-      created_at: expect.any(Date),
-      updated_at: expect.any(Date),
-    })
+    expect(en).toEqual(
+      expect.objectContaining({
+        _t: EnURI,
+        meta: {
+          id: expect.any(String),
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+          _r: 'entity',
+        },
+        props: {
+          name: 'Carlos',
+          value: 35,
+          tags: ['moda masculina', 'viagens internacionais'],
+        },
+      }),
+    )
   })
 
   it('get() retorna undefined quando não encontra', async () => {
-    const user = await users.get('617364616461637871717766')
-    expect(user).toBeUndefined()
+    const en = await repo.methods.get('non-existant')
+    expect(en).toBeUndefined()
   })
 
   it('set() faz upsert com $set', async () => {
     const data = {
-      name: 'João',
-      age: 22,
-      interests: ['videogame', 'tecnologia', 'inteligência artificial'],
+      name: 'John',
+      value: 22,
+      tags: ['Videogame', 'Tech', 'generative AI'],
     }
 
-    entity = await users.set(User.create(data))
+    const created = await repo.methods.set(createEn(data))
+    const received = await repo.methods.get(created.meta.id)
 
-    const user = await users.get(entity.id)
-    expect(user).toEqual(expect.objectContaining({ ...data, id: entity.id }))
+    expect(received).toEqual(
+      expect.objectContaining({
+        props: data,
+        meta: expect.objectContaining({
+          id: created.meta.id,
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+        }),
+      }),
+    )
   })
 
   it('remove() deleta pelo _id', async () => {
-    await users.remove({ id: entity.id })
+    await repo.methods.remove(entity.meta.id)
 
-    const user = await users.get(entity.id)
-    expect(user).toBeUndefined()
+    const en = await repo.methods.get(entity.meta.id)
+    expect(en).toBeUndefined()
   })
 
   it('query() sem where aplica filtro vazio', async () => {
-    const all = await users.query()
+    const all = await repo.methods.query()
 
     expect(all.length).toBe(1)
   })
 
   it('query() com paginação (limit + cursor)', async () => {
-    await users.set(
-      User.create({
-        name: 'Carlos',
-        age: 12,
-        interests: ['videogame', 'tecnologia', 'inteligência artificial'],
-      }),
-    )
-    await users.set(
-      User.create({
-        name: 'Miguel',
-        age: 42,
-        interests: ['tecnologia', 'trabalho remoto'],
-      }),
-    )
+    await repo.infra.clear()
+    await repo.methods.batch([
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Carlos',
+          value: 12,
+          tags: ['videogame', 'tecnologia', 'inteligência artificial'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Miguel',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Antonio',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Michael',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Felipe',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+    ])
 
-    const list = await users.query(Query.where('name', '==', 'Carlos'))
+    const list = await repo.methods.query(
+      QueryBuilder()
+        .filterBy('tags', 'array-contains', 'tecnologia')
+        .cursor('1')
+        .limit(2)
+        .build(),
+    )
 
     expect(list.length).toBe(2)
   })
 
   it('query() com sorts aplica .sort corretamente', async () => {
-    const all = await users.query(
-      Query.sorts([{ property: 'name', direction: 'desc' }]),
+    const all = await repo.methods.query(
+      QueryBuilder()
+        .orderBy([{ property: 'name', direction: 'desc' }])
+        .build(),
     )
 
-    expect(all).toEqual([
-      expect.objectContaining({ name: 'Miguel' }),
-      expect.objectContaining({ name: 'Carlos' }),
-      expect.objectContaining({ name: 'Carlos' }),
+    expect(all.map(e => e.props.name)).toEqual([
+      'Miguel',
+      'Michael',
+      'Felipe',
+      'Carlos',
+      'Antonio',
     ])
   })
 
   it('query() com where leaf (>=) mapeia para $gte', async () => {
-    const list = await users.query(
-      Query.sorts(
-        [{ property: 'age', direction: 'desc' }],
-        Query.where('age', '>=', 18),
-      ),
+    await repo.infra.clear()
+    await repo.methods.batch([
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Carlos',
+          value: 35,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Miguel',
+          value: 42,
+          tags: ['tecnologia', 'ia generativa'],
+        }),
+      },
+    ])
+    const list = await repo.methods.query(
+      QueryBuilder<En>()
+        .orderBy([{ property: 'value', direction: 'desc' }])
+        .filterBy('value', '>=', 18)
+        .build(),
     )
 
     expect(list).toEqual([
-      expect.objectContaining({ name: 'Miguel', age: 42 }),
-      expect.objectContaining({ name: 'Carlos', age: 35 }),
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Miguel', value: 42 }),
+      }),
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Carlos', value: 35 }),
+      }),
     ])
   })
 
   it("query() com where 'array-contains' mapeia para { field: value }", async () => {
-    const list = await users.query(
-      Query.sorts(
-        [{ property: 'age', direction: 'asc' }],
-        Query.where('interests', 'array-contains', 'tecnologia'),
-      ),
+    const list = await repo.methods.query(
+      QueryBuilder<En>()
+        .filterBy('tags', 'array-contains', 'tecnologia')
+        .orderBy([{ property: 'value', direction: 'asc' }])
+        .build(),
     )
 
     expect(list).toEqual([
-      expect.objectContaining({ name: 'Carlos', age: 12 }),
-      expect.objectContaining({ name: 'Miguel', age: 42 }),
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Carlos', value: 35 }),
+      }),
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Miguel', value: 42 }),
+      }),
     ])
   })
 
   it("query() com where 'between' mapeia para $gte/$lte", async () => {
-    const list = await users.query(
-      Query.where('age', 'between', { start: 18, end: 45 }),
+    const list = await repo.methods.query(
+      QueryBuilder<En>()
+        .filterBy('value', 'between', { start: 18, end: 45 })
+        .orderBy([{ property: 'value', direction: 'asc' }])
+        .build(),
     )
 
     expect(list).toEqual([
-      expect.objectContaining({ name: 'Carlos', age: 35 }),
-      expect.objectContaining({ name: 'Miguel', age: 42 }),
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Carlos', value: 35 }),
+      }),
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Miguel', value: 42 }),
+      }),
     ])
   })
 
   it("query() com where 'in' mapeia para $in", async () => {
-    const list = await users.query(
-      Query.where('name', 'in', ['Mônica', 'Marcos', 'Miguel']),
-    )
-
-    expect(list).toEqual([expect.objectContaining({ name: 'Miguel', age: 42 })])
-  })
-
-  it('query() com where composite AND/OR', async () => {
-    const left = Filter.where<User>('age', '<', 18)
-    const right = Filter.where<User>(
-      'interests',
-      'array-contains',
-      'tecnologia',
-    )
-    const and = Filter.and(left, right)
-    const list = await users.query({ where: and })
-
-    expect(list).toEqual([expect.objectContaining({ name: 'Carlos', age: 12 })])
-
-    const or = Filter.or(left, right)
-    const list2 = await users.query({ where: or })
-
-    expect(list2).toEqual([
-      expect.objectContaining({ name: 'Carlos', age: 12 }),
-      expect.objectContaining({ name: 'Miguel', age: 42 }),
-    ])
-  })
-
-  it("query() com 'array-contains-any' vira $in", async () => {
-    const list = await users.query(
-      Query.where('interests', 'array-contains-any', [
-        'viagens internacionais',
-        'trabalho remoto',
-      ]),
+    const list = await repo.methods.query(
+      QueryBuilder<En>()
+        .filterBy('name', 'in', ['Mônica', 'Marcos', 'Miguel'])
+        .build(),
     )
 
     expect(list).toEqual([
-      expect.objectContaining({ name: 'Carlos', age: 35 }),
-      expect.objectContaining({ name: 'Miguel', age: 42 }),
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Miguel', value: 42 }),
+      }),
+    ])
+  })
+
+  it('query() com where composite AND/OR', async () => {
+    await repo.methods.set(
+      createEn({
+        name: 'Antonio',
+        value: 12,
+        tags: ['tecnologia', 'videogame'],
+      }),
+    )
+
+    const left = Filter.where('value', '<', 18)
+    const right = Filter.where('tags', 'array-contains', 'tecnologia')
+    const and = Filter.and(left, right)
+
+    const list = await repo.methods.query(QueryBuilder().filterBy(and).build())
+
+    expect(list).toEqual([
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Antonio', value: 12 }),
+      }),
+    ])
+
+    const or = Filter.or(left, right)
+    const list2 = await repo.methods.query(QueryBuilder().filterBy(or).build())
+
+    expect(list2.length).toEqual(3)
+  })
+
+  it("query() com 'array-contains-any' vira $in", async () => {
+    const list = await repo.methods.query(
+      QueryBuilder<En>()
+        .filterBy('tags', 'array-contains-any', [
+          'viagens internacionais',
+          'trabalho remoto',
+        ])
+        .build(),
+    )
+
+    expect(list).toEqual([
+      expect.objectContaining({
+        props: expect.objectContaining({ name: 'Carlos', value: 35 }),
+      }),
     ])
   })
 
   afterAll(async () => {
-    await users.clear()
-    await users.disconnect()
+    await repo.infra.clear()
+    await repo.infra.disconnect()
   })
 })

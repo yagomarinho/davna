@@ -10,6 +10,7 @@ import { Collection, Document, MongoClient, MongoClientOptions } from 'mongodb'
 import {
   Entity,
   EntityContext,
+  isEntity,
   QueryBuilder,
   Repository,
   RepositoryResult,
@@ -128,18 +129,22 @@ export function MongoRepository<E extends Entity>({
 
   const get = verifyConnectionProxy<Repository<E>['methods']['get']>(
     async id => {
-      const item = await coll.findOne({ _id: mongoId(id) }, { projection })
+      try {
+        const item = await coll.findOne({ _id: mongoId(id) }, { projection })
 
-      if (item === null) return
+        if (item === null) return
 
-      return converter.from(fromDocument(item))
+        return converter.from(fromDocument(item))
+      } catch {
+        return
+      }
     },
   )
 
   const set = verifyConnectionProxy<Repository<E>['methods']['set']>(
     async entity => {
-      const e = entityContext.isValid(entity)
-        ? (entity as E)
+      const e: E = entityContext.isValid(entity)
+        ? (entity as any)
         : entity._b(entity.props, await entityContext.meta())
 
       const { _id, ...props } = toDocument(converter.to(e))
@@ -170,7 +175,9 @@ export function MongoRepository<E extends Entity>({
   const query = verifyConnectionProxy<Repository<E>['methods']['query']>(
     async (q = QueryBuilder<E>().build()) => {
       let find = coll.find(
-        q.filter_by ? whereAdaptToFindQuery(q.filter_by) : {},
+        q.filter_by && q.filter_by.value
+          ? whereAdaptToFindQuery(q.filter_by)
+          : {},
       )
 
       if (typeof q.batch_size === 'number' && q.batch_size !== Infinity) {
@@ -192,24 +199,30 @@ export function MongoRepository<E extends Entity>({
 
   const batch = verifyConnectionProxy<Repository<E>['methods']['batch']>(
     async b => {
-      const bulk = b.map(item => {
-        if (item.type === 'remove')
+      const bulk = await Promise.all(
+        b.map(async item => {
+          if (item.type === 'remove')
+            return {
+              deleteOne: {
+                filter: { _id: mongoId(item.data) },
+              },
+            }
+
+          const e: E = entityContext.isValid(item.data)
+            ? (item.data as any)
+            : item.data._b(item.data.props, await entityContext.meta())
+
+          const { _id, ...props } = toDocument(converter.to(e))
+
           return {
-            deleteOne: {
-              filter: { _id: mongoId(item.data) },
+            updateOne: {
+              filter: { _id },
+              update: { $set: props },
+              upsert: true,
             },
           }
-
-        const { _id, ...props } = toDocument(converter.to(item.data))
-
-        return {
-          updateOne: {
-            filter: { _id },
-            update: { $set: props },
-            upsert: true,
-          },
-        }
-      })
+        }),
+      )
 
       const result = await coll.bulkWrite(bulk, { ordered: false })
 
@@ -268,7 +281,7 @@ function isValidObjectId(id) {
 
 function mongoEntityContext(): EntityContext {
   const isValid: EntityContext['isValid'] = (entity): entity is Entity =>
-    isValid(entity) && isValidObjectId(entity.meta.id)
+    isEntity(entity) && isValidObjectId(entity.meta.id)
 
   const meta: EntityContext['meta'] = () => ({
     id: '',
