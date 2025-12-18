@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { EntityContext } from '@davna/core'
 import { createRole, Role, RoleURI } from '../entities'
 import { MongoRepository, MongoConverter } from '@davna/infra'
 
@@ -44,14 +45,21 @@ const converter: MongoConverter<Role> = {
 
 export interface RoleRepositoryConfig {
   client?: ReturnType<MongoRepository<any>['infra']['createClient']>
+  entityContext?: EntityContext
 }
 
-export const RoleRepository = ({ client }: RoleRepositoryConfig) =>
+export const RoleRepository = ({
+  client,
+  entityContext,
+}: RoleRepositoryConfig) =>
   MongoRepository<Role>({
-    uri: process.env.MONGODB_ROLE_CONNECT_URI || 'mongodb://localhost:27017',
-    database: process.env.MONGODB_ROLE_DATABASE || 'db',
-    collection: process.env.MONGODB_ROLE_COLLECTION || 'roles',
+    ...{
+      uri: process.env.MONGODB_ROLE_CONNECT_URI || 'mongodb://localhost:27017',
+      database: process.env.MONGODB_ROLE_DATABASE || 'db',
+      collection: process.env.MONGODB_ROLE_COLLECTION || 'roles',
+    },
     converter,
+    client: client as any,
     tag: RoleURI as RoleURI,
-    client,
-  } as any)
+    entityContext,
+  })

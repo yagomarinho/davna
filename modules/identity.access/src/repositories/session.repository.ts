@@ -5,26 +5,66 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Converter } from '@davna/kernel'
-import { MongoClient, MongoDBRepository, ObjectId } from '@davna/infra'
+import { MongoConverter, MongoRepository } from '@davna/infra'
+import { createSession, Session, SessionURI } from '../entities/session'
+import { EntityContext } from '@davna/core'
 
-import { Session } from '../entities/session'
-
-const converter: Converter<Session> = {
-  to: ({ id, ...props }: any) => ({
-    ...props,
-    _id: id ? new ObjectId(id) : new ObjectId(),
+const converter: MongoConverter<Session> = {
+  to: ({
+    _v,
+    meta: { id, created_at, updated_at },
+    props: { account_id, expiresIn, refresh_token, user_agent },
+  }) => ({
+    id,
+    data: {
+      account_id,
+      expiresIn,
+      refresh_token,
+      user_agent,
+      created_at,
+      updated_at,
+      __version: _v,
+    },
   }),
-  from: ({ _id, ...raw }: any) =>
-    Session.create({ ...raw, id: _id?.toString() ?? '' }),
+  from: ({
+    id,
+    data: {
+      account_id,
+      expiresIn,
+      refresh_token,
+      user_agent,
+      created_at,
+      updated_at,
+      __version,
+    },
+  }) =>
+    createSession(
+      {
+        account_id,
+        expiresIn,
+        refresh_token,
+        user_agent,
+      },
+      {
+        id,
+        _r: 'entity',
+        created_at,
+        updated_at,
+      },
+      __version,
+    ),
 }
 
 export interface SessionRepositoryConfig {
-  client?: MongoClient
+  client?: ReturnType<MongoRepository<any>['infra']['createClient']>
+  entityContext?: EntityContext
 }
 
-export const SessionRepository = ({ client }: SessionRepositoryConfig) =>
-  MongoDBRepository<Session>({
+export const SessionRepository = ({
+  client,
+  entityContext,
+}: SessionRepositoryConfig) =>
+  MongoRepository<Session>({
     ...{
       uri:
         process.env.MONGODB_SESSION_CONNECT_URI || 'mongodb://localhost:27017',
@@ -33,4 +73,6 @@ export const SessionRepository = ({ client }: SessionRepositoryConfig) =>
     },
     client: client as any,
     converter,
+    tag: SessionURI,
+    entityContext,
   })

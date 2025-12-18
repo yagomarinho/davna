@@ -5,56 +5,56 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Converter } from '@davna/kernel'
-import { MongoDBRepository, MongoClient, ObjectId } from '@davna/infra'
+import { MongoConverter, MongoRepository } from '@davna/infra'
+import { Account, AccountURI, createAccount } from '../entities'
+import { EntityContext } from '@davna/core'
 
-import { Account } from '../entities/account'
-import { createAccount } from '../entities/account/factory'
-
-const converter: Converter<Account> = {
+const converter: MongoConverter<Account> = {
   to: ({
-    id,
-    name,
-    external_ref,
-    roles,
-    created_at,
-    updated_at,
-    __version,
+    _v,
+    meta: { id, created_at, updated_at },
+    props: { external_ref, name, roles },
   }) => ({
-    _id: id ? new ObjectId(id) : new ObjectId(),
-    name,
-    external_ref,
-    roles,
-    created_at,
-    updated_at,
-    __version,
-  }),
-  from: ({
-    _id,
-    name,
-    external_ref,
-    roles,
-    created_at,
-    updated_at,
-    __version,
-  }) =>
-    createAccount({
-      id: _id?.toString() ?? '',
+    id,
+    data: {
       name,
       external_ref,
       roles,
       created_at,
       updated_at,
+      __version: _v,
+    },
+  }),
+  from: ({
+    id,
+    data: { name, external_ref, roles, created_at, updated_at, __version },
+  }) =>
+    createAccount(
+      {
+        name,
+        external_ref,
+        roles,
+      },
+      {
+        id,
+        _r: 'entity',
+        created_at,
+        updated_at,
+      },
       __version,
-    }),
+    ),
 }
 
 export interface AccountRepositoryConfig {
-  client?: MongoClient
+  client?: ReturnType<MongoRepository<any>['infra']['createClient']>
+  entityContext?: EntityContext
 }
 
-export const AccountRepository = ({ client }: AccountRepositoryConfig) =>
-  MongoDBRepository<Account>({
+export const AccountRepository = ({
+  client,
+  entityContext,
+}: AccountRepositoryConfig) =>
+  MongoRepository<Account>({
     ...{
       uri:
         process.env.MONGODB_ACCOUNT_CONNECT_URI || 'mongodb://localhost:27017',
@@ -63,4 +63,6 @@ export const AccountRepository = ({ client }: AccountRepositoryConfig) =>
     },
     client: client as any,
     converter,
+    entityContext,
+    tag: AccountURI,
   })
