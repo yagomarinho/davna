@@ -5,9 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Buildable, Tag, Version, Versioned } from '../composition'
+import { isObject } from '@davna/kernel'
+import {
+  Buildable,
+  Tag,
+  verifyResource,
+  Version,
+  Versioned,
+} from '../composition'
 import { EntityURIS, EntityURItoKind } from '../types'
-import { EntityMeta } from './meta'
+import { EntityMeta, EntityURI } from './meta'
 
 /**
  * Core Entity interface.
@@ -84,4 +91,21 @@ export function createEntity<T extends EntityURIS>(
     props,
     meta,
   }
+}
+
+/**
+ * Structural entity check.
+ *
+ * Validates shape and resource identity,
+ * but does NOT validate identifier semantics.
+ */
+
+export function isEntity<E extends Entity>(
+  entity: DraftEntity<E>,
+): entity is E {
+  return (
+    isObject(entity) &&
+    isObject(entity.meta) &&
+    verifyResource(EntityURI)(entity.meta)
+  )
 }

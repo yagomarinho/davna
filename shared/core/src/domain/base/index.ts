@@ -6,5 +6,6 @@
  */
 
 export * from './entity'
+export * from './entity.context'
 export * from './meta'
 export * from './value.object'

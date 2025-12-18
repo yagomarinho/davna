@@ -59,9 +59,9 @@ export function GoogleSheetsRepository<E extends Entity>({
   const set: Repository<E>['methods']['set'] = async entity => {
     const sheets = google.sheets({ version: 'v4', auth })
 
-    const meta = await entityContext.meta()
+    const e = await entityContext.declareEntity(entity)
     const requestBody = {
-      values: [serializeEntity({ ...entity, meta })],
+      values: [serializeEntity(e)],
     }
 
     // Append the serialized entity values as a new row in the sheet
@@ -77,7 +77,7 @@ export function GoogleSheetsRepository<E extends Entity>({
       throw new Error('Invalid data to update')
 
     // Return the fully built entity with metadata
-    return entity._b(entity.props, meta) as any
+    return e
   }
 
   return {

@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './entity.context'
 export * from './fp'
 export * from './timestamp'
 export * from './uid'

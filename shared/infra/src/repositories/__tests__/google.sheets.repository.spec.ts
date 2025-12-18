@@ -63,8 +63,9 @@ describe('GoogleSheetsRepository — integration', () => {
   const spreadsheetId = process.env.GCP_LEAD_SPREADSHEET_ID ?? ''
 
   const entityContext = {
-    meta: jest.fn(),
-    isValid: jest.fn().mockImplementation(() => true),
+    declareEntity: jest.fn(),
+    createMeta: jest.fn(),
+    validateEntity: jest.fn().mockImplementation(() => true),
   } as any as jest.Mocked<EntityContext>
 
   beforeEach(() => {
@@ -92,13 +93,15 @@ describe('GoogleSheetsRepository — integration', () => {
       updated_at: now,
     }
 
-    entityContext.meta.mockResolvedValueOnce(meta)
-
     const entity = createEn({
       name: 'Integration Test',
       value: 123,
       tags: ['some tag'],
     })
+
+    entityContext.declareEntity.mockResolvedValueOnce(
+      entity._b(entity.props, meta),
+    )
 
     const result = await repo.methods.set(entity)
 

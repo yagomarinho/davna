@@ -65,10 +65,7 @@ export function InMemoryRepository<E extends Entity>({
     repo.find(el => el.meta.id === id)
 
   const set: Repository<E>['methods']['set'] = async entity => {
-    const e: E = entity._b(
-      entity.props,
-      entity.meta ? entity.meta : await entityContext.meta(),
-    ) as any
+    const e = await entityContext.declareEntity(entity)
 
     repo = repo.filter(el => el.meta.id !== e.meta.id).concat(e)
 
@@ -100,14 +97,22 @@ export function InMemoryRepository<E extends Entity>({
     return r
   }
 
-  function batch(b: Batch<E>): BatchResult {
+  const batch = async (b: Batch<E>): Promise<BatchResult> => {
     const toRemoveId = b
       .filter(item => item.type === 'remove')
       .map(item => item.data)
 
     repo = repo.filter(el => !toRemoveId.includes(el.meta.id))
 
-    b.filter(item => item.type === 'upsert').map(el => set(el.data))
+    const entities = await Promise.all(
+      b
+        .filter(item => item.type === 'upsert')
+        .map(async el => await entityContext.declareEntity(el.data)),
+    )
+
+    const entities_id = entities.map(en => en.meta.id)
+
+    repo = repo.filter(el => !entities_id.includes(el.meta.id)).concat(entities)
 
     return { status: 'successful', time: new Date() }
   }

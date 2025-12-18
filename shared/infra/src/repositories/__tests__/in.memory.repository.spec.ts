@@ -1,10 +1,4 @@
-import {
-  Batch,
-  EntityContext,
-  EntityMeta,
-  Filter,
-  QueryBuilder,
-} from '@davna/core'
+import { Batch, EntityContext, Filter, QueryBuilder } from '@davna/core'
 
 import { InMemoryRepository } from '../in.memory.repository'
 import { createEn, En, setName } from './fakes/fake.entity'
@@ -26,21 +20,23 @@ describe('InMemoryRepository', () => {
   it('should use a custom id provider when provided', async () => {
     let i = 100
 
-    const entityContext: EntityContext = {
-      isValid: jest.fn().mockImplementation(() => true) as any,
-      meta: (): EntityMeta => ({
-        id: `u-${i++}`,
-        _r: 'entity',
-        created_at: new Date(),
-        updated_at: new Date(),
-      }),
-    }
+    const entityContext = {
+      declareEntity: jest.fn().mockImplementation(entity =>
+        entity._b(entity.props, {
+          _r: 'entity',
+          id: `u-${i++}`,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }),
+      ),
+    } as any as jest.Mocked<EntityContext>
 
-    const repo = InMemoryRepository<En>({ entityContext })
+    const repo = InMemoryRepository<En>({ entityContext, tag: 'En' })
 
     const a = await repo.methods.set(
       createEn({ name: 'John', value: 10, tags: [] }),
     )
+
     const b = await repo.methods.set(
       createEn({ name: 'Mike', value: 11, tags: [] }),
     )

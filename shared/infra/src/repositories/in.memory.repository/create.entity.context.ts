@@ -21,20 +21,29 @@ import { EntityContext, isEntity } from '@davna/core'
 export function createEntityContext(): EntityContext {
   let n = 0
 
-  const isValid: EntityContext['isValid'] = entity => isEntity(entity)
+  const validateEntity: EntityContext['validateEntity'] = entity =>
+    isEntity(entity)
 
-  const meta: EntityContext['meta'] = () => {
+  const createMeta: EntityContext['createMeta'] = () => {
     const now = new Date()
+    const id = (n++).toString()
+
     return {
+      id,
       _r: 'entity',
       created_at: now,
       updated_at: now,
-      id: (n++).toString(),
     }
   }
 
+  const declareEntity: EntityContext['declareEntity'] = async entity =>
+    validateEntity(entity)
+      ? entity
+      : (entity._b(entity.props, await createMeta()) as any)
+
   return {
-    isValid,
-    meta,
+    declareEntity,
+    createMeta,
+    validateEntity,
   }
 }

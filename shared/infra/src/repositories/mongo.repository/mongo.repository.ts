@@ -8,6 +8,7 @@
 import { Collection, Document, MongoClient, MongoClientOptions } from 'mongodb'
 
 import {
+  DraftEntity,
   Entity,
   EntityContext,
   isEntity,
@@ -143,9 +144,7 @@ export function MongoRepository<E extends Entity>({
 
   const set = verifyConnectionProxy<Repository<E>['methods']['set']>(
     async entity => {
-      const e: E = entityContext.isValid(entity)
-        ? (entity as any)
-        : entity._b(entity.props, await entityContext.meta())
+      const e = await entityContext.declareEntity(entity)
 
       const { _id, ...props } = toDocument(converter.to(e))
 
@@ -208,9 +207,7 @@ export function MongoRepository<E extends Entity>({
               },
             }
 
-          const e: E = entityContext.isValid(item.data)
-            ? (item.data as any)
-            : item.data._b(item.data.props, await entityContext.meta())
+          const e = await entityContext.declareEntity(item.data)
 
           const { _id, ...props } = toDocument(converter.to(e))
 
@@ -280,18 +277,29 @@ function isValidObjectId(id) {
 }
 
 function mongoEntityContext(): EntityContext {
-  const isValid: EntityContext['isValid'] = (entity): entity is Entity =>
-    isEntity(entity) && isValidObjectId(entity.meta.id)
+  const validateEntity: EntityContext['validateEntity'] = <E extends Entity>(
+    entity: DraftEntity<E>,
+  ): entity is E => isEntity(entity) && isValidObjectId(entity.meta.id)
 
-  const meta: EntityContext['meta'] = () => ({
+  const createMeta: EntityContext['createMeta'] = () => ({
     id: '',
     _r: 'entity',
     created_at: new Date(),
     updated_at: new Date(),
   })
 
+  const declareEntity: EntityContext['declareEntity'] = async <
+    E extends Entity,
+  >(
+    entity: DraftEntity<E>,
+  ): Promise<E> =>
+    validateEntity(entity)
+      ? entity
+      : (entity._b(entity.props, await createMeta()) as any)
+
   return {
-    isValid,
-    meta,
+    declareEntity,
+    validateEntity,
+    createMeta,
   }
 }
