@@ -1,26 +1,50 @@
-import { isLeft, isRight, Left, Right, Repository } from '@davna/core'
+import { isLeft, isRight, Left, Repository, EntityContext } from '@davna/core'
 import { InMemoryRepository } from '@davna/infra'
-import { Role } from '../../entities'
+import { createRole, Role } from '../../entities'
 import { getRole } from '../get.role'
 
 describe('getRole service', () => {
   const role_id = 'role-1'
   let rolesRepo: Repository<Role>
 
+  const entityContext = {
+    declareEntity: jest.fn(),
+  } as any as jest.Mocked<EntityContext>
+
   beforeEach(() => {
-    rolesRepo = InMemoryRepository<Role>()
+    rolesRepo = InMemoryRepository<Role>({ entityContext })
+    jest.clearAllMocks()
   })
 
   it('should return Right when role exists', async () => {
-    const role = { id: role_id, name: 'admin' } as Role
-    await rolesRepo.set(role)
+    entityContext.declareEntity.mockImplementationOnce(entity =>
+      entity._b(entity.props, {
+        id: role_id,
+        _r: 'entity',
+        created_at: new Date(),
+        updated_at: new Date(),
+      }),
+    )
+
+    const role = createRole({
+      name: 'admin',
+      description: 'This role is only for admins',
+    })
+
+    await rolesRepo.methods.set(role)
 
     const result = await getRole(role_id)({
       roles: rolesRepo,
     })
 
     expect(isRight(result)).toBeTruthy()
-    expect(result).toEqual(expect.objectContaining(Right(role)))
+    const { value } = result
+
+    expect(value).toEqual(
+      expect.objectContaining({
+        props: role.props,
+      }),
+    )
   })
 
   it('should return Left when role does not exist', async () => {

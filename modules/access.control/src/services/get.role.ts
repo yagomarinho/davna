@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Left, Repository, Right, Service } from '@davna/core'
+import { Left, Readable, Repository, Right, Service } from '@davna/core'
 import { Role } from '../entities'
 
 interface Env {
-  roles: Repository<Role>
+  roles: Readable<Repository<Role>>
 }
 
 export const getRole = Service((role_id: string) => async ({ roles }: Env) => {
-  const role = await roles.get(role_id)
+  const role = await roles.methods.get(role_id)
 
   if (!role)
     return Left({

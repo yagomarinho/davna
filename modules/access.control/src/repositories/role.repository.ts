@@ -8,19 +8,25 @@
 import { createRole, Role, RoleURI } from '../entities'
 import { MongoRepository, MongoConverter } from '@davna/infra'
 
-// O converter já tem que saber que é uma entity e não precisar construir uma
 const converter: MongoConverter<Role> = {
-  to: ({ _v, props: { name, description }, meta }) => ({
-    id: meta?.id,
+  to: ({
+    _v,
+    props: { name, description },
+    meta: { id, created_at, updated_at },
+  }) => ({
+    id,
     data: {
       name,
       description,
-      created_at: meta.created_at,
-      updated_at: meta.updated_at,
+      created_at,
+      updated_at,
       __version: _v,
     },
   }),
-  from: ({ id, data: { name, description, created_at, updated_at } }) =>
+  from: ({
+    id,
+    data: { name, description, created_at, updated_at, __version },
+  }) =>
     createRole(
       {
         name,
@@ -32,6 +38,7 @@ const converter: MongoConverter<Role> = {
         created_at,
         updated_at,
       },
+      __version,
     ),
 }
 

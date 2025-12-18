@@ -29,11 +29,24 @@ export interface Role extends Entity<RoleProps, RoleURI, RoleVersion> {}
 export interface CreateRoleProps extends RoleProps, Partial<Entity> {}
 
 export function createRole(props: RoleProps): DraftEntity<Role>
-export function createRole(props: RoleProps, meta: EntityMeta): Role
-export function createRole(props: RoleProps, meta?: EntityMeta): any {
+export function createRole(
+  props: RoleProps,
+  meta: undefined,
+  _version: RoleVersion,
+): DraftEntity<Role>
+export function createRole(
+  props: RoleProps,
+  meta: EntityMeta,
+  _version?: RoleVersion,
+): Role
+export function createRole(
+  props: RoleProps,
+  meta?: EntityMeta,
+  _version: RoleVersion = RoleVersion,
+): any {
   return createEntity(
     RoleURI,
-    RoleVersion,
+    _version,
     createRole,
     { name: props.name, description: props.description },
     meta as any,
