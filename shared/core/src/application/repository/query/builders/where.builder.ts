@@ -13,6 +13,8 @@ import {
   WhereLeaf,
   Operators,
 } from '../models'
+import { Entity } from '../../../../domain'
+import { ExtractSearchablePropertiesFromEntity } from './query.builder'
 
 /**
  * Creates a composite Where node.
@@ -21,11 +23,11 @@ import {
  * ('and' or 'or'), enabling nested and complex filters.
  */
 
-export function createWhereComposite<E extends ValidObject>(
+export function createWhereComposite<E extends Entity>(
   value: 'or' | 'and',
-  left: Where<E>,
-  right: Where<E>,
-): WhereComposite<E> {
+  left: Where<ExtractSearchablePropertiesFromEntity<E>>,
+  right: Where<ExtractSearchablePropertiesFromEntity<E>>,
+): WhereComposite<ExtractSearchablePropertiesFromEntity<E>> {
   return {
     value,
     left,
@@ -64,11 +66,11 @@ export function createWhereLeaf<
  * Both left and right conditions must be satisfied.
  */
 
-export function and<E extends ValidObject>(
-  left: Where<E>,
-  right: Where<E>,
-): WhereComposite<E> {
-  return createWhereComposite('and', left, right)
+export function and<E extends Entity>(
+  left: Where<ExtractSearchablePropertiesFromEntity<E>>,
+  right: Where<ExtractSearchablePropertiesFromEntity<E>>,
+): WhereComposite<ExtractSearchablePropertiesFromEntity<E>> {
+  return createWhereComposite<E>('and', left, right)
 }
 
 /**
@@ -77,9 +79,9 @@ export function and<E extends ValidObject>(
  * Either left or right condition must be satisfied.
  */
 
-export function or<E extends ValidObject>(
-  left: Where<E>,
-  right: Where<E>,
-): WhereComposite<E> {
+export function or<E extends Entity>(
+  left: Where<ExtractSearchablePropertiesFromEntity<E>>,
+  right: Where<ExtractSearchablePropertiesFromEntity<E>>,
+): WhereComposite<ExtractSearchablePropertiesFromEntity<E>> {
   return createWhereComposite('or', left, right)
 }

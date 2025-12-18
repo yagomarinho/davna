@@ -68,7 +68,7 @@ export function InMemoryRepository<E extends Entity>({
     const e: E = entity._b(
       entity.props,
       entity.meta ? entity.meta : await entityContext.meta(),
-    )
+    ) as any
 
     repo = repo.filter(el => el.meta.id !== e.meta.id).concat(e)
 

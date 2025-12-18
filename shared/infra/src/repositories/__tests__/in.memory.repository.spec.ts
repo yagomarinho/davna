@@ -1,331 +1,329 @@
-import { Entity, Filter, Query } from '@davna/core'
+import {
+  Batch,
+  EntityContext,
+  EntityMeta,
+  Filter,
+  QueryBuilder,
+} from '@davna/core'
 
 import { InMemoryRepository } from '../in.memory.repository'
-
-interface User extends Entity {
-  name: string
-  age: number
-  score: number
-  tags: string[]
-}
+import { createEn, En, setName } from './fakes/fake.entity'
 
 describe('InMemoryRepository', () => {
-  it('should create a new entity without id and assign id/created_at/updated_at', () => {
-    const repo = InMemoryRepository<User>({})
-    const saved: any = repo.methods.set({
-      id: '' as any,
-      name: 'Ana',
-      age: 28,
-      score: 10,
-      tags: [],
-    })
+  it('should create a new entity without id and assign id/created_at/updated_at', async () => {
+    const repo = InMemoryRepository<En>()
+    const en = createEn({ name: 'John', value: 10, tags: [] })
+    const saved = await repo.methods.set(en)
 
-    expect(saved.id).toBe('0')
-    expect(saved.created_at).toEqual(expect.any(Date))
-    expect(saved.updated_at).toEqual(expect.any(Date))
+    expect(saved.meta.id).toBe('0')
+    expect(saved.meta.created_at).toEqual(expect.any(Date))
+    expect(saved.meta.updated_at).toEqual(expect.any(Date))
 
-    const fetched = repo.get(saved.id)
+    const fetched = await repo.methods.get(saved.meta.id)
     expect(fetched).toEqual(saved)
   })
 
-  it('should use a custom idProvider when provided', () => {
+  it('should use a custom id provider when provided', async () => {
     let i = 100
-    const idProvider = () => `u-${i++}`
-    const repo = InMemoryRepository<User>({ idProvider })
 
-    const a: any = repo.set({
-      id: '' as any,
-      name: 'A',
-      age: 20,
-      score: 1,
-      tags: [],
-    } as any)
-    const b: any = repo.set({
-      id: '' as any,
-      name: 'B',
-      age: 21,
-      score: 2,
-      tags: [],
-    } as any)
-
-    expect(a.id).toBe('u-100')
-    expect(b.id).toBe('u-101')
-  })
-
-  it('should update an existing entity (same id) and refresh updated_at without duplicating', () => {
-    const repo = InMemoryRepository<User>()
-    const created: any = repo.set({
-      name: 'Ana',
-      age: 28,
-      score: 10,
-      tags: [],
-    } as any)
-
-    const updated: any = repo.set({ ...created, name: 'Ana Maria', score: 15 })
-
-    expect(updated.id).toBe(created.id)
-
-    const all: any = repo.query()
-    expect(all.length).toBe(1)
-    expect(all[0].name).toBe('Ana Maria')
-  })
-
-  it('should remove an entity by id', () => {
-    const repo = InMemoryRepository<User>({})
-    const a: any = repo.set({
-      id: '' as any,
-      name: 'A',
-      age: 20,
-      score: 1,
-      tags: [],
-    } as any)
-    const b: any = repo.set({
-      id: '' as any,
-      name: 'B',
-      age: 21,
-      score: 2,
-      tags: [],
-    } as any)
-
-    repo.remove({ id: a.id })
-    expect(repo.get(a.id)).toBeUndefined()
-    expect(repo.get(b.id)).toBeDefined()
-  })
-
-  it('should support limit and cursor for pagination', () => {
-    const repo = InMemoryRepository<User>({})
-    for (let i = 0; i < 7; i++) {
-      repo.set({
-        id: '' as any,
-        name: `U${i}`,
-        age: 20 + i,
-        score: i,
-        tags: [],
-      } as any)
+    const entityContext: EntityContext = {
+      isValid: jest.fn().mockImplementation(() => true) as any,
+      meta: (): EntityMeta => ({
+        id: `u-${i++}`,
+        _r: 'entity',
+        created_at: new Date(),
+        updated_at: new Date(),
+      }),
     }
 
-    const page1: any = repo.query(Query.limit(3))
-    const page2: any = repo.query(Query.cursor('1', Query.limit(3)))
-    const page3: any = repo.query(Query.cursor('2', Query.limit(3)))
+    const repo = InMemoryRepository<En>({ entityContext })
 
-    expect(page1.map(u => u.name)).toEqual(['U0', 'U1', 'U2'])
-    expect(page2.map(u => u.name)).toEqual(['U3', 'U4', 'U5'])
-    expect(page3.map(u => u.name)).toEqual(['U6'])
+    const a = await repo.methods.set(
+      createEn({ name: 'John', value: 10, tags: [] }),
+    )
+    const b = await repo.methods.set(
+      createEn({ name: 'Mike', value: 11, tags: [] }),
+    )
+
+    expect(a.meta.id).toBe('u-100')
+    expect(b.meta.id).toBe('u-101')
   })
 
-  it('should sort by single and multiple fields', () => {
-    const repo = InMemoryRepository<User>({})
-    repo.set({ id: '' as any, name: 'C', age: 30, score: 10, tags: [] } as any)
-    repo.set({ id: '' as any, name: 'A', age: 20, score: 30, tags: [] } as any)
-    repo.set({ id: '' as any, name: 'B', age: 30, score: 20, tags: [] } as any)
+  it('should update an existing entity (same id) and refresh updated_at without duplicating', async () => {
+    const repo = InMemoryRepository<En>()
 
-    const s1: any = repo.query({
-      sorts: [{ property: 'name', direction: 'asc' }],
-    } as any)
-    expect(s1.map(v => v.name)).toEqual(['A', 'B', 'C'])
+    const created = await repo.methods.set(
+      createEn({ name: 'Ana Maria', value: 15, tags: [] }),
+    )
 
-    const s2: any = repo.query({
-      sorts: [
-        { property: 'age', direction: 'asc' },
-        { property: 'score', direction: 'desc' },
-      ],
-    } as any)
+    const updated = await repo.methods.set(setName('Ana', created))
 
-    expect(s2.map(v => `${v.age}:${v.score}`)).toEqual([
-      '20:30',
-      '30:20',
-      '30:10',
+    expect(updated.meta.id).toBe(created.meta.id)
+
+    const all = await repo.methods.query()
+    expect(all.length).toBe(1)
+    expect(all[0].props.name).toBe('Ana')
+  })
+
+  it('should remove an entity by id', async () => {
+    const repo = InMemoryRepository<En>({})
+    const john = await repo.methods.set(
+      createEn({ name: 'John', value: 10, tags: [] }),
+    )
+    const mike = await repo.methods.set(
+      createEn({ name: 'Mike', value: 11, tags: [] }),
+    )
+
+    await repo.methods.remove(john.meta.id)
+
+    expect(repo.methods.get(john.meta.id)).toBeUndefined()
+    expect(repo.methods.get(mike.meta.id)).toBeDefined()
+  })
+
+  it('should support limit and cursor for pagination', async () => {
+    const repo = InMemoryRepository<En>()
+
+    const upsert: Batch<En> = Array.from({ length: 7 }, (_, i) => ({
+      type: 'upsert',
+      data: createEn({
+        name: `U${i}`,
+        value: 20 + i,
+        tags: [],
+      }),
+    }))
+
+    await repo.methods.batch(upsert)
+
+    const page1 = await repo.methods.query(QueryBuilder<En>().limit(3).build())
+    const page2 = await repo.methods.query(
+      QueryBuilder<En>().cursor('1').limit(3).build(),
+    )
+
+    const page3 = await repo.methods.query(
+      QueryBuilder<En>().cursor('2').limit(3).build(),
+    )
+
+    expect(page1.map(u => u.props.name)).toEqual(['U0', 'U1', 'U2'])
+    expect(page2.map(u => u.props.name)).toEqual(['U3', 'U4', 'U5'])
+    expect(page3.map(u => u.props.name)).toEqual(['U6'])
+  })
+
+  it('should sort by single and multiple fields', async () => {
+    const repo = InMemoryRepository<En>()
+
+    await repo.methods.batch([
+      { type: 'upsert', data: createEn({ name: 'C', value: 30, tags: [] }) },
+      { type: 'upsert', data: createEn({ name: 'A', value: 20, tags: [] }) },
+      { type: 'upsert', data: createEn({ name: 'B', value: 25, tags: [] }) },
+    ])
+
+    const s1 = await repo.methods.query(
+      QueryBuilder<En>()
+        .orderBy([{ property: 'name', direction: 'asc' }])
+        .build(),
+    )
+
+    expect(s1.map(v => v.props.name)).toEqual(['A', 'B', 'C'])
+
+    const s2 = await repo.methods.query(
+      QueryBuilder<En>()
+        .orderBy([{ property: 'value', direction: 'desc' }])
+        .build(),
+    )
+
+    expect(s2.map(v => `${v.props.value}:${v.props.name}`)).toEqual([
+      '30:C',
+      '25:B',
+      '20:A',
     ])
   })
 
   describe('where filters (leaf operators)', () => {
-    let repo = InMemoryRepository<User>({})
+    let repo = InMemoryRepository<En>()
 
     beforeEach(() => {
-      repo = InMemoryRepository<User>({})
-      repo.set({
-        id: '' as any,
-        name: 'Ana',
-        age: 28,
-        score: 50,
-        tags: ['a', 'b'],
-      } as any)
-      repo.set({
-        id: '' as any,
-        name: 'Bruno',
-        age: 31,
-        score: 40,
-        tags: ['b', 'c'],
-      } as any)
-      repo.set({
-        id: '' as any,
-        name: 'Carla',
-        age: 22,
-        score: 60,
-        tags: ['c'],
-      } as any)
+      repo = InMemoryRepository<En>()
+
+      repo.methods.batch([
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Ana', value: 28, tags: ['a', 'b'] }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Bruno', value: 31, tags: ['b', 'c'] }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Carla', value: 22, tags: ['d', 'y'] }),
+        },
+      ])
     })
 
-    it('should filter with == and !=', () => {
-      const eq: any = repo.query(Query.where('name', '==', 'Ana'))
-      const ne: any = repo.query(Query.where('name', '!=', 'Ana'))
-
-      expect(eq.map(v => v.name)).toEqual(['Ana'])
-      expect(ne.map(v => v.name).sort()).toEqual(['Bruno', 'Carla'])
-    })
-
-    it('should filter with >, >=, <, <=', () => {
-      const gt: any = repo.query(Query.where('age', '>', 28))
-      const gte: any = repo.query(Query.where('age', '>=', 28))
-      const lt: any = repo.query(Query.where('age', '<', 28))
-      const lte: any = repo.query(Query.where('age', '<=', 28))
-
-      expect(gt.map(v => v.name).sort()).toEqual(['Bruno'])
-      expect(gte.map(v => v.name).sort()).toEqual(['Ana', 'Bruno'])
-      expect(lt.map(v => v.name).sort()).toEqual(['Carla'])
-      expect(lte.map(v => v.name).sort()).toEqual(['Ana', 'Carla'])
-    })
-
-    it('should filter with in and not-in', () => {
-      const _in: any = repo.query(Query.where('name', 'in', ['Ana', 'X']))
-      const nin: any = repo.query(Query.where('name', 'not-in', ['Ana', 'X']))
-
-      expect(_in.map(v => v.name).sort()).toEqual(['Ana'])
-      expect(nin.map(v => v.name).sort()).toEqual(['Bruno', 'Carla'])
-    })
-
-    it('should filter with between', () => {
-      const between: any = repo.query(
-        Query.where('score', 'between', { start: 45, end: 55 }),
+    it('should filter with == and !=', async () => {
+      const eq = await repo.methods.query(
+        QueryBuilder<En>().filterBy('name', '==', 'Ana').build(),
       )
-      expect(between.map(v => v.name)).toEqual(['Ana'])
-    })
-
-    it('should filter with array-contains and array-contains-any', () => {
-      const contains: any = repo.query(
-        Query.where('tags', 'array-contains', 'a'),
-      )
-      const any: any = repo.query(
-        Query.where('tags', 'array-contains-any', ['a', 'z']),
+      const ne = await repo.methods.query(
+        QueryBuilder<En>().filterBy('name', '!=', 'Ana').build(),
       )
 
-      expect(contains.map(v => v.name)).toEqual(['Ana'])
-      expect(any.map(v => v.name)).toEqual(['Ana'])
+      expect(eq.map(v => v.props.name)).toEqual(['Ana'])
+      expect(ne.map(v => v.props.name).sort()).toEqual(['Bruno', 'Carla'])
+    })
+
+    it('should filter with >, >=, <, <=', async () => {
+      const gt = await repo.methods.query(
+        QueryBuilder<En>().filterBy('value', '>', 28).build(),
+      )
+      const gte = await repo.methods.query(
+        QueryBuilder<En>().filterBy('value', '>=', 28).build(),
+      )
+      const lt = await repo.methods.query(
+        QueryBuilder<En>().filterBy('value', '<', 28).build(),
+      )
+      const lte = await repo.methods.query(
+        QueryBuilder<En>().filterBy('value', '<=', 28).build(),
+      )
+
+      expect(gt.map(v => v.props.name).sort()).toEqual(['Bruno'])
+      expect(gte.map(v => v.props.name).sort()).toEqual(['Ana', 'Bruno'])
+      expect(lt.map(v => v.props.name).sort()).toEqual(['Carla'])
+      expect(lte.map(v => v.props.name).sort()).toEqual(['Ana', 'Carla'])
+    })
+
+    it('should filter with in and not-in', async () => {
+      const _in = await repo.methods.query(
+        QueryBuilder<En>().filterBy('name', 'in', ['Ana', 'X']).build(),
+      )
+      const nin = await repo.methods.query(
+        QueryBuilder<En>().filterBy('name', 'not-in', ['Ana', 'X']).build(),
+      )
+
+      expect(_in.map(v => v.props.name).sort()).toEqual(['Ana'])
+      expect(nin.map(v => v.props.name).sort()).toEqual(['Bruno', 'Carla'])
+    })
+
+    it('should filter with between', async () => {
+      const between = await repo.methods.query(
+        QueryBuilder<En>()
+          .filterBy('value', 'between', { start: 25, end: 29 })
+          .build(),
+      )
+      expect(between.map(v => v.props.name)).toEqual(['Ana'])
+    })
+
+    it('should filter with array-contains and array-contains-any', async () => {
+      const contains = await repo.methods.query(
+        QueryBuilder<En>().filterBy('tags', 'array-contains', 'a').build(),
+      )
+      const any = await repo.methods.query(
+        QueryBuilder<En>()
+          .filterBy('tags', 'array-contains-any', ['a', 'z'])
+          .build(),
+      )
+
+      expect(contains.map(v => v.props.name)).toEqual(['Ana'])
+      expect(any.map(v => v.props.name)).toEqual(['Ana'])
     })
   })
 
   describe('composite where (and/or)', () => {
-    let repo = InMemoryRepository<User>({})
+    let repo = InMemoryRepository<En>()
 
     beforeEach(() => {
-      repo = InMemoryRepository<User>({})
-      repo.set({
-        id: '' as any,
-        name: 'Ana',
-        age: 28,
-        score: 50,
-        tags: ['a', 'b'],
-      } as any)
-      repo.set({
-        id: '' as any,
-        name: 'Bruno',
-        age: 31,
-        score: 40,
-        tags: ['b', 'c'],
-      } as any)
-      repo.set({
-        id: '' as any,
-        name: 'Carla',
-        age: 22,
-        score: 60,
-        tags: ['c'],
-      } as any)
+      repo = InMemoryRepository<En>()
+
+      repo.methods.batch([
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Ana', value: 28, tags: ['a', 'b'] }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Bruno', value: 31, tags: ['b', 'c'] }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Carla', value: 22, tags: ['c'] }),
+        },
+      ])
     })
 
-    it('should filter with AND composition', () => {
-      const where = Filter.and<User>(
-        Filter.where('age', '>=', 25),
-        Filter.where('score', '>=', 50),
+    it('should filter with AND composition', async () => {
+      const where = Filter.and<En>(
+        Filter.where('value', '<', 31),
+        Filter.where('tags', 'array-contains', 'b'),
       )
-      const res: any = repo.query(Query(where))
-      expect(res.map(v => v.name)).toEqual(['Ana'])
+      const res = await repo.methods.query(
+        QueryBuilder<En>().filterBy(where).build(),
+      )
+
+      expect(res.map(v => v.props.name)).toEqual(['Ana'])
     })
 
-    it('should filter with OR composition', () => {
-      const where = Filter.or<User>(
-        Filter.where('age', '<', 23),
+    it('should filter with OR composition', async () => {
+      const where = Filter.or<En>(
+        Filter.where('value', '<', 23),
         Filter.where('name', '==', 'Bruno'),
       )
-      const res: any = repo.query(Query(where))
-      expect(res.map(v => v.name).sort()).toEqual(['Bruno', 'Carla'])
+      const res = await repo.methods.query(
+        QueryBuilder<En>().filterBy(where).build(),
+      )
+      expect(res.map(v => v.props.name).sort()).toEqual(['Bruno', 'Carla'])
     })
   })
 
-  it('should keep created_at stable across updates when caller preserves it', () => {
-    const repo = InMemoryRepository<User>({})
-    const first: any = repo.set({
-      id: '' as any,
-      name: 'Zoe',
-      age: 18,
-      score: 5,
-      tags: [],
-    } as any)
+  it('should keep created_at stable across updates when caller preserves it', async () => {
+    const repo = InMemoryRepository<En>()
 
-    const second: any = repo.set({ ...first, score: 7 } as any)
+    const first = await repo.methods.set(
+      createEn({
+        name: 'Zoe',
+        value: 18,
+        tags: [],
+      }),
+    )
 
-    expect(second.created_at).toEqual(first.created_at)
+    const second = await repo.methods.set(setName('Zoe Lang', first))
+
+    expect(second.meta.created_at).toEqual(first.meta.created_at)
   })
 
-  it('should return empty array when no matches', () => {
-    const repo = InMemoryRepository<User>({})
-    repo.set({ id: '' as any, name: 'Only', age: 1, score: 1, tags: [] } as any)
+  it('should return empty array when no matches', async () => {
+    const repo = InMemoryRepository<En>()
 
-    const res = repo.query(Query(Filter.where<User>('name', '==', 'None')))
+    repo.methods.set(
+      createEn({
+        name: 'Only',
+        value: 1,
+        tags: [],
+      }),
+    )
+
+    const res = await repo.methods.query(
+      QueryBuilder()
+        .filterBy(Filter.where('name', '==', 'None'))
+        .build(),
+    )
     expect(res).toEqual([])
   })
 
-  it('should upsert entities with batch operation', () => {
-    const repo = InMemoryRepository<User>({})
+  it('should upsert entities with batch operation', async () => {
+    const repo = InMemoryRepository<En>()
 
-    const result = repo.batch([
+    const result = await repo.methods.batch([
       {
         type: 'upsert',
-        data: applyTag('user')({
-          __version: 'v1',
-          id: '',
-          name: 'Ana',
-          age: 28,
-          score: 10,
-          tags: [],
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
+        data: createEn({ name: 'Ana', value: 28, tags: [] }),
       },
       {
         type: 'upsert',
-        data: applyTag('user')({
-          __version: 'v1',
-          id: '',
-          name: 'Miguel',
-          age: 18,
-          score: 20,
-          tags: [],
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
+        data: createEn({ name: 'Miguel', value: 18, tags: [] }),
       },
       {
         type: 'upsert',
-        data: applyTag('user')({
-          __version: 'v1',
-          id: '',
-          name: 'Pablo',
-          age: 12,
-          score: 90,
-          tags: [],
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
+        data: createEn({ name: 'Pablo', value: 12, tags: [] }),
       },
     ])
 
@@ -336,58 +334,30 @@ describe('InMemoryRepository', () => {
       }),
     )
 
-    const fetched: any = repo.query()
+    const fetched = await repo.methods.query()
     expect(fetched.length).toBe(3)
   })
 
-  it('should remove entities with batch operation', () => {
-    const repo = InMemoryRepository<User>({})
+  it('should remove entities with batch operation', async () => {
+    const repo = InMemoryRepository<En>()
 
-    const user = repo.set(
-      applyTag('user')({
-        __version: 'v1',
-        id: '',
+    const user = await repo.methods.set(
+      createEn({
         name: 'Ana',
-        age: 28,
-        score: 10,
+        value: 28,
         tags: [],
-        created_at: new Date(),
-        updated_at: new Date(),
       }),
     )
 
-    const result = repo.batch([
+    const result = await repo.methods.batch([
+      { type: 'remove', data: user.meta.id },
       {
-        type: 'remove',
-        data: {
-          id: (user as any).id,
-        },
+        type: 'upsert',
+        data: createEn({ name: 'Miguel', value: 18, tags: [] }),
       },
       {
         type: 'upsert',
-        data: applyTag('user')({
-          __version: 'v1',
-          id: '',
-          name: 'Miguel',
-          age: 18,
-          score: 20,
-          tags: [],
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
-      },
-      {
-        type: 'upsert',
-        data: applyTag('user')({
-          __version: 'v1',
-          id: '',
-          name: 'Pablo',
-          age: 12,
-          score: 90,
-          tags: [],
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
+        data: createEn({ name: 'Pablo', value: 12, tags: [] }),
       },
     ])
 
@@ -398,7 +368,8 @@ describe('InMemoryRepository', () => {
       }),
     )
 
-    const fetched: any = repo.query()
+    const fetched = await repo.methods.query()
     expect(fetched.length).toBe(2)
+    expect(fetched.map(v => v.props.name).sort()).toEqual(['Miguel', 'Pablo'])
   })
 })

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Entity } from '../../../domain'
+import { DraftEntity, Entity } from '../../../domain'
 
 /**
  * Represents a single batch operation responsible for
@@ -23,7 +23,7 @@ export interface UpsertBatchItem<E extends Entity> {
    * Full entity instance to be persisted
    * The entity identifier determines whether this is an insert or an update
    */
-  data: E
+  data: DraftEntity<E>
 }
 
 /**

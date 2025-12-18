@@ -6,7 +6,7 @@ import {
   GoogleSheetsRepository,
   GCPCredentials,
 } from '../google.sheets.repository'
-import { En, EnURI } from './fakes/fake.entity'
+import { createEn, En, EnURI } from './fakes/fake.entity'
 
 jest.setTimeout(20_000)
 
@@ -94,9 +94,10 @@ describe('GoogleSheetsRepository — integration', () => {
 
     entityContext.meta.mockResolvedValueOnce(meta)
 
-    const entity = En({
+    const entity = createEn({
       name: 'Integration Test',
       value: 123,
+      tags: ['some tag'],
     })
 
     const result = await repo.methods.set(entity)
@@ -121,6 +122,9 @@ describe('GoogleSheetsRepository — integration', () => {
     )
     expect(JSON.stringify(found)).toEqual(
       expect.stringContaining(result.props.value.toString()),
+    )
+    expect(JSON.stringify(found)).toEqual(
+      expect.stringContaining(JSON.stringify(result.props.tags)),
     )
   })
 })
