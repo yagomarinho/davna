@@ -31,33 +31,27 @@ describe('FederatedRepository', () => {
     jest.clearAllMocks()
   })
 
-  const repo = FederatedRepository({
-    tag: 'federated',
+  const repo = FederatedRepository<[UserURI, OrderURI], 'test.federated'>({
+    repositories: {
+      [UserURI]: init => {
+        userRepo = InMemoryRepository<User>({
+          entityContext: init.entityContext,
+          tag: UserURI,
+        })
+
+        return userRepo
+      },
+      [OrderURI]: init => {
+        orderRepo = InMemoryRepository<Order>({
+          entityContext: init.entityContext,
+          tag: OrderURI,
+        })
+
+        return orderRepo
+      },
+    },
+    tag: 'test.federated',
     IDContext,
-    repositories: [
-      [
-        UserURI,
-        init => {
-          userRepo = InMemoryRepository<User>({
-            entityContext: init.entityContext,
-            tag: UserURI,
-          })
-
-          return userRepo as any
-        },
-      ],
-      [
-        OrderURI,
-        init => {
-          orderRepo = InMemoryRepository<Order>({
-            entityContext: init.entityContext,
-            tag: OrderURI,
-          })
-
-          return orderRepo as any
-        },
-      ],
-    ],
   })
 
   it('should route set() to the correct repository based on entity tag', async () => {
@@ -65,26 +59,20 @@ describe('FederatedRepository', () => {
       props: { entity_tag: UserURI },
     } as any)
 
-    const user: User = await repo.methods.set(
-      createUser({ name: 'Ana' }) as any,
-    )
+    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
 
     IDContext.getIDEntity.mockResolvedValueOnce({
       props: { entity_tag: OrderURI },
     } as any)
 
-    const order: Order = await repo.methods.set(
-      createOrder({ value: 100 }) as any,
-    )
+    const order = await repo.methods.set<Order>(createOrder({ value: 100 }))
 
     expect(await repo.methods.get(user.meta.id)).toEqual(user)
     expect(await repo.methods.get(order.meta.id)).toEqual(order)
   })
 
   it('should resolve repository on get() using IDContext', async () => {
-    const user: User = await repo.methods.set(
-      createUser({ name: 'Ana' }) as any,
-    )
+    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
 
     IDContext.getIDEntity.mockResolvedValue(
       createID(
@@ -114,9 +102,7 @@ describe('FederatedRepository', () => {
   })
 
   it('should remove entity from the correct repository based on id', async () => {
-    const user: User = await repo.methods.set(
-      createUser({ name: 'Ana' }) as any,
-    )
+    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
 
     IDContext.getIDEntity.mockResolvedValue(
       createID(
@@ -140,14 +126,10 @@ describe('FederatedRepository', () => {
   })
 
   it('should aggregate query results from all repositories when no tag is provided', async () => {
-    const user: User = await repo.methods.set(
-      createUser({ name: 'Ana' }) as any,
-    )
-    const order: Order = await repo.methods.set(
-      createOrder({ value: 100 }) as any,
-    )
+    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
+    const order = await repo.methods.set<Order>(createOrder({ value: 100 }))
 
-    const result: (User | Order)[] = await repo.methods.query()
+    const result = await repo.methods.query()
 
     expect(result.map(e => e.meta.id).sort()).toEqual([
       user.meta.id,
@@ -159,10 +141,7 @@ describe('FederatedRepository', () => {
     const user = await userRepo.methods.set(createUser({ name: 'Ana' }))
     await orderRepo.methods.set(createOrder({ value: 100 }))
 
-    const result = await repo.methods.query(
-      QueryBuilder<never>().build(),
-      UserURI as never,
-    )
+    const result = await repo.methods.query(QueryBuilder().build(), UserURI)
 
     expect(result).toEqual([
       expect.objectContaining({
@@ -182,7 +161,7 @@ describe('FederatedRepository', () => {
 
     const result = await repo.methods.batch([
       { type: 'remove', data: user.meta.id },
-      { type: 'upsert', data: createOrder({ value: 200 }) as any },
+      { type: 'upsert', data: createOrder({ value: 200 }) },
     ])
 
     expect(result).toEqual(
@@ -203,7 +182,7 @@ describe('FederatedRepository', () => {
     })
 
     const result = await repo.methods.batch([
-      { type: 'upsert', data: createOrder({ value: 100 }) as any },
+      { type: 'upsert', data: createOrder({ value: 100 }) },
     ])
 
     expect(result).toEqual(
@@ -215,13 +194,13 @@ describe('FederatedRepository', () => {
   })
 
   it('should throw when setting an entity with an unregistered tag', async () => {
-    const invalid = {
+    const invalid: any = {
       _t: 'invalid',
       meta: {},
       props: {},
     }
 
-    await expect(repo.methods.set(invalid as any)).rejects.toThrow(
+    await expect(repo.methods.set(invalid)).rejects.toThrow(
       'No repository registered for tag "invalid"',
     )
   })

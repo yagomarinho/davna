@@ -5,10 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { applyTag, applyVersioning, Entity, Metadata } from '@davna/core'
+import {
+  createEntity,
+  DraftEntity,
+  Entity,
+  EntityMeta,
+  ValueObject,
+} from '@davna/core'
+import { Metadata } from '@davna/kernel'
 
 export const AudioURI = 'audio'
 export type AudioURI = typeof AudioURI
+
+export const AudioVersion = 'v1'
+export type AudioVersion = typeof AudioVersion
 
 interface StorageRef {
   type: string
@@ -23,86 +33,47 @@ export interface AudioProps {
   mime_type: string
   url: string
   duration: number // in secs
-  storage: StorageRef
+  storage: ValueObject<StorageRef>
   metadata: Metadata
 }
 
-export interface Audio extends AudioProps, Entity<AudioURI, 'v1'> {}
+export interface Audio extends Entity<AudioProps, AudioURI, AudioVersion> {}
 
-export interface CreateAudio extends AudioProps, Partial<Entity> {}
+declare module '@davna/core' {
+  interface EntityURItoKind {
+    [AudioURI]: Audio
+  }
+}
 
-export function Audio(
-  id: string,
-  filename: string,
-  mime_type: string,
-  url: string,
-  duration: number,
-  storage: StorageRef,
-  metadata: Metadata,
-  status: 'persistent' | 'presigned',
-  created_at: Date,
-  updated_at: Date,
-): Audio {
-  return applyVersioning('v1')(
-    applyTag(AudioURI)({
-      id,
+export function createAudio(props: AudioProps): DraftEntity<Audio>
+export function createAudio(
+  props: AudioProps,
+  meta: undefined,
+  _version: AudioVersion,
+): DraftEntity<Audio>
+export function createAudio(
+  props: AudioProps,
+  meta: EntityMeta,
+  _version?: AudioVersion,
+): Audio
+export function createAudio(
+  { status, filename, mime_type, url, duration, storage, metadata }: AudioProps,
+  meta?: EntityMeta,
+  _version: AudioVersion = AudioVersion,
+): DraftEntity<Audio> | Audio {
+  return createEntity(
+    AudioURI,
+    _version,
+    createAudio,
+    {
+      status,
       filename,
       mime_type,
       url,
       duration,
       storage,
       metadata,
-      status,
-      created_at,
-      updated_at,
-    }),
+    },
+    meta as any,
   )
-}
-
-Audio.create = function createAudio({
-  id = '',
-  filename,
-  mime_type,
-  url,
-  duration,
-  storage,
-  metadata,
-  status,
-  created_at,
-  updated_at,
-}: CreateAudio): Audio {
-  const now = new Date()
-  return Audio(
-    id,
-    filename,
-    mime_type,
-    url,
-    duration,
-    storage,
-    metadata,
-    status,
-    created_at ?? now,
-    updated_at ?? now,
-  )
-}
-
-Audio.persistent = function persistentAudio(
-  props: Omit<CreateAudio, 'status'>,
-): Audio {
-  return Audio.create({
-    ...props,
-    status: 'persistent',
-  })
-}
-
-Audio.presigned = function persistentAudio(
-  props: Pick<CreateAudio, 'duration' | 'mime_type' | 'metadata'>,
-): Audio {
-  return Audio.create({
-    ...props,
-    status: 'presigned',
-    filename: '',
-    storage: {},
-    url,
-  })
 }

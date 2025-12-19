@@ -58,7 +58,7 @@ export function InMemoryRepository<E extends Entity>({
   repository = [],
   entityContext = createEntityContext(),
   tag = 'entity' as never,
-}: InMemoryConfig<E> = {}): Repository<E> {
+}: InMemoryConfig<E> = {}): Repository<E, InMemoryRepositoryURI> {
   let repo = [...repository]
 
   const get: Repository<E>['methods']['get'] = id =>

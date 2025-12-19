@@ -10,6 +10,8 @@ import {
   BatchItem,
   DraftEntity,
   Entity,
+  EntityOf,
+  EntityURIS,
   ExtractEntityTag,
   ExtractSearchablePropertiesFromEntity,
   Query,
@@ -18,56 +20,65 @@ import {
   Resolvable,
   Tag,
 } from '@davna/core'
-import { ExtractEntitiesOfRepoEntries, FedConfig, RepoEntry } from './contracts'
+import { FedConfig } from './contracts'
 
 export const FedetaredURI = 'federated.repository'
 export type FedetaredURI = typeof FedetaredURI
 
-type RepoMap<R extends RepoEntry<Entity>[]> = Map<
-  string,
-  Repository<ExtractEntitiesOfRepoEntries<R>>
->
+type RepoMap<E extends Entity> = Map<string, Repository<E>>
+type EntitiesOf<
+  U extends EntityURIS[],
+  E extends Entity = never,
+> = 0 extends U['length']
+  ? E
+  : U extends [infer First, ...infer Rest]
+    ? First extends EntityURIS
+      ? Rest extends EntityURIS[]
+        ? EntitiesOf<Rest, E | EntityOf<First>>
+        : never
+      : never
+    : never
 
-interface FederatedQueryMethod<R extends RepoEntry<Entity>[]> {
-  (): RepositoryResult<ExtractEntitiesOfRepoEntries<R>[]>
+interface FederatedQueryMethod<E extends Entity> {
+  (): RepositoryResult<E[]>
   (
-    query: Query<
-      ExtractSearchablePropertiesFromEntity<ExtractEntitiesOfRepoEntries<R>>
-    >,
-  ): RepositoryResult<ExtractEntitiesOfRepoEntries<R>[]>
-  <E extends ExtractEntitiesOfRepoEntries<R> = ExtractEntitiesOfRepoEntries<R>>(
-    q: Query<ExtractSearchablePropertiesFromEntity<E>>,
-    tag: ExtractEntityTag<E>,
+    query: Query<ExtractSearchablePropertiesFromEntity<E>>,
   ): RepositoryResult<E[]>
+  <F extends E = E>(
+    q: Query<ExtractSearchablePropertiesFromEntity<F>>,
+    tag: ExtractEntityTag<F>,
+  ): RepositoryResult<F[]>
 }
 
 export interface FederatedRepository<
-  R extends RepoEntry<Entity>[],
+  E extends Entity,
   T extends string = string,
 >
-  extends
-    Omit<Repository<ExtractEntitiesOfRepoEntries<R>, FedetaredURI>, '_t'>,
-    Tag<T> {
-  methods: Repository<ExtractEntitiesOfRepoEntries<R>>['methods'] & {
-    set: <E extends ExtractEntitiesOfRepoEntries<R>>(
-      entity: DraftEntity<E>,
-    ) => RepositoryResult<E>
-    query: FederatedQueryMethod<R>
+  extends Omit<Repository<E, FedetaredURI>, '_t'>, Tag<T> {
+  methods: Repository<E>['methods'] & {
+    set: <F extends E>(entity: DraftEntity<F>) => RepositoryResult<F>
+    query: FederatedQueryMethod<E>
   }
 }
 
 export function FederatedRepository<
-  R extends RepoEntry<Entity>[],
+  U extends EntityURIS[],
   T extends string = string,
->({ IDContext, repositories, tag }: FedConfig<R, T>): FederatedRepository<R> {
-  const repoByTag: RepoMap<R> = new Map(
-    repositories.map(([repoTag, repoInitializer]) => [
+>({
+  IDContext,
+  repositories,
+  tag,
+}: FedConfig<U, T>): FederatedRepository<EntitiesOf<U>> {
+  const repoByTag: RepoMap<EntitiesOf<U>> = new Map(
+    Object.entries(repositories).map(([repoTag, repoInitializer]) => [
       repoTag,
-      repoInitializer({ entityContext: IDContext }) as any,
+      repoInitializer({ entityContext: IDContext }),
     ]),
   )
 
-  const get: FederatedRepository<R>['methods']['get'] = async id => {
+  const get: FederatedRepository<
+    EntitiesOf<U>
+  >['methods']['get'] = async id => {
     const idEntity = await IDContext.getIDEntity(id)
     if (!idEntity) return
 
@@ -76,16 +87,18 @@ export function FederatedRepository<
     return repo.methods.get(id)
   }
 
-  const set: FederatedRepository<R>['methods']['set'] = async <
-    E extends ExtractEntitiesOfRepoEntries<R>,
+  const set: FederatedRepository<EntitiesOf<U>>['methods']['set'] = async <
+    F extends EntitiesOf<U>,
   >(
-    entity: DraftEntity<E>,
+    entity: DraftEntity<F>,
   ) => {
     const repo = resolveRepo(entity._t)
-    return repo.methods.set(entity) as E
+    return repo.methods.set(entity) as F
   }
 
-  const remove: FederatedRepository<R>['methods']['remove'] = async id => {
+  const remove: FederatedRepository<
+    EntitiesOf<U>
+  >['methods']['remove'] = async id => {
     const idEntity = await IDContext.getIDEntity(id)
     if (!idEntity) return
 
@@ -94,24 +107,26 @@ export function FederatedRepository<
     await repo.methods.remove(id)
   }
 
-  const query: FederatedRepository<R>['methods']['query'] = async <
-    E extends ExtractEntitiesOfRepoEntries<R> = ExtractEntitiesOfRepoEntries<R>,
+  const query: FederatedRepository<EntitiesOf<U>>['methods']['query'] = async <
+    F extends EntitiesOf<U> = EntitiesOf<U>,
   >(
-    q?: Query<ExtractSearchablePropertiesFromEntity<E>>,
-    tag?: ExtractEntityTag<E>,
+    q?: Query<ExtractSearchablePropertiesFromEntity<F>>,
+    tag?: ExtractEntityTag<F>,
   ) => {
     if (tag) {
       const repo = resolveRepo(tag)
-      return repo.methods.query(q) as E[]
+      return repo.methods.query(q) as F[]
     }
 
     const results = await Promise.all(
       [...repoByTag.values()].map(repo => repo.methods.query(q)),
     )
-    return results.flat() as E[]
+    return results.flat() as EntitiesOf<U>[]
   }
 
-  const batch: FederatedRepository<R>['methods']['batch'] = async batch => {
+  const batch: FederatedRepository<
+    EntitiesOf<U>
+  >['methods']['batch'] = async batch => {
     const orderedBatch = await batch.reduce(
       async (acc, item) => {
         if (item.type === 'upsert') {
@@ -136,9 +151,7 @@ export function FederatedRepository<
           return setBatchItem(acc, tag, item)
         }
       },
-      new Map() as Resolvable<
-        Map<string, Batch<ExtractEntitiesOfRepoEntries<R>>>
-      >,
+      new Map() as Resolvable<Map<string, Batch<EntitiesOf<U>>>>,
     )
 
     const results = await Promise.all(

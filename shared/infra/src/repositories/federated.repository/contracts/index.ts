@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './extract.entities.of.repo.entries'
 export * from './fed.config'
-export * from './repo.entry'
 export * from './repo.initializer'
+export * from './uri.to.repo.map'

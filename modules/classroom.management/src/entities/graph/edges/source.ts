@@ -5,15 +5,50 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Tagged } from '@davna/core'
-import { AudioURI } from '../vertices/audio'
-import { TextURI } from '../vertices/text'
+import { createEntity, DraftEntity, Entity, EntityMeta } from '@davna/core'
+import { AudioURI, TextURI } from '../vertices'
 
 export const SourceURI = 'source'
 export type SourceURI = typeof SourceURI
 
-export interface Source extends Tagged<SourceURI> {
+export const SourceVersion = 'v1'
+export type SourceVersion = typeof SourceVersion
+
+export interface SourceProps {
   message_id: string
   source_id: string
   source_type: AudioURI | TextURI
+}
+
+export interface Source extends Entity<SourceProps, SourceURI, SourceVersion> {}
+
+declare module '@davna/core' {
+  interface EntityURItoKind {
+    [SourceURI]: Source
+  }
+}
+
+export function createSource(props: SourceProps): DraftEntity<Source>
+export function createSource(
+  props: SourceProps,
+  meta: undefined,
+  _version: SourceVersion,
+): DraftEntity<Source>
+export function createSource(
+  props: SourceProps,
+  meta: EntityMeta,
+  _version?: SourceVersion,
+): Source
+export function createSource(
+  { message_id, source_id, source_type }: SourceProps,
+  meta?: EntityMeta,
+  _version: SourceVersion = SourceVersion,
+): DraftEntity<Source> | Source {
+  return createEntity(
+    SourceURI,
+    _version,
+    createSource,
+    { message_id, source_id, source_type },
+    meta as any,
+  )
 }
