@@ -5,22 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  Entity,
-  EntityContext,
-  EntityURIS,
-  RepositoryResult,
-} from '@davna/core'
-import { URItoRepoMap } from './uri.to.repo.map'
+import { Entity, EntityContext, RepositoryResult } from '@davna/core'
 import { ID } from '@davna/kernel'
+
+import { RepoInitilizer } from './repo.initializer'
 
 export interface IDContext extends EntityContext {
   getEntityTag<T extends Entity>(entity: T): string
   getIDEntity(id: string): RepositoryResult<ID | undefined>
 }
 
-export interface FedConfig<U extends EntityURIS[], T extends string = string> {
-  repositories: URItoRepoMap<U>
+export interface FedConfig<
+  U extends RepoInitilizer<any>[],
+  T extends string = string,
+> {
+  repositories: U
   IDContext: IDContext
   tag: T
 }

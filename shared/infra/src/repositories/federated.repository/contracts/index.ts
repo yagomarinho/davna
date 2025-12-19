@@ -7,4 +7,3 @@
 
 export * from './fed.config'
 export * from './repo.initializer'
-export * from './uri.to.repo.map'

@@ -11,7 +11,6 @@ import {
   DraftEntity,
   Entity,
   EntityOf,
-  EntityURIS,
   ExtractEntityTag,
   ExtractSearchablePropertiesFromEntity,
   Query,
@@ -20,21 +19,26 @@ import {
   Resolvable,
   Tag,
 } from '@davna/core'
-import { FedConfig } from './contracts'
+import { FedConfig, RepoInitilizer } from './contracts'
 
 export const FedetaredURI = 'federated.repository'
 export type FedetaredURI = typeof FedetaredURI
 
 type RepoMap<E extends Entity> = Map<string, Repository<E>>
+
 type EntitiesOf<
-  U extends EntityURIS[],
+  U extends RepoInitilizer<any>[],
   E extends Entity = never,
 > = 0 extends U['length']
-  ? E
+  ? U extends (infer F)[]
+    ? F extends RepoInitilizer<infer T>
+      ? T
+      : never
+    : never
   : U extends [infer First, ...infer Rest]
-    ? First extends EntityURIS
-      ? Rest extends EntityURIS[]
-        ? EntitiesOf<Rest, E | EntityOf<First>>
+    ? First extends RepoInitilizer<infer F>
+      ? Rest extends RepoInitilizer<F>[]
+        ? EntitiesOf<Rest, E | F>
         : never
       : never
     : never
@@ -44,10 +48,10 @@ interface FederatedQueryMethod<E extends Entity> {
   (
     query: Query<ExtractSearchablePropertiesFromEntity<E>>,
   ): RepositoryResult<E[]>
-  <F extends E = E>(
-    q: Query<ExtractSearchablePropertiesFromEntity<F>>,
-    tag: ExtractEntityTag<F>,
-  ): RepositoryResult<F[]>
+  <F extends ExtractEntityTag<E> = ExtractEntityTag<E>>(
+    q: Query<ExtractSearchablePropertiesFromEntity<EntityOf<F>>>,
+    tag: F,
+  ): RepositoryResult<EntityOf<F>[]>
 }
 
 export interface FederatedRepository<
@@ -55,14 +59,14 @@ export interface FederatedRepository<
   T extends string = string,
 >
   extends Omit<Repository<E, FedetaredURI>, '_t'>, Tag<T> {
-  methods: Repository<E>['methods'] & {
+  methods: Omit<Repository<E>['methods'], 'set' | 'query'> & {
     set: <F extends E>(entity: DraftEntity<F>) => RepositoryResult<F>
     query: FederatedQueryMethod<E>
   }
 }
 
 export function FederatedRepository<
-  U extends EntityURIS[],
+  U extends RepoInitilizer<any>[],
   T extends string = string,
 >({
   IDContext,
@@ -70,10 +74,10 @@ export function FederatedRepository<
   tag,
 }: FedConfig<U, T>): FederatedRepository<EntitiesOf<U>> {
   const repoByTag: RepoMap<EntitiesOf<U>> = new Map(
-    Object.entries(repositories).map(([repoTag, repoInitializer]) => [
-      repoTag,
-      repoInitializer({ entityContext: IDContext }),
-    ]),
+    repositories.map(init => {
+      const repo = init({ entityContext: IDContext })
+      return [repo._t, repo]
+    }),
   )
 
   const get: FederatedRepository<

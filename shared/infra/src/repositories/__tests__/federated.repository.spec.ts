@@ -31,25 +31,25 @@ describe('FederatedRepository', () => {
     jest.clearAllMocks()
   })
 
-  const repo = FederatedRepository<[UserURI, OrderURI], 'test.federated'>({
-    repositories: {
-      [UserURI]: init => {
-        userRepo = InMemoryRepository<User>({
-          entityContext: init.entityContext,
-          tag: UserURI,
-        })
-
-        return userRepo
-      },
-      [OrderURI]: init => {
-        orderRepo = InMemoryRepository<Order>({
+  const repo = FederatedRepository({
+    repositories: [
+      init => {
+        orderRepo = InMemoryRepository({
           entityContext: init.entityContext,
           tag: OrderURI,
         })
 
         return orderRepo
       },
-    },
+      init => {
+        userRepo = InMemoryRepository({
+          entityContext: init.entityContext,
+          tag: UserURI,
+        })
+
+        return userRepo
+      },
+    ],
     tag: 'test.federated',
     IDContext,
   })
@@ -59,20 +59,20 @@ describe('FederatedRepository', () => {
       props: { entity_tag: UserURI },
     } as any)
 
-    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
+    const user = await repo.methods.set(createUser({ name: 'Ana' }))
 
     IDContext.getIDEntity.mockResolvedValueOnce({
       props: { entity_tag: OrderURI },
     } as any)
 
-    const order = await repo.methods.set<Order>(createOrder({ value: 100 }))
+    const order = await repo.methods.set(createOrder({ value: 100 }))
 
     expect(await repo.methods.get(user.meta.id)).toEqual(user)
     expect(await repo.methods.get(order.meta.id)).toEqual(order)
   })
 
   it('should resolve repository on get() using IDContext', async () => {
-    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
+    const user = await repo.methods.set(createUser({ name: 'Ana' }))
 
     IDContext.getIDEntity.mockResolvedValue(
       createID(
@@ -102,7 +102,7 @@ describe('FederatedRepository', () => {
   })
 
   it('should remove entity from the correct repository based on id', async () => {
-    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
+    const user = await repo.methods.set(createUser({ name: 'Ana' }))
 
     IDContext.getIDEntity.mockResolvedValue(
       createID(
@@ -126,8 +126,8 @@ describe('FederatedRepository', () => {
   })
 
   it('should aggregate query results from all repositories when no tag is provided', async () => {
-    const user = await repo.methods.set<User>(createUser({ name: 'Ana' }))
-    const order = await repo.methods.set<Order>(createOrder({ value: 100 }))
+    const user = await repo.methods.set(createUser({ name: 'Ana' }))
+    const order = await repo.methods.set(createOrder({ value: 100 }))
 
     const result = await repo.methods.query()
 
