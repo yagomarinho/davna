@@ -8,4 +8,5 @@
 import { Entity } from '../../../domain'
 import { RemoveBatchItem, UpsertBatchItem } from './batch.item'
 
-export type Batch<E extends Entity> = (UpsertBatchItem<E> | RemoveBatchItem)[]
+export type BatchItem<E extends Entity> = UpsertBatchItem<E> | RemoveBatchItem
+export type Batch<E extends Entity> = BatchItem<E>[]
