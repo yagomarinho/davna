@@ -5,6 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './audio.repository'
-export * from './classroom.repository'
-export * from './message.repository'
+export * from './classroom.federated.repository'

@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Left, Repository, Right, Service } from '@davna/core'
+import { Left, Right, Service } from '@davna/core'
 
-import { MessageHandler } from '../utils/message.handler'
-import { StorageConstructor } from '../utils/storage'
-import { FederatedRepository } from '@davna/infra'
+import { MessageHandler, StorageConstructor } from '../utils'
+import { ClassroomFedRepository } from '../repositories'
+import { ClassroomDTO, MessageDTO } from '../dtos/output'
 
 interface Request {
   classroom_id: string
@@ -21,14 +21,14 @@ interface Request {
 }
 
 interface Env {
-  repo: FederatedRepository<[], ''>
+  repository: ClassroomFedRepository
   messageHandler: MessageHandler
   storage: StorageConstructor
 }
 
 interface Response {
-  classroom: Classroom
-  message: Message
+  classroom: ClassroomDTO
+  message: MessageDTO
 }
 
 export const appendMessageToClassroom = Service<Request, Env, Response>(
@@ -40,10 +40,10 @@ export const appendMessageToClassroom = Service<Request, Env, Response>(
     translation,
     data,
   }) =>
-    async ({ graph, messageHandler, storage }) => {
-      let classroom = await classrooms.get(classroom_id)
+    async ({ repository, messageHandler, storage }) => {
+      let classroom = await repository.methods.get(classroom_id)
 
-      if (!classroom)
+      if (!classroom || classroom._t !== 'classroom')
         return Left({ status: 'error', message: 'No founded classroom' })
 
       if (

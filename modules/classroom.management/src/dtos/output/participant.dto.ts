@@ -5,5 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './input'
-export * from './output'
+export enum PARTICIPANT_ROLE {
+  COSTUMER = 'costumer',
+  AGENT = 'agent',
+}
+
+export interface ParticipantDTO {
+  participant_id: string
+  role: PARTICIPANT_ROLE
+}

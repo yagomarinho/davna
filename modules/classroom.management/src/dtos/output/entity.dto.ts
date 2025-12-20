@@ -5,5 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './input'
-export * from './output'
+import { EntityMeta } from '@davna/core'
+
+export interface EntityDTO extends Omit<
+  EntityMeta,
+  '_idempotency_key' | '_r'
+> {}
