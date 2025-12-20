@@ -2,16 +2,18 @@ import { Batch, EntityContext, Filter, QueryBuilder } from '@davna/core'
 
 import { InMemoryRepository } from '../in.memory.repository'
 import { createEn, En, setName } from './fakes/fake.entity'
+import { fakeIdempotencyKey } from './fakes/fake.idempotency.key'
 
 describe('InMemoryRepository', () => {
   it('should create a new entity without id and assign id/created_at/updated_at', async () => {
     const repo = InMemoryRepository<En>()
     const en = createEn({ name: 'John', value: 10, tags: [] })
-    const saved = await repo.methods.set(en)
+    const saved = await repo.methods.set(en, fakeIdempotencyKey(1))
 
     expect(saved.meta.id).toBe('0')
     expect(saved.meta.created_at).toEqual(expect.any(Date))
     expect(saved.meta.updated_at).toEqual(expect.any(Date))
+    expect(saved.meta._idempotency_key).toBe(fakeIdempotencyKey(1))
 
     const fetched = await repo.methods.get(saved.meta.id)
     expect(fetched).toEqual(saved)
@@ -35,10 +37,12 @@ describe('InMemoryRepository', () => {
 
     const a = await repo.methods.set(
       createEn({ name: 'John', value: 10, tags: [] }),
+      fakeIdempotencyKey(1),
     )
 
     const b = await repo.methods.set(
       createEn({ name: 'Mike', value: 11, tags: [] }),
+      fakeIdempotencyKey(1),
     )
 
     expect(a.meta.id).toBe('u-100')
@@ -50,9 +54,13 @@ describe('InMemoryRepository', () => {
 
     const created = await repo.methods.set(
       createEn({ name: 'Ana Maria', value: 15, tags: [] }),
+      fakeIdempotencyKey(1),
     )
 
-    const updated = await repo.methods.set(setName('Ana', created))
+    const updated = await repo.methods.set(
+      setName('Ana', created),
+      fakeIdempotencyKey(1),
+    )
 
     expect(updated.meta.id).toBe(created.meta.id)
 
@@ -65,9 +73,11 @@ describe('InMemoryRepository', () => {
     const repo = InMemoryRepository<En>({})
     const john = await repo.methods.set(
       createEn({ name: 'John', value: 10, tags: [] }),
+      fakeIdempotencyKey(1),
     )
     const mike = await repo.methods.set(
       createEn({ name: 'Mike', value: 11, tags: [] }),
+      fakeIdempotencyKey(1),
     )
 
     await repo.methods.remove(john.meta.id)
@@ -88,7 +98,7 @@ describe('InMemoryRepository', () => {
       }),
     }))
 
-    await repo.methods.batch(upsert)
+    await repo.methods.batch(upsert, fakeIdempotencyKey(1))
 
     const page1 = await repo.methods.query(QueryBuilder<En>().limit(3).build())
     const page2 = await repo.methods.query(
@@ -107,11 +117,14 @@ describe('InMemoryRepository', () => {
   it('should sort by single and multiple fields', async () => {
     const repo = InMemoryRepository<En>()
 
-    await repo.methods.batch([
-      { type: 'upsert', data: createEn({ name: 'C', value: 30, tags: [] }) },
-      { type: 'upsert', data: createEn({ name: 'A', value: 20, tags: [] }) },
-      { type: 'upsert', data: createEn({ name: 'B', value: 25, tags: [] }) },
-    ])
+    await repo.methods.batch(
+      [
+        { type: 'upsert', data: createEn({ name: 'C', value: 30, tags: [] }) },
+        { type: 'upsert', data: createEn({ name: 'A', value: 20, tags: [] }) },
+        { type: 'upsert', data: createEn({ name: 'B', value: 25, tags: [] }) },
+      ],
+      fakeIdempotencyKey(1),
+    )
 
     const s1 = await repo.methods.query(
       QueryBuilder<En>()
@@ -140,20 +153,23 @@ describe('InMemoryRepository', () => {
     beforeEach(() => {
       repo = InMemoryRepository<En>()
 
-      repo.methods.batch([
-        {
-          type: 'upsert',
-          data: createEn({ name: 'Ana', value: 28, tags: ['a', 'b'] }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({ name: 'Bruno', value: 31, tags: ['b', 'c'] }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({ name: 'Carla', value: 22, tags: ['d', 'y'] }),
-        },
-      ])
+      repo.methods.batch(
+        [
+          {
+            type: 'upsert',
+            data: createEn({ name: 'Ana', value: 28, tags: ['a', 'b'] }),
+          },
+          {
+            type: 'upsert',
+            data: createEn({ name: 'Bruno', value: 31, tags: ['b', 'c'] }),
+          },
+          {
+            type: 'upsert',
+            data: createEn({ name: 'Carla', value: 22, tags: ['d', 'y'] }),
+          },
+        ],
+        fakeIdempotencyKey(1),
+      )
     })
 
     it('should filter with == and !=', async () => {
@@ -230,20 +246,23 @@ describe('InMemoryRepository', () => {
     beforeEach(() => {
       repo = InMemoryRepository<En>()
 
-      repo.methods.batch([
-        {
-          type: 'upsert',
-          data: createEn({ name: 'Ana', value: 28, tags: ['a', 'b'] }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({ name: 'Bruno', value: 31, tags: ['b', 'c'] }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({ name: 'Carla', value: 22, tags: ['c'] }),
-        },
-      ])
+      repo.methods.batch(
+        [
+          {
+            type: 'upsert',
+            data: createEn({ name: 'Ana', value: 28, tags: ['a', 'b'] }),
+          },
+          {
+            type: 'upsert',
+            data: createEn({ name: 'Bruno', value: 31, tags: ['b', 'c'] }),
+          },
+          {
+            type: 'upsert',
+            data: createEn({ name: 'Carla', value: 22, tags: ['c'] }),
+          },
+        ],
+        fakeIdempotencyKey(1),
+      )
     })
 
     it('should filter with AND composition', async () => {
@@ -279,9 +298,13 @@ describe('InMemoryRepository', () => {
         value: 18,
         tags: [],
       }),
+      fakeIdempotencyKey(1),
     )
 
-    const second = await repo.methods.set(setName('Zoe Lang', first))
+    const second = await repo.methods.set(
+      setName('Zoe Lang', first),
+      fakeIdempotencyKey(1),
+    )
 
     expect(second.meta.created_at).toEqual(first.meta.created_at)
   })
@@ -295,6 +318,7 @@ describe('InMemoryRepository', () => {
         value: 1,
         tags: [],
       }),
+      fakeIdempotencyKey(1),
     )
 
     const res = await repo.methods.query(
@@ -308,20 +332,23 @@ describe('InMemoryRepository', () => {
   it('should upsert entities with batch operation', async () => {
     const repo = InMemoryRepository<En>()
 
-    const result = await repo.methods.batch([
-      {
-        type: 'upsert',
-        data: createEn({ name: 'Ana', value: 28, tags: [] }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({ name: 'Miguel', value: 18, tags: [] }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({ name: 'Pablo', value: 12, tags: [] }),
-      },
-    ])
+    const result = await repo.methods.batch(
+      [
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Ana', value: 28, tags: [] }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Miguel', value: 18, tags: [] }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Pablo', value: 12, tags: [] }),
+        },
+      ],
+      fakeIdempotencyKey(1),
+    )
 
     expect(result).toEqual(
       expect.objectContaining({
@@ -343,19 +370,23 @@ describe('InMemoryRepository', () => {
         value: 28,
         tags: [],
       }),
+      fakeIdempotencyKey(1),
     )
 
-    const result = await repo.methods.batch([
-      { type: 'remove', data: user.meta.id },
-      {
-        type: 'upsert',
-        data: createEn({ name: 'Miguel', value: 18, tags: [] }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({ name: 'Pablo', value: 12, tags: [] }),
-      },
-    ])
+    const result = await repo.methods.batch(
+      [
+        { type: 'remove', data: user.meta.id },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Miguel', value: 18, tags: [] }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({ name: 'Pablo', value: 12, tags: [] }),
+        },
+      ],
+      fakeIdempotencyKey(1),
+    )
 
     expect(result).toEqual(
       expect.objectContaining({

@@ -7,6 +7,7 @@
 
 export * from './audited'
 export * from './buildable'
+export * from './idempotent'
 export * from './identifiable'
 export * from './resource'
 export * from './tag'

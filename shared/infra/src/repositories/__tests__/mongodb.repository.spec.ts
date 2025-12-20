@@ -2,19 +2,29 @@ import { Filter, QueryBuilder } from '@davna/core'
 import { MongoConverter, MongoRepository } from '../mongo.repository'
 import { createEn, En, EnURI } from './fakes/fake.entity'
 import { MongoWithURIConfig } from '../mongo.repository/mongo.client.config'
+import { fakeIdempotencyKey } from './fakes/fake.idempotency.key'
 
 const converter: MongoConverter<En> = {
   to: ({
     props: { name, tags, value },
-    meta: { id, created_at, updated_at },
+    meta: { id, created_at, updated_at, _idempotency_key },
   }) => ({
     id,
-    data: { name, tags, value, created_at, updated_at },
+    data: { name, tags, value, created_at, updated_at, _idempotency_key },
   }),
-  from: ({ id, data: { name, tags, value, created_at, updated_at } }) =>
+  from: ({
+    id,
+    data: { name, tags, value, created_at, updated_at, _idempotency_key },
+  }) =>
     createEn(
       { name, value, tags },
-      { _r: 'entity', id, created_at, updated_at },
+      {
+        _r: 'entity',
+        id,
+        created_at,
+        updated_at,
+        _idempotency_key,
+      },
     ),
 }
 
@@ -42,6 +52,7 @@ describe('mongo db repository', () => {
         value: 35,
         tags: ['moda masculina', 'viagens internacionais'],
       }),
+      fakeIdempotencyKey(1),
     )
 
     const en = await repo.methods.get(entity.meta.id)
@@ -54,6 +65,7 @@ describe('mongo db repository', () => {
           created_at: expect.any(Date),
           updated_at: expect.any(Date),
           _r: 'entity',
+          _idempotency_key: fakeIdempotencyKey(1),
         },
         props: {
           name: 'Carlos',
@@ -76,7 +88,10 @@ describe('mongo db repository', () => {
       tags: ['Videogame', 'Tech', 'generative AI'],
     }
 
-    const created = await repo.methods.set(createEn(data))
+    const created = await repo.methods.set(
+      createEn(data),
+      fakeIdempotencyKey(1),
+    )
     const received = await repo.methods.get(created.meta.id)
 
     expect(received).toEqual(
@@ -86,6 +101,7 @@ describe('mongo db repository', () => {
           id: created.meta.id,
           created_at: expect.any(Date),
           updated_at: expect.any(Date),
+          _idempotency_key: fakeIdempotencyKey(1),
         }),
       }),
     )
@@ -106,48 +122,51 @@ describe('mongo db repository', () => {
 
   it('query() com paginação (limit + cursor)', async () => {
     await repo.infra.clear()
-    await repo.methods.batch([
-      {
-        type: 'upsert',
-        data: createEn({
-          name: 'Carlos',
-          value: 12,
-          tags: ['videogame', 'tecnologia', 'inteligência artificial'],
-        }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({
-          name: 'Miguel',
-          value: 42,
-          tags: ['tecnologia', 'trabalho remoto'],
-        }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({
-          name: 'Antonio',
-          value: 42,
-          tags: ['tecnologia', 'trabalho remoto'],
-        }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({
-          name: 'Michael',
-          value: 42,
-          tags: ['tecnologia', 'trabalho remoto'],
-        }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({
-          name: 'Felipe',
-          value: 42,
-          tags: ['tecnologia', 'trabalho remoto'],
-        }),
-      },
-    ])
+    await repo.methods.batch(
+      [
+        {
+          type: 'upsert',
+          data: createEn({
+            name: 'Carlos',
+            value: 12,
+            tags: ['videogame', 'tecnologia', 'inteligência artificial'],
+          }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({
+            name: 'Miguel',
+            value: 42,
+            tags: ['tecnologia', 'trabalho remoto'],
+          }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({
+            name: 'Antonio',
+            value: 42,
+            tags: ['tecnologia', 'trabalho remoto'],
+          }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({
+            name: 'Michael',
+            value: 42,
+            tags: ['tecnologia', 'trabalho remoto'],
+          }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({
+            name: 'Felipe',
+            value: 42,
+            tags: ['tecnologia', 'trabalho remoto'],
+          }),
+        },
+      ],
+      fakeIdempotencyKey(1),
+    )
 
     const list = await repo.methods.query(
       QueryBuilder()
@@ -178,24 +197,27 @@ describe('mongo db repository', () => {
 
   it('query() com where leaf (>=) mapeia para $gte', async () => {
     await repo.infra.clear()
-    await repo.methods.batch([
-      {
-        type: 'upsert',
-        data: createEn({
-          name: 'Carlos',
-          value: 35,
-          tags: ['tecnologia', 'trabalho remoto'],
-        }),
-      },
-      {
-        type: 'upsert',
-        data: createEn({
-          name: 'Miguel',
-          value: 42,
-          tags: ['tecnologia', 'ia generativa'],
-        }),
-      },
-    ])
+    await repo.methods.batch(
+      [
+        {
+          type: 'upsert',
+          data: createEn({
+            name: 'Carlos',
+            value: 35,
+            tags: ['tecnologia', 'trabalho remoto'],
+          }),
+        },
+        {
+          type: 'upsert',
+          data: createEn({
+            name: 'Miguel',
+            value: 42,
+            tags: ['tecnologia', 'ia generativa'],
+          }),
+        },
+      ],
+      fakeIdempotencyKey(1),
+    )
     const list = await repo.methods.query(
       QueryBuilder<En>()
         .orderBy([{ property: 'value', direction: 'desc' }])
@@ -270,6 +292,7 @@ describe('mongo db repository', () => {
         value: 12,
         tags: ['tecnologia', 'videogame'],
       }),
+      fakeIdempotencyKey(1),
     )
 
     const left = Filter.where('value', '<', 18)

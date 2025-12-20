@@ -4,7 +4,11 @@ import { loginValidation } from '../login.dto'
 describe('loginValidation', () => {
   it('should validate successfully and apply default user-agent', async () => {
     const request: any = {
-      metadata: {},
+      metadata: {
+        headers: {
+          'x-idempotency-key': 'idempotent',
+        },
+      },
       data: {
         email: 'test@example.com',
         password: 'secret',
@@ -24,7 +28,12 @@ describe('loginValidation', () => {
 
   it('should keep given user-agent when provided', async () => {
     const request: any = {
-      metadata: { headers: { 'user-agent': 'custom-agent' } },
+      metadata: {
+        headers: {
+          'user-agent': 'custom-agent',
+          'x-idempotency-key': 'idempotent',
+        },
+      },
       data: {
         email: 'john@doe.com',
         password: '123456',
@@ -42,7 +51,11 @@ describe('loginValidation', () => {
 
   it('should return Left when email is invalid', async () => {
     const request: any = {
-      metadata: {},
+      metadata: {
+        headers: {
+          'x-idempotency-key': 'idempotent',
+        },
+      },
       data: {
         email: 'invalid-email',
         password: 'abc',
@@ -58,7 +71,7 @@ describe('loginValidation', () => {
 
   it('should return Left when password is missing', async () => {
     const request: any = {
-      metadata: {},
+      metadata: { headers: { 'x-idempotency-key': 'idempotent' } },
       data: {
         email: 'test@example.com',
       },
@@ -71,16 +84,22 @@ describe('loginValidation', () => {
     expect(JSON.stringify(result)).toContain('password')
   })
 
-  it('should return Left when data is missing entirely', async () => {
+  it('should return Left when has no idempotency_key', async () => {
     const request: any = {
-      metadata: {},
+      metadata: { headers: {} },
     }
 
     const result = await loginValidation(request)
 
     expect(isLeft(result)).toBeTruthy()
+    expect(JSON.stringify(result)).toContain('idempotency')
+  })
 
-    expect(JSON.stringify(result)).toContain('email')
-    expect(JSON.stringify(result)).toContain('password')
+  it('should return Left when data is missing entirely', async () => {
+    const request: any = {}
+
+    const result = await loginValidation(request)
+
+    expect(isLeft(result)).toBeTruthy()
   })
 })

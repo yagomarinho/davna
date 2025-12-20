@@ -20,7 +20,10 @@ interface Env {
 export const appendSuggestion = Service<Request, Env, Suggestion>(
   ({ suggestion }) =>
     async ({ suggestions }) => {
-      const s = await suggestions.methods.set(createSuggestion({ suggestion }))
+      const s = await suggestions.methods.set(
+        createSuggestion({ suggestion }),
+        '',
+      )
       return Right(s)
     },
 )

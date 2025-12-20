@@ -5,6 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "jest",
+    "test:dtos": "jest src/dtos/",
     "test:handlers": "jest src/handlers/",
     "test:services": "jest src/services/"
   },

@@ -16,5 +16,5 @@ import { RepositoryResult } from '../types'
  */
 
 export interface RepositoryRemover {
-  (id: string): RepositoryResult<void>
+  (id: string, idempotency_key?: string): RepositoryResult<void>
 }

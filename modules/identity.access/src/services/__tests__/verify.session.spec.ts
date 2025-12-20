@@ -70,7 +70,7 @@ describe('verify session service', () => {
       expiresIn: new Date(Date.now() - dayTime),
     })
 
-    expired = await sessions.methods.set(expired)
+    expired = await sessions.methods.set(expired, '')
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
@@ -97,7 +97,7 @@ describe('verify session service', () => {
       expiresIn: new Date(Date.now() + dayTime),
     })
 
-    expired = await sessions.methods.set(expired)
+    expired = await sessions.methods.set(expired, '')
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
@@ -127,7 +127,7 @@ describe('verify session service', () => {
       refresh_token: refresh_stable,
     })
 
-    session = await sessions.methods.set(session)
+    session = await sessions.methods.set(session, '')
 
     const account = await accounts.methods.set(
       createAccount(
@@ -141,8 +141,10 @@ describe('verify session service', () => {
           _r: 'entity',
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: '',
         },
       ),
+      '',
     )
 
     const setSpy = jest.spyOn(sessions.methods, 'set')
@@ -185,7 +187,7 @@ describe('verify session service', () => {
       refresh_token: 'refresh-old',
     })
 
-    session = await sessions.methods.set(session)
+    session = await sessions.methods.set(session, '')
 
     const account = await accounts.methods.set(
       createAccount(
@@ -199,8 +201,10 @@ describe('verify session service', () => {
           _r: 'entity',
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: '',
         },
       ),
+      '',
     )
 
     const setSpy = jest.spyOn(sessions.methods, 'set')
@@ -242,7 +246,7 @@ describe('verify session service', () => {
       expiresIn: new Date(Date.now() + 5 * dayTime),
     })
 
-    session = await sessions.methods.set(session)
+    session = await sessions.methods.set(session, '')
 
     const account = await accounts.methods.set(
       createAccount(
@@ -256,8 +260,10 @@ describe('verify session service', () => {
           _r: 'entity',
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: '',
         },
       ),
+      '',
     )
 
     const setSpy = jest.spyOn(sessions.methods, 'set')

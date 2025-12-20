@@ -79,9 +79,12 @@ function applyWhereComposite<E extends Entity>(
 function applyWhereLeaf<E extends Entity>(where: WhereLeaf<E>, entity: E) {
   const { fieldname, operator, value } = where.value
 
-  const key: 'meta' | 'props' = ['id', 'created_at', 'updated_at'].includes(
-    fieldname as any,
-  )
+  const key: 'meta' | 'props' = [
+    'id',
+    'created_at',
+    'updated_at',
+    '_idempotency_key',
+  ].includes(fieldname as any)
     ? 'meta'
     : 'props'
 

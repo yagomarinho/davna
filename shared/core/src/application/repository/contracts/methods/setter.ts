@@ -18,5 +18,5 @@ import { RepositoryResult } from '../types'
  */
 
 export interface RepositorySetter<E extends Entity> {
-  (entity: DraftEntity<E>): RepositoryResult<E>
+  (entity: DraftEntity<E>, idempotency_key: string): RepositoryResult<E>
 }

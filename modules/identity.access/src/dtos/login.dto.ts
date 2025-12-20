@@ -11,6 +11,7 @@ import { object, string, ValidationError } from 'yup'
 const metadataSchema = object({
   headers: object({
     'user-agent': string().default('anonymous').optional(),
+    'x-idempotency-key': string().required(),
   }),
 })
 

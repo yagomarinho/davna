@@ -39,6 +39,7 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
+      idempotency_key: 'idempotent',
     })({ signer, sessions, accounts, config })
 
     expect(isLeft(result)).toBeTruthy()
@@ -53,13 +54,14 @@ describe('refresh session service', () => {
       expiresIn: new Date(Date.now() - dayTime),
     })
 
-    expired = await sessions.methods.set(expired)
+    expired = await sessions.methods.set(expired, '')
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
+      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(removeSpy).toHaveBeenCalledWith(expired.meta!.id)
@@ -75,13 +77,14 @@ describe('refresh session service', () => {
       expiresIn: new Date(Date.now() + 2000),
     })
 
-    expired = await sessions.methods.set(expired)
+    expired = await sessions.methods.set(expired, '')
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
+      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(removeSpy).toHaveBeenCalledWith(expired.meta!.id)
@@ -97,7 +100,7 @@ describe('refresh session service', () => {
       refresh_token: stable_refresh,
       expiresIn: new Date(Date.now() + 3 * dayTime),
     })
-    session = await sessions.methods.set(session)
+    session = await sessions.methods.set(session, '')
 
     const account = await accounts.methods.set(
       createAccount(
@@ -111,8 +114,10 @@ describe('refresh session service', () => {
           _r: 'entity',
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: '',
         },
       ),
+      'idempotent',
     )
 
     const querySpy = jest.spyOn(sessions.methods, 'query')
@@ -124,6 +129,7 @@ describe('refresh session service', () => {
     const result: any = await refreshSession({
       signature: stable_refresh,
       user_agent,
+      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(setSpy).not.toHaveBeenCalled()
@@ -164,7 +170,7 @@ describe('refresh session service', () => {
       expiresIn: expSoon,
     })
 
-    session = await sessions.methods.set(session)
+    session = await sessions.methods.set(session, '')
 
     const account = await accounts.methods.set(
       createAccount(
@@ -178,8 +184,10 @@ describe('refresh session service', () => {
           _r: 'entity',
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: '',
         },
       ),
+      'idempotent',
     )
 
     const setSpy = jest.spyOn(sessions.methods, 'set')
@@ -192,6 +200,7 @@ describe('refresh session service', () => {
     const result: any = await refreshSession({
       signature: 'old.refresh',
       user_agent,
+      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(setSpy).toHaveBeenCalled()
@@ -231,10 +240,32 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
+      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(spy).toHaveBeenCalled()
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
+  })
+
+  it('should return Left when try to refresh token with same idempotency key', async () => {
+    await sessions.methods.set(
+      createSession({
+        account_id,
+        user_agent: 'Old-UA',
+        refresh_token: refresh_signature,
+        expiresIn: new Date(Date.now() + 3 * dayTime),
+      }),
+      'idempotent',
+    )
+
+    const result = await refreshSession({
+      signature: refresh_signature,
+      user_agent,
+      idempotency_key: 'idempotent',
+    })({ signer, accounts, sessions, config })
+
+    expect(isLeft(result)).toBeTruthy()
+    expect(JSON.stringify(result)).toContain('Already done')
   })
 })

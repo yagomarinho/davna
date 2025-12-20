@@ -37,6 +37,7 @@ describe('login with credentials service', () => {
       email: 'john@doe.com',
       password: '1234',
       user_agent: 'device',
+      idempotency_key: 'idempotent',
     }
 
     ;(signer.sign as jest.Mock).mockReturnValue(expected.token)
@@ -70,6 +71,7 @@ describe('login with credentials service', () => {
           _r: 'entity',
           created_at: expect.any(Date),
           updated_at: expect.any(Date),
+          _idempotency_key: 'idempotent',
         },
       }),
       token: {
@@ -90,6 +92,7 @@ describe('login with credentials service', () => {
       email: 'john@doe.com',
       password: '1234',
       user_agent: 'device',
+      idempotency_key: 'idempotent',
     }
 
     const external_ref = 'external_ref'
@@ -103,6 +106,7 @@ describe('login with credentials service', () => {
 
     const account = await accounts.methods.set(
       createAccount({ external_ref, name: 'john', roles: [] }),
+      'idempotent',
     )
 
     const result = await loginWithCredentials(credentials)({
@@ -139,6 +143,7 @@ describe('login with credentials service', () => {
       email: 'john@doe.com',
       password: '1234',
       user_agent: 'device',
+      idempotency_key: 'idempotent',
     }
 
     const result = await loginWithCredentials(credentials)({
@@ -155,5 +160,44 @@ describe('login with credentials service', () => {
     })
 
     expect(isLeft(result)).toBeTruthy()
+  })
+
+  it('should not be able to login with same idempotency key twice', async () => {
+    const expected = { token: 'token', refresh_token: 'refresh_token' }
+
+    const credentials = {
+      email: 'john@doe.com',
+      password: '1234',
+      user_agent: 'device',
+      idempotency_key: 'idempotent',
+    }
+
+    ;(signer.sign as jest.Mock).mockReturnValue(expected.token)
+    ;(signer.sign as jest.Mock).mockReturnValueOnce(expected.refresh_token)
+    ;(auth.authenticate as jest.Mock).mockReturnValue({
+      id: 'external_ref',
+      name: 'john',
+    })
+
+    const resultRight = await loginWithCredentials(credentials)({
+      signer,
+      auth,
+      accounts,
+      sessions,
+      config,
+    })
+
+    expect(isRight(resultRight)).toBeTruthy()
+
+    const resultLeft = await loginWithCredentials(credentials)({
+      signer,
+      auth,
+      accounts,
+      sessions,
+      config,
+    })
+
+    expect(isLeft(resultLeft)).toBeTruthy()
+    expect(JSON.stringify(resultLeft.value)).toContain('Already done')
   })
 })

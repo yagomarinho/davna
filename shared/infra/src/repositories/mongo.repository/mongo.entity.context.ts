@@ -5,25 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { EntityContext, isEntity } from '@davna/core'
+import { DraftEntity, Entity, EntityContext, isEntity } from '@davna/core'
 import { concatenate } from '@davna/kernel'
 
-/**
- * Creates a fake `EntityContext` for testing or development purposes.
- *
- * - Generates simple incrementing IDs for entities
- * - Sets `created_at` and `updated_at` to the current timestamp
- * - Provides a basic `isValid` check using `isEntity`
- *
- * Useful for scenarios where a real `EntityContext` is not available,
- * such as unit tests or local development mocks.
- */
+function isValidObjectId(id) {
+  return /^[a-fA-F0-9]{24}$/.test(id)
+}
 
-export function createEntityContext(): EntityContext {
-  let n = 0
-
-  const validateEntity: EntityContext['validateEntity'] = entity =>
-    isEntity(entity)
+export function mongoEntityContext(): EntityContext {
+  const validateEntity: EntityContext['validateEntity'] = <E extends Entity>(
+    entity: DraftEntity<E>,
+  ): entity is E => isEntity(entity) && isValidObjectId(entity.meta.id)
 
   const createMeta: EntityContext['createMeta'] = ({
     id,
@@ -33,7 +25,7 @@ export function createEntityContext(): EntityContext {
   }) => {
     const now = new Date()
     return {
-      id: id ?? (n++).toString(),
+      id: id ?? '',
       _r: 'entity',
       created_at: created_at ?? now,
       updated_at: updated_at ?? now,
@@ -41,10 +33,12 @@ export function createEntityContext(): EntityContext {
     }
   }
 
-  const declareEntity: EntityContext['declareEntity'] = async (
-    entity,
-    idempotency_key,
-  ) =>
+  const declareEntity: EntityContext['declareEntity'] = async <
+    E extends Entity,
+  >(
+    entity: DraftEntity<E>,
+    idempotency_key: string,
+  ): Promise<E> =>
     entity._b(
       entity.props,
       await createMeta(
@@ -56,7 +50,7 @@ export function createEntityContext(): EntityContext {
 
   return {
     declareEntity,
-    createMeta,
     validateEntity,
+    createMeta,
   }
 }

@@ -15,6 +15,7 @@ describe('appendLead Service', () => {
 
     expect(setSpy).toHaveBeenCalledWith(
       expect.objectContaining({ props: { lead: '21999998888' } }),
+      '',
     )
 
     expect(result.value).toEqual(

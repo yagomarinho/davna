@@ -1,6 +1,5 @@
-import type { Signer } from '@davna/infra'
 import { Left, Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/infra'
+import { InMemoryRepository, type Signer } from '@davna/infra'
 
 import { Session } from '../../entities/session'
 import { refreshSessionHandler } from '../refresh.session.handler'
@@ -66,6 +65,7 @@ describe('refreshSessionHandler', () => {
         headers: {
           'user-agent': user_agent,
           'x-refresh-authorization': bearer,
+          'x-idempotency-key': 'idempotent',
         },
       },
     })
@@ -99,6 +99,7 @@ describe('refreshSessionHandler', () => {
         headers: {
           'user-agent': user_agent,
           'x-refresh-authorization': bearer,
+          'x-idempotency-key': 'idempotent',
         },
       },
     })
@@ -139,6 +140,7 @@ describe('refreshSessionHandler', () => {
         headers: {
           'user-agent': user_agent,
           'x-refresh-authorization': bearer,
+          'x-idempotency-key': 'idempotent',
         },
       },
     })

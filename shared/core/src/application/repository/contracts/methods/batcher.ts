@@ -19,5 +19,5 @@ import { RepositoryResult } from '../types'
  */
 
 export interface RepositoryBatcher<E extends Entity> {
-  (b: Batch<E>): RepositoryResult<BatchResult>
+  (b: Batch<E>, idempotency_key: string): RepositoryResult<BatchResult>
 }

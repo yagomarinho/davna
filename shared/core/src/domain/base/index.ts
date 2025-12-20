@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export * from './context'
 export * from './entity'
-export * from './entity.context'
 export * from './meta'
 export * from './value.object'

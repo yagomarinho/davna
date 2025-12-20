@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './entities.of'
-export * from './fed.config'
-export * from './repo.initializer'
-export * from './repository.pool'
+export function fakeIdempotencyKey(seed: string | number = 1): string {
+  return `idem_${String(seed).padStart(6, '0')}`
+}

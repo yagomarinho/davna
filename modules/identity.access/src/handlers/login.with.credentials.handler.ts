@@ -27,11 +27,13 @@ export const loginWithCredentialsHandler = Handler(
     async ({ accounts, sessions, auth, signer, config }: Env) => {
       const { email, password } = request.data
       const user_agent: string = request.metadata.headers['user-agent']
+      const idempotency_key = request.metadata.headers['x-idempotency-key']
 
       const result = await loginWithCredentials({
         email,
         password,
         user_agent,
+        idempotency_key,
       })({
         accounts,
         sessions,

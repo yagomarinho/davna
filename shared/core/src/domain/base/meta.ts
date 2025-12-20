@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Auditable, Identifiable, Resource } from '../composition'
+import { Auditable, Idempotent, Identifiable, Resource } from '../composition'
 
 export const EntityURI = 'entity'
 export type EntityURI = typeof EntityURI
@@ -17,4 +17,4 @@ export type EntityURI = typeof EntityURI
  * and resource discrimination.
  */
 export interface EntityMeta
-  extends Resource<EntityURI>, Identifiable, Auditable {}
+  extends Resource<EntityURI>, Identifiable, Auditable, Idempotent {}

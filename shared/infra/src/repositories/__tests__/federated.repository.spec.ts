@@ -6,6 +6,7 @@ import { FederatedRepository, IDContext } from '../federated.repository'
 
 import { createUser, User, UserURI } from './fakes/fake.user'
 import { createOrder, Order, OrderURI } from './fakes/fake.order'
+import { fakeIdempotencyKey } from './fakes/fake.idempotency.key'
 
 describe('FederatedRepository', () => {
   let userRepo: Repository<User>
@@ -59,20 +60,29 @@ describe('FederatedRepository', () => {
       props: { entity_tag: UserURI },
     } as any)
 
-    const user = await repo.methods.set(createUser({ name: 'Ana' }))
+    const user = await repo.methods.set(
+      createUser({ name: 'Ana' }),
+      fakeIdempotencyKey(1),
+    )
 
     IDContext.getIDEntity.mockResolvedValueOnce({
       props: { entity_tag: OrderURI },
     } as any)
 
-    const order = await repo.methods.set(createOrder({ value: 100 }))
+    const order = await repo.methods.set(
+      createOrder({ value: 100 }),
+      fakeIdempotencyKey(1),
+    )
 
     expect(await repo.methods.get(user.meta.id)).toEqual(user)
     expect(await repo.methods.get(order.meta.id)).toEqual(order)
   })
 
   it('should resolve repository on get() using IDContext', async () => {
-    const user = await repo.methods.set(createUser({ name: 'Ana' }))
+    const user = await repo.methods.set(
+      createUser({ name: 'Ana' }),
+      fakeIdempotencyKey(1),
+    )
 
     IDContext.getIDEntity.mockResolvedValue(
       createID(
@@ -84,6 +94,7 @@ describe('FederatedRepository', () => {
           _r: 'entity',
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: fakeIdempotencyKey(1),
         },
       ),
     )
@@ -102,7 +113,10 @@ describe('FederatedRepository', () => {
   })
 
   it('should remove entity from the correct repository based on id', async () => {
-    const user = await repo.methods.set(createUser({ name: 'Ana' }))
+    const user = await repo.methods.set(
+      createUser({ name: 'Ana' }),
+      fakeIdempotencyKey(1),
+    )
 
     IDContext.getIDEntity.mockResolvedValue(
       createID(
@@ -114,6 +128,7 @@ describe('FederatedRepository', () => {
           _r: 'entity',
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: fakeIdempotencyKey(1),
         },
       ),
     )
@@ -126,8 +141,14 @@ describe('FederatedRepository', () => {
   })
 
   it('should aggregate query results from all repositories when no tag is provided', async () => {
-    const user = await repo.methods.set(createUser({ name: 'Ana' }))
-    const order = await repo.methods.set(createOrder({ value: 100 }))
+    const user = await repo.methods.set(
+      createUser({ name: 'Ana' }),
+      fakeIdempotencyKey(1),
+    )
+    const order = await repo.methods.set(
+      createOrder({ value: 100 }),
+      fakeIdempotencyKey(1),
+    )
 
     const result = await repo.methods.query()
 
@@ -138,8 +159,14 @@ describe('FederatedRepository', () => {
   })
 
   it('should query only the specified repository when tag is provided', async () => {
-    const user = await userRepo.methods.set(createUser({ name: 'Ana' }))
-    await orderRepo.methods.set(createOrder({ value: 100 }))
+    const user = await userRepo.methods.set(
+      createUser({ name: 'Ana' }),
+      fakeIdempotencyKey(1),
+    )
+    await orderRepo.methods.set(
+      createOrder({ value: 100 }),
+      fakeIdempotencyKey(1),
+    )
 
     const result = await repo.methods.query(QueryBuilder().build(), UserURI)
 
@@ -151,18 +178,27 @@ describe('FederatedRepository', () => {
   })
 
   it('should group batch operations by tag and execute them in the correct repositories', async () => {
-    const user = await userRepo.methods.set(createUser({ name: 'Ana' }))
-    await orderRepo.methods.set(createOrder({ value: 100 }))
+    const user = await userRepo.methods.set(
+      createUser({ name: 'Ana' }),
+      fakeIdempotencyKey(1),
+    )
+    await orderRepo.methods.set(
+      createOrder({ value: 100 }),
+      fakeIdempotencyKey(1),
+    )
 
     IDContext.getIDEntity.mockImplementation(async (id): Promise<any> => {
       if (id === user.meta.id) return { props: { entity_tag: UserURI } }
       return undefined
     })
 
-    const result = await repo.methods.batch([
-      { type: 'remove', data: user.meta.id },
-      { type: 'upsert', data: createOrder({ value: 200 }) },
-    ])
+    const result = await repo.methods.batch(
+      [
+        { type: 'remove', data: user.meta.id },
+        { type: 'upsert', data: createOrder({ value: 200 }) },
+      ],
+      fakeIdempotencyKey(1),
+    )
 
     expect(result).toEqual(
       expect.objectContaining({
@@ -181,9 +217,10 @@ describe('FederatedRepository', () => {
       time: new Date(),
     })
 
-    const result = await repo.methods.batch([
-      { type: 'upsert', data: createOrder({ value: 100 }) },
-    ])
+    const result = await repo.methods.batch(
+      [{ type: 'upsert', data: createOrder({ value: 100 }) }],
+      fakeIdempotencyKey(1),
+    )
 
     expect(result).toEqual(
       expect.objectContaining({
@@ -200,8 +237,8 @@ describe('FederatedRepository', () => {
       props: {},
     }
 
-    await expect(repo.methods.set(invalid)).rejects.toThrow(
-      'No repository registered for tag "invalid"',
-    )
+    await expect(
+      repo.methods.set(invalid, fakeIdempotencyKey(1)),
+    ).rejects.toThrow('No repository registered for tag "invalid"')
   })
 })

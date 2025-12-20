@@ -1,6 +1,5 @@
-import type { Auth, Signer } from '@davna/infra'
 import { Left, Repository, Request } from '@davna/core'
-import { InMemoryRepository } from '@davna/infra'
+import { InMemoryRepository, type Auth, type Signer } from '@davna/infra'
 
 import { Account } from '../../entities/account'
 import { Session } from '../../entities/session'
@@ -51,7 +50,12 @@ describe('loginWithCredentialsHandler', () => {
   it('should return 401 Response when loginWithCredentials service returns Left (unauthorized)', async () => {
     const req = Request({
       data: { email, password },
-      metadata: { headers: { 'user-agent': user_agent } },
+      metadata: {
+        headers: {
+          'user-agent': user_agent,
+          'x-idempotency-key': 'idempotent',
+        },
+      },
     })
 
     loginWithCredentials.mockImplementationOnce(
@@ -84,7 +88,12 @@ describe('loginWithCredentialsHandler', () => {
   it('should return Response.data with payload when loginWithCredentials service returns Right', async () => {
     const req = Request({
       data: { email, password },
-      metadata: { headers: { 'user-agent': user_agent } },
+      metadata: {
+        headers: {
+          'user-agent': user_agent,
+          'x-idempotency-key': 'idempotent',
+        },
+      },
     })
 
     const servicePayload = {

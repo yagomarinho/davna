@@ -22,24 +22,31 @@ export function GSRepoEntityContext({
   const validateEntity: EntityContext['validateEntity'] = entity =>
     isEntity(entity)
 
-  const createMeta: EntityContext['createMeta'] = async () => {
+  const createMeta: EntityContext['createMeta'] = async ({
+    id,
+    created_at,
+    updated_at,
+    idempotency_key,
+  }) => {
     const auth = await GCPAuth(credentials)
-    // buscar quantas linhas existem no google sheets
-
     const now = new Date()
-
     return {
-      id: (await getRowsCount(auth, spreadsheetId, range)).toString(),
+      // buscar quantas linhas existem no google sheets
+      id: id ?? (await getRowsCount(auth, spreadsheetId, range)).toString(),
       _r: 'entity',
-      created_at: now,
-      updated_at: now,
+      created_at: created_at ?? now,
+      updated_at: updated_at ?? now,
+      _idempotency_key: idempotency_key,
     }
   }
 
-  const declareEntity: EntityContext['declareEntity'] = async entity =>
+  const declareEntity: EntityContext['declareEntity'] = async (
+    entity,
+    idempotency_key,
+  ) =>
     validateEntity(entity)
       ? entity
-      : (entity._b(entity.props, await createMeta()) as any)
+      : (entity._b(entity.props, await createMeta({ idempotency_key })) as any)
 
   return {
     createMeta,

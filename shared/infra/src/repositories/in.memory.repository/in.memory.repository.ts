@@ -6,10 +6,8 @@
  */
 
 import {
-  Batch,
   Entity,
   Repository,
-  BatchResult,
   EntityContext,
   QueryBuilder,
   ExtractEntityTag,
@@ -64,14 +62,19 @@ export function InMemoryRepository<E extends Entity>({
   const get: Repository<E>['methods']['get'] = id =>
     repo.find(el => el.meta.id === id)
 
-  const set: Repository<E>['methods']['set'] = async entity => {
-    const e = await entityContext.declareEntity(entity)
+  const set: Repository<E>['methods']['set'] = async (
+    entity,
+    idempontecy_key,
+  ) => {
+    const e = await entityContext.declareEntity(entity, idempontecy_key)
 
     repo = repo.filter(el => el.meta.id !== e.meta.id).concat(e)
 
     return e
   }
 
+  // idempontecy key makes no difference for hard remove operation
+  // but kept for interface consistency and for global id contexts
   const remove: Repository<E>['methods']['remove'] = id => {
     repo = repo.filter(el => el.meta.id !== id)
   }
@@ -97,7 +100,10 @@ export function InMemoryRepository<E extends Entity>({
     return r
   }
 
-  const batch = async (b: Batch<E>): Promise<BatchResult> => {
+  const batch: Repository<E>['methods']['batch'] = async (
+    b,
+    idempontecy_key,
+  ) => {
     const toRemoveId = b
       .filter(item => item.type === 'remove')
       .map(item => item.data)
@@ -107,7 +113,10 @@ export function InMemoryRepository<E extends Entity>({
     const entities = await Promise.all(
       b
         .filter(item => item.type === 'upsert')
-        .map(async el => await entityContext.declareEntity(el.data)),
+        .map(
+          async el =>
+            await entityContext.declareEntity(el.data, idempontecy_key),
+        ),
     )
 
     const entities_id = entities.map(en => en.meta.id)

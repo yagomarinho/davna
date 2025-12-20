@@ -7,20 +7,13 @@
 
 import { Collection, Document, MongoClient, MongoClientOptions } from 'mongodb'
 
-import {
-  DraftEntity,
-  Entity,
-  EntityContext,
-  isEntity,
-  QueryBuilder,
-  Repository,
-  RepositoryResult,
-} from '@davna/core'
+import { Entity, QueryBuilder, Repository, RepositoryResult } from '@davna/core'
 
 import { MongoClientConfig, MongoWithURIConfig } from './mongo.client.config'
 import { CONNECTION_STATUS } from './connection.status'
 import { fromDocument, isConnected, mongoId, toDocument } from './helpers'
 import { applySorts, whereAdaptToFindQuery } from './query'
+import { mongoEntityContext } from './mongo.entity.context'
 
 /**
  * Resource identifier for MongoDB repositories.
@@ -143,8 +136,8 @@ export function MongoRepository<E extends Entity>({
   )
 
   const set = verifyConnectionProxy<Repository<E>['methods']['set']>(
-    async entity => {
-      const e = await entityContext.declareEntity(entity)
+    async (entity, idempontecy_key) => {
+      const e = await entityContext.declareEntity(entity, idempontecy_key)
 
       const { _id, ...props } = toDocument(converter.to(e))
 
@@ -165,6 +158,8 @@ export function MongoRepository<E extends Entity>({
     },
   )
 
+  // idempontecy key makes no difference for hard remove operation
+  // but kept for interface consistency and for global id contexts
   const remove = verifyConnectionProxy<Repository<E>['methods']['remove']>(
     async id => {
       await coll.deleteOne({ _id: mongoId(id) })
@@ -197,7 +192,7 @@ export function MongoRepository<E extends Entity>({
   )
 
   const batch = verifyConnectionProxy<Repository<E>['methods']['batch']>(
-    async b => {
+    async (b, idempontecy_key) => {
       const bulk = await Promise.all(
         b.map(async item => {
           if (item.type === 'remove')
@@ -207,7 +202,10 @@ export function MongoRepository<E extends Entity>({
               },
             }
 
-          const e = await entityContext.declareEntity(item.data)
+          const e = await entityContext.declareEntity(
+            item.data,
+            idempontecy_key,
+          )
 
           const { _id, ...props } = toDocument(converter.to(e))
 
@@ -269,37 +267,5 @@ export function MongoRepository<E extends Entity>({
       disconnect,
       clear,
     },
-  }
-}
-
-function isValidObjectId(id) {
-  return /^[a-fA-F0-9]{24}$/.test(id)
-}
-
-function mongoEntityContext(): EntityContext {
-  const validateEntity: EntityContext['validateEntity'] = <E extends Entity>(
-    entity: DraftEntity<E>,
-  ): entity is E => isEntity(entity) && isValidObjectId(entity.meta.id)
-
-  const createMeta: EntityContext['createMeta'] = () => ({
-    id: '',
-    _r: 'entity',
-    created_at: new Date(),
-    updated_at: new Date(),
-  })
-
-  const declareEntity: EntityContext['declareEntity'] = async <
-    E extends Entity,
-  >(
-    entity: DraftEntity<E>,
-  ): Promise<E> =>
-    validateEntity(entity)
-      ? entity
-      : (entity._b(entity.props, await createMeta()) as any)
-
-  return {
-    declareEntity,
-    validateEntity,
-    createMeta,
   }
 }

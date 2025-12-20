@@ -89,7 +89,7 @@ export const verifySession = Service<Request, Env, TokenResponse>(
             session.meta,
           )
 
-          session = await sessions.methods.set(session)
+          session = await sessions.methods.set(session, '')
 
           token = signer.sign({
             subject: session.meta.id,
@@ -119,7 +119,7 @@ export const verifySession = Service<Request, Env, TokenResponse>(
               session.meta,
             )
 
-            session = await sessions.methods.set(session)
+            session = await sessions.methods.set(session, '')
           }
 
           token = signer.sign({

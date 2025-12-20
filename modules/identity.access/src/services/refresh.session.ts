@@ -14,6 +14,7 @@ import { Account, createSession, Session } from '../entities'
 interface Request {
   signature: string
   user_agent: string
+  idempotency_key: string
 }
 
 interface Token {
@@ -34,9 +35,18 @@ interface Env {
 }
 
 export const refreshSession = Service<Request, Env, TokenResponse>(
-  ({ signature, user_agent }: Request) =>
+  ({ signature, user_agent, idempotency_key }: Request) =>
     async ({ signer, sessions, accounts, config }: Env) => {
       try {
+        const [alreadyDone] = await sessions.methods.query(
+          QueryBuilder()
+            .filterBy('_idempotency_key', '==', idempotency_key)
+            .build(),
+        )
+
+        if (alreadyDone)
+          return Left({ status: 'error', message: 'Already done' })
+
         const now = new Date()
         let [session] = await sessions.methods.query(
           QueryBuilder().filterBy('refresh_token', '==', signature).build(),
@@ -84,7 +94,7 @@ export const refreshSession = Service<Request, Env, TokenResponse>(
             session.meta,
           )
 
-          session = await sessions.methods.set(session)
+          session = await sessions.methods.set(session, idempotency_key)
         }
 
         token = signer.sign({

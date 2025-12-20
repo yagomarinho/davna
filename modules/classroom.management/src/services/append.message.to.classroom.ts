@@ -7,10 +7,6 @@
 
 import { Left, Repository, Right, Service } from '@davna/core'
 
-import { Audio } from '../entities/audio'
-import { Classroom } from '../entities/classroom'
-import { Message } from '../entities/message'
-
 import { MessageHandler } from '../utils/message.handler'
 import { StorageConstructor } from '../utils/storage'
 
@@ -24,9 +20,7 @@ interface Request {
 }
 
 interface Env {
-  audios: Repository<Audio>
-  classrooms: Repository<Classroom>
-  messages: Repository<Message>
+  graph: Graph
   messageHandler: MessageHandler
   storage: StorageConstructor
 }
@@ -45,7 +39,7 @@ export const appendMessageToClassroom = Service<Request, Env, Response>(
     translation,
     data,
   }) =>
-    async ({ audios, classrooms, messages, messageHandler, storage }) => {
+    async ({ graph, messageHandler, storage }) => {
       let classroom = await classrooms.get(classroom_id)
 
       if (!classroom)

@@ -59,10 +59,13 @@ export function GoogleSheetsRepository<E extends Entity>({
     ],
   })
 
-  const set: Repository<E>['methods']['set'] = async entity => {
+  const set: Repository<E>['methods']['set'] = async (
+    entity,
+    idempotency_key,
+  ) => {
     const sheets = google.sheets({ version: 'v4', auth })
 
-    const e = await entityContext.declareEntity(entity)
+    const e = await entityContext.declareEntity(entity, idempotency_key)
     const requestBody = {
       values: [serializeEntity(e)],
     }

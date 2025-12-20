@@ -36,7 +36,7 @@ describe('revoke session service', () => {
       expiresIn: new Date(Date.now() - dayTime),
     })
 
-    expired = await sessions.methods.set(expired)
+    expired = await sessions.methods.set(expired, '')
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
@@ -58,7 +58,7 @@ describe('revoke session service', () => {
       expiresIn: new Date(Date.now() + 3 * dayTime),
     })
 
-    active = await sessions.methods.set(active)
+    active = await sessions.methods.set(active, '')
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
@@ -80,7 +80,7 @@ describe('revoke session service', () => {
       refresh_token: 'refresh',
       expiresIn: new Date(Date.now() + dayTime),
     })
-    session = await sessions.methods.set(session)
+    session = await sessions.methods.set(session, '')
 
     const first = await revokeSession({ session_id: session.meta!.id })({
       sessions,

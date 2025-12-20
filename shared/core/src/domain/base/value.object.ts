@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@davna/kernel'
-import { Resource, Tag, verifyResource } from '../composition'
+import { Idempotent, Resource, Tag, verifyResource } from '../composition'
 
 /**
  * Resource identifier for value objects.
@@ -24,7 +24,7 @@ export type ValueObjectURI = typeof ValueObjectURI
  * only a resource discriminator.
  */
 
-export interface ValueObjectMeta extends Resource<ValueObjectURI> {}
+export interface ValueObjectMeta extends Resource<ValueObjectURI>, Idempotent {}
 
 /**
  * Core Value Object contract.
@@ -43,6 +43,10 @@ export interface ValueObject<
   props: Readonly<P>
 }
 
+interface CreateValueObjectMetaParams {
+  idempotency_key: string
+}
+
 /**
  * Creates metadata for a value object.
  *
@@ -50,9 +54,12 @@ export interface ValueObject<
  * solely to provide a resource discriminator.
  */
 
-function createValueObjectMeta(): ValueObjectMeta {
+function createValueObjectMeta({
+  idempotency_key,
+}: CreateValueObjectMetaParams): ValueObjectMeta {
   return {
     _r: ValueObjectURI,
+    _idempotency_key: idempotency_key,
   }
 }
 
@@ -65,12 +72,13 @@ function createValueObjectMeta(): ValueObjectMeta {
 
 export function ValueObject<P extends {}, T extends string>(
   props: P,
+  idempotency_key: string,
   tag: T,
 ): ValueObject<P, T> {
   return {
     _t: tag,
     props,
-    meta: createValueObjectMeta(),
+    meta: createValueObjectMeta({ idempotency_key }),
   }
 }
 

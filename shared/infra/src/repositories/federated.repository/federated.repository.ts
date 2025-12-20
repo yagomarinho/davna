@@ -5,63 +5,92 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type {
+  EntitiesOf,
+  FedConfig,
+  RepoInitilizer,
+  RepositoryPool,
+} from './contracts'
+
 import {
   Batch,
   BatchItem,
   DraftEntity,
   Entity,
-  EntityOf,
   ExtractEntityTag,
   ExtractSearchablePropertiesFromEntity,
   Query,
   Repository,
-  RepositoryResult,
   Resolvable,
   Tag,
 } from '@davna/core'
-import { FedConfig, RepoInitilizer } from './contracts'
+import { FederatedRemover, FederatedSearcher, FederatedSetter } from './methods'
 
+/*
+ * Federated repository URI.
+ *
+ * Identifies the federated repository implementation
+ * within the repository resolution system.
+ */
 export const FedetaredURI = 'federated.repository'
 export type FedetaredURI = typeof FedetaredURI
 
-type RepoMap<E extends Entity> = Map<string, Repository<E>>
-
-type EntitiesOf<
-  U extends RepoInitilizer<any>[],
-  E extends Entity = never,
-> = 0 extends U['length']
-  ? U extends (infer F)[]
-    ? F extends RepoInitilizer<infer T>
-      ? T
-      : never
-    : never
-  : U extends [infer First, ...infer Rest]
-    ? First extends RepoInitilizer<infer F>
-      ? Rest extends RepoInitilizer<F>[]
-        ? EntitiesOf<Rest, E | F>
-        : never
-      : never
-    : never
-
-interface FederatedQueryMethod<E extends Entity> {
-  (): RepositoryResult<E[]>
-  (
-    query: Query<ExtractSearchablePropertiesFromEntity<E>>,
-  ): RepositoryResult<E[]>
-  <F extends ExtractEntityTag<E> = ExtractEntityTag<E>>(
-    q: Query<ExtractSearchablePropertiesFromEntity<EntityOf<F>>>,
-    tag: F,
-  ): RepositoryResult<EntityOf<F>[]>
-}
+/**
+ * Federated repository contract.
+ *
+ * Represents a repository abstraction that operates
+ * over one or more federated data sources.
+ *
+ * This repository:
+ * - preserves the standard repository read/write surface
+ * - replaces core mutation and query operations with
+ *   federated-capable counterparts
+ * - is identified by a dedicated repository URI
+ *
+ * The concrete federation model (routing, aggregation,
+ * replication, consistency or conflict resolution)
+ * is intentionally left to the implementation.
+ *
+ * - E: base entity type managed by the repository
+ * - T: tag used to identify concrete entity variants
+ */
 
 export interface FederatedRepository<
   E extends Entity,
   T extends string = string,
 >
   extends Omit<Repository<E, FedetaredURI>, '_t'>, Tag<T> {
+  /**
+   * Federated repository methods.
+   *
+   * Overrides selected repository operations with
+   * federated-aware variants while preserving the
+   * remaining repository surface.
+   */
   methods: Omit<Repository<E>['methods'], 'set' | 'query'> & {
-    set: <F extends E>(entity: DraftEntity<F>) => RepositoryResult<F>
-    query: FederatedQueryMethod<E>
+    /**
+     * Federated write operation.
+     *
+     * Persists or propagates entity drafts across
+     * federated targets using idempotent semantics.
+     */
+    set: FederatedSetter<E>
+
+    /**
+     * Federated remove operation.
+     *
+     * Removes entities across federated targets
+     * using idempotent semantics.
+     */
+    remove: FederatedRemover
+
+    /**
+     * Federated query operation.
+     *
+     * Executes read operations across federated
+     * sources with optional scoping and tagging.
+     */
+    query: FederatedSearcher<E>
   }
 }
 
@@ -73,7 +102,7 @@ export function FederatedRepository<
   repositories,
   tag,
 }: FedConfig<U, T>): FederatedRepository<EntitiesOf<U>> {
-  const repoByTag: RepoMap<EntitiesOf<U>> = new Map(
+  const repoByTag: RepositoryPool<EntitiesOf<U>> = new Map(
     repositories.map(init => {
       const repo = init({ entityContext: IDContext })
       return [repo._t, repo]
@@ -95,20 +124,21 @@ export function FederatedRepository<
     F extends EntitiesOf<U>,
   >(
     entity: DraftEntity<F>,
+    idempontecy_key: string,
   ) => {
     const repo = resolveRepo(entity._t)
-    return repo.methods.set(entity) as F
+    return repo.methods.set(entity, idempontecy_key) as F
   }
 
   const remove: FederatedRepository<
     EntitiesOf<U>
-  >['methods']['remove'] = async id => {
+  >['methods']['remove'] = async (id, idempontecy_key) => {
     const idEntity = await IDContext.getIDEntity(id)
     if (!idEntity) return
 
     const repo = resolveRepo(idEntity.props.entity_tag)
 
-    await repo.methods.remove(id)
+    await repo.methods.remove(id, idempontecy_key)
   }
 
   const query: FederatedRepository<EntitiesOf<U>>['methods']['query'] = async <
@@ -128,10 +158,11 @@ export function FederatedRepository<
     return results.flat() as EntitiesOf<U>[]
   }
 
-  const batch: FederatedRepository<
-    EntitiesOf<U>
-  >['methods']['batch'] = async batch => {
-    const orderedBatch = await batch.reduce(
+  const batch: FederatedRepository<EntitiesOf<U>>['methods']['batch'] = async (
+    b,
+    idempotency_key,
+  ) => {
+    const orderedBatch = await b.reduce(
       async (acc, item) => {
         if (item.type === 'upsert') {
           if (acc instanceof Promise) {
@@ -159,10 +190,10 @@ export function FederatedRepository<
     )
 
     const results = await Promise.all(
-      [...orderedBatch.entries()].map(async ([tag, batch]) => {
+      [...orderedBatch.entries()].map(async ([tag, orderedB]) => {
         const repo = resolveRepo(tag)
         return {
-          ...(await repo.methods.batch(batch)),
+          ...(await repo.methods.batch(orderedB, idempotency_key)),
           tag,
         }
       }),

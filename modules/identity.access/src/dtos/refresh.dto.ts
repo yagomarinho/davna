@@ -17,6 +17,7 @@ export const refreshValidation = ({ refreshTokenHeader }: Options) => {
     headers: object({
       'user-agent': string().default('anonymous').optional(),
       [refreshTokenHeader]: string().default('').optional(),
+      'x-idempotency-key': string().required(),
     }),
   })
 
