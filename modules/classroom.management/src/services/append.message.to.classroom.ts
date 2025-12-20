@@ -9,6 +9,7 @@ import { Left, Repository, Right, Service } from '@davna/core'
 
 import { MessageHandler } from '../utils/message.handler'
 import { StorageConstructor } from '../utils/storage'
+import { FederatedRepository } from '@davna/infra'
 
 interface Request {
   classroom_id: string
@@ -20,7 +21,7 @@ interface Request {
 }
 
 interface Env {
-  graph: Graph
+  repo: FederatedRepository<[], ''>
   messageHandler: MessageHandler
   storage: StorageConstructor
 }

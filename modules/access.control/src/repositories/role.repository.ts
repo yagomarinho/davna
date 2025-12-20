@@ -13,7 +13,7 @@ const converter: MongoConverter<Role> = {
   to: ({
     _v,
     props: { name, description },
-    meta: { id, created_at, updated_at },
+    meta: { id, created_at, updated_at, _idempotency_key },
   }) => ({
     id,
     data: {
@@ -21,12 +21,20 @@ const converter: MongoConverter<Role> = {
       description,
       created_at,
       updated_at,
+      _idempotency_key,
       __version: _v,
     },
   }),
   from: ({
     id,
-    data: { name, description, created_at, updated_at, __version },
+    data: {
+      name,
+      description,
+      created_at,
+      updated_at,
+      _idempotency_key,
+      __version,
+    },
   }) =>
     createRole(
       {
@@ -38,6 +46,7 @@ const converter: MongoConverter<Role> = {
         _r: 'entity',
         created_at,
         updated_at,
+        _idempotency_key,
       },
       __version,
     ),

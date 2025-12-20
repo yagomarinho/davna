@@ -12,7 +12,7 @@ import { EntityContext } from '@davna/core'
 const converter: MongoConverter<Account> = {
   to: ({
     _v,
-    meta: { id, created_at, updated_at },
+    meta: { id, created_at, updated_at, _idempotency_key },
     props: { external_ref, name, roles },
   }) => ({
     id,
@@ -22,12 +22,21 @@ const converter: MongoConverter<Account> = {
       roles,
       created_at,
       updated_at,
+      _idempotency_key,
       __version: _v,
     },
   }),
   from: ({
     id,
-    data: { name, external_ref, roles, created_at, updated_at, __version },
+    data: {
+      name,
+      external_ref,
+      roles,
+      created_at,
+      updated_at,
+      _idempotency_key,
+      __version,
+    },
   }) =>
     createAccount(
       {
@@ -40,6 +49,7 @@ const converter: MongoConverter<Account> = {
         _r: 'entity',
         created_at,
         updated_at,
+        _idempotency_key,
       },
       __version,
     ),

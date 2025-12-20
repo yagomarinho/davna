@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export * from './federated.repository'
 export * from './google.sheets.repository'
 export * from './in.memory.repository'
 export * from './mongo.repository'

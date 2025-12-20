@@ -96,12 +96,12 @@ export interface FederatedRepository<
 
 export function FederatedRepository<
   U extends RepoInitilizer<any>[],
-  T extends string = string,
+  T extends string,
 >({
+  tag,
   IDContext,
   repositories,
-  tag,
-}: FedConfig<U, T>): FederatedRepository<EntitiesOf<U>> {
+}: FedConfig<U, T>): FederatedRepository<EntitiesOf<U>, T> {
   const repoByTag: RepositoryPool<EntitiesOf<U>> = new Map(
     repositories.map(init => {
       const repo = init({ entityContext: IDContext })

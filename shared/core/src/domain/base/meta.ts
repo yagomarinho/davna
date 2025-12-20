@@ -18,3 +18,18 @@ export type EntityURI = typeof EntityURI
  */
 export interface EntityMeta
   extends Resource<EntityURI>, Identifiable, Auditable, Idempotent {}
+
+export function createMeta({
+  created_at,
+  id,
+  updated_at,
+  _idempotency_key,
+}: Omit<EntityMeta, '_r'>): EntityMeta {
+  return {
+    id,
+    _r: 'entity',
+    created_at,
+    updated_at,
+    _idempotency_key,
+  }
+}

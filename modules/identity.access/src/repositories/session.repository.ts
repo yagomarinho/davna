@@ -12,7 +12,7 @@ import { EntityContext } from '@davna/core'
 const converter: MongoConverter<Session> = {
   to: ({
     _v,
-    meta: { id, created_at, updated_at },
+    meta: { id, created_at, updated_at, _idempotency_key },
     props: { account_id, expiresIn, refresh_token, user_agent },
   }) => ({
     id,
@@ -23,6 +23,7 @@ const converter: MongoConverter<Session> = {
       user_agent,
       created_at,
       updated_at,
+      _idempotency_key,
       __version: _v,
     },
   }),
@@ -35,6 +36,7 @@ const converter: MongoConverter<Session> = {
       user_agent,
       created_at,
       updated_at,
+      _idempotency_key,
       __version,
     },
   }) =>
@@ -50,6 +52,7 @@ const converter: MongoConverter<Session> = {
         _r: 'entity',
         created_at,
         updated_at,
+        _idempotency_key,
       },
       __version,
     ),

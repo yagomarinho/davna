@@ -5,7 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createEntity, DraftEntity, Entity, EntityMeta } from '@davna/core'
+import {
+  createEntity,
+  createMeta,
+  DraftEntity,
+  Entity,
+  EntityContext,
+  EntityMeta,
+} from '@davna/core'
+import { MongoConverter, MongoRepository } from '@davna/infra'
 
 export const ClassroomURI = 'classroom'
 export type ClassroomURI = typeof ClassroomURI
@@ -53,3 +61,54 @@ export function createClassroom(
     meta as any,
   )
 }
+
+const converter: MongoConverter<Classroom> = {
+  to: ({
+    _v,
+    _t,
+    meta: { id, created_at, updated_at, _idempotency_key },
+    props: { name },
+  }) => ({
+    id,
+    data: {
+      name,
+      created_at,
+      updated_at,
+      _idempotency_key,
+      __version: _v,
+      __tag: _t,
+    },
+  }),
+  from: ({
+    id,
+    data: { name, created_at, updated_at, _idempotency_key, __version },
+  }) =>
+    createClassroom(
+      { name },
+      createMeta({ id, created_at, updated_at, _idempotency_key }),
+      __version,
+    ),
+}
+
+export interface ClassroomRepositoryConfig {
+  client?: ReturnType<MongoRepository<any>['infra']['createClient']>
+  entityContext: EntityContext
+}
+
+export const ClassroomRepository = ({
+  client,
+  entityContext,
+}: ClassroomRepositoryConfig) =>
+  MongoRepository<Classroom>({
+    ...{
+      uri:
+        process.env.MONGODB_CLASSROOM_CONNECT_URI ||
+        'mongodb://localhost:27017',
+      database: process.env.MONGODB_CLASSROOM_DATABASE || 'db',
+      collection: process.env.MONGODB_CLASSROOM_COLLECTION || 'classrooms',
+    },
+    client: client as any,
+    converter,
+    tag: ClassroomURI,
+    entityContext,
+  })

@@ -23,6 +23,7 @@ describe('getRole service', () => {
         _r: 'entity',
         created_at: new Date(),
         updated_at: new Date(),
+        _idempotency_key: '',
       }),
     )
 
@@ -31,7 +32,7 @@ describe('getRole service', () => {
       description: 'This role is only for admins',
     })
 
-    await rolesRepo.methods.set(role)
+    await rolesRepo.methods.set(role, '')
 
     const result = await getRole(role_id)({
       roles: rolesRepo,

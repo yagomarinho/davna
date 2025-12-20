@@ -17,6 +17,10 @@ import { Idempotent, Resource, Tag, verifyResource } from '../composition'
 export const ValueObjectURI = 'value-object'
 export type ValueObjectURI = typeof ValueObjectURI
 
+export type RawProps<P extends {}> = {
+  [K in keyof P]: P[K] extends ValueObject<infer T> ? T : P[K]
+}
+
 /**
  * Metadata associated with a value object.
  *
