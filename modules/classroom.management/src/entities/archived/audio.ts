@@ -5,19 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { date, mixed, number, object, string } from 'yup'
-import { applyTag, applyVersioning, Entity } from '@davna/core'
 import { STORAGE_TYPE } from '@davna/infra'
 
 const URI = 'audio'
 type URI = typeof URI
-
-export enum SUPORTED_MIME_TYPE {
-  OPUS = 'audio/webm; codecs=opus',
-  WEBM = 'audio/webm',
-  MP3 = 'audio/mpeg',
-  MP4 = 'audio/mp4',
-}
 
 interface Ref {
   storage: STORAGE_TYPE
@@ -41,25 +32,6 @@ export interface Audio
 
 export interface CreateAudio
   extends AudioProps, Partial<UploadedAudioProps>, Partial<Entity> {}
-
-export const audioSchema = object({
-  id: string().required(),
-  owner_id: string().required(),
-  name: string().required(),
-  mime: mixed<SUPORTED_MIME_TYPE>()
-    .oneOf(Object.values(SUPORTED_MIME_TYPE))
-    .required(),
-  src: string().required(),
-  duration: number().required(),
-  internal_ref: object({
-    storage: mixed<STORAGE_TYPE>()
-      .oneOf(Object.values(STORAGE_TYPE))
-      .required(),
-    identifier: string().required(),
-  }),
-  created_at: date().required(),
-  updated_at: date().required(),
-})
 
 export function Audio(
   id: string,

@@ -25,7 +25,7 @@ export interface CreateMetaParams {
   id?: string
   created_at?: Date
   updated_at?: Date
-  idempotency_key: string
+  _idempotency_key?: string
 }
 
 /**
@@ -52,7 +52,7 @@ export interface EntityContext {
    * defaults and invariants to produce a resolvable
    * EntityMeta instance.
    */
-  createMeta: (data: CreateMetaParams) => Resolvable<EntityMeta>
+  createMeta: (data?: CreateMetaParams) => Resolvable<EntityMeta>
 
   /**
    * Declare and materialize an entity.
@@ -61,10 +61,7 @@ export interface EntityContext {
    * and resolved entity, enforcing identity and
    * structural constraints.
    */
-  declareEntity: <E extends Entity>(
-    entity: DraftEntity<E>,
-    idempotency_key: string,
-  ) => Resolvable<E>
+  declareEntity: <E extends Entity>(entity: DraftEntity<E>) => Resolvable<E>
 
   /**
    * Validate an entity draft.
@@ -76,4 +73,6 @@ export interface EntityContext {
    * DraftEntity<E> to E when validation succeeds.
    */
   validateEntity: <E extends Entity>(entity: DraftEntity<E>) => entity is E
+
+  setIdempotency: (_idempotency_key: string) => void
 }

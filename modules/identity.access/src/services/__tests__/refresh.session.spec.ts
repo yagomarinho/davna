@@ -54,7 +54,7 @@ describe('refresh session service', () => {
       expiresIn: new Date(Date.now() - dayTime),
     })
 
-    expired = await sessions.methods.set(expired, '')
+    expired = await sessions.methods.set(expired)
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
@@ -77,7 +77,7 @@ describe('refresh session service', () => {
       expiresIn: new Date(Date.now() + 2000),
     })
 
-    expired = await sessions.methods.set(expired, '')
+    expired = await sessions.methods.set(expired)
 
     const removeSpy = jest.spyOn(sessions.methods, 'remove')
 
@@ -100,7 +100,7 @@ describe('refresh session service', () => {
       refresh_token: stable_refresh,
       expiresIn: new Date(Date.now() + 3 * dayTime),
     })
-    session = await sessions.methods.set(session, '')
+    session = await sessions.methods.set(session)
 
     const account = await accounts.methods.set(
       createAccount(
@@ -117,7 +117,6 @@ describe('refresh session service', () => {
           _idempotency_key: '',
         },
       ),
-      'idempotent',
     )
 
     const querySpy = jest.spyOn(sessions.methods, 'query')
@@ -170,7 +169,7 @@ describe('refresh session service', () => {
       expiresIn: expSoon,
     })
 
-    session = await sessions.methods.set(session, '')
+    session = await sessions.methods.set(session)
 
     const account = await accounts.methods.set(
       createAccount(
@@ -187,7 +186,6 @@ describe('refresh session service', () => {
           _idempotency_key: '',
         },
       ),
-      'idempotent',
     )
 
     const setSpy = jest.spyOn(sessions.methods, 'set')
@@ -256,7 +254,6 @@ describe('refresh session service', () => {
         refresh_token: refresh_signature,
         expiresIn: new Date(Date.now() + 3 * dayTime),
       }),
-      'idempotent',
     )
 
     const result = await refreshSession({

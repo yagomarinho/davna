@@ -20,7 +20,7 @@ interface Env {
 export const appendLead = Service<Request, Env, Lead>(
   ({ lead }) =>
     async ({ leads }) => {
-      const l = await leads.methods.set(createLead({ lead }), '')
+      const l = await leads.methods.set(createLead({ lead }))
       return Right(l)
     },
 )

@@ -15,7 +15,7 @@ import {
   RawProps,
   ValueObject,
 } from '@davna/core'
-import { MongoConverter, MongoRepository } from '@davna/infra'
+import { MongoConverter, MongoRepository, STORAGE_TYPE } from '@davna/infra'
 import { Metadata } from '@davna/kernel'
 
 export const AudioURI = 'audio'
@@ -30,8 +30,14 @@ export type AudioStorageURI = typeof AudioStorageURI
 export const AudioVersion = 'v1'
 export type AudioVersion = typeof AudioVersion
 
+export enum SUPORTED_MIME_TYPE {
+  OPUS = 'audio/webm; codecs=opus',
+  WEBM = 'audio/webm',
+  MP3 = 'audio/mpeg',
+  MP4 = 'audio/mp4',
+}
 interface StorageRef {
-  type: string
+  type: STORAGE_TYPE
   internal_id: string
   bucket: string
   download_url: string
@@ -168,9 +174,9 @@ const converter: MongoConverter<Audio> = {
     id,
     data: {
       status,
-      duration,
       filename,
       url,
+      duration,
       mime_type,
       metadata,
       storage,

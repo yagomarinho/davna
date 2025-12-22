@@ -5,12 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export enum PARTICIPANT_ROLE {
-  TEACHER = 'teacher',
-  STUDENT = 'student',
-}
-
-export interface ParticipantDTO {
-  participant_id: string
-  role: PARTICIPANT_ROLE
-}
+export * from './unit.of.work'
+export * from './unit.of.work.saga'

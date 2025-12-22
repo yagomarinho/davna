@@ -106,7 +106,6 @@ describe('login with credentials service', () => {
 
     const account = await accounts.methods.set(
       createAccount({ external_ref, name: 'john', roles: [] }),
-      'idempotent',
     )
 
     const result = await loginWithCredentials(credentials)({

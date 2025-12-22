@@ -13,7 +13,7 @@ import { Emitter } from '../helpers/emitter'
 
 import { teacherGeneratesResponse } from '../services/teacher.generates.response'
 
-import { MessageHandler } from '../utils/message.handler'
+import { MessageHandler } from '../utils/resource.resolver'
 import { remainingConsumption } from '../helpers/remaining.consumption'
 import { StorageConstructor } from '../utils/storage'
 import { MultimediaProvider } from '../providers'

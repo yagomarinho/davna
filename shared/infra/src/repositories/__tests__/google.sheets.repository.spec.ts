@@ -104,7 +104,7 @@ describe('GoogleSheetsRepository — integration', () => {
       entity._b(entity.props, meta),
     )
 
-    const result = await repo.methods.set(entity, '')
+    const result = await repo.methods.set(entity)
 
     expect(result).toBeDefined()
     expect(result.meta.id).toBe(meta.id)

@@ -65,7 +65,6 @@ export const loginWithCredentials = Service<Request, Env, TokenResponse>(
               external_ref: user.id,
               roles: [],
             }),
-            idempotency_key,
           )
         }
 
@@ -84,7 +83,6 @@ export const loginWithCredentials = Service<Request, Env, TokenResponse>(
             refresh_token,
             expiresIn: new Date(Date.now() + refreshTokenConfig.expiresIn),
           }),
-          idempotency_key,
         )
 
         const token = signer.sign({

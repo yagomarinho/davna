@@ -94,7 +94,7 @@ export const refreshSession = Service<Request, Env, TokenResponse>(
             session.meta,
           )
 
-          session = await sessions.methods.set(session, idempotency_key)
+          session = await sessions.methods.set(session)
         }
 
         token = signer.sign({

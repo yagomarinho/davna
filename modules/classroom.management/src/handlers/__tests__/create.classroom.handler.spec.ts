@@ -4,7 +4,7 @@ import { InMemoryRepository } from '@davna/infra'
 import { createClassroomHandler } from '../create.classroom.handler'
 import { Classroom } from '../../entities'
 
-import { createClassroom as createClassroomService } from '../../services/create.classroom'
+import { createClassroom as createClassroomService } from '../../services/open.classroom'
 
 jest.mock('../../services/create.classroom', () => ({
   createClassroom: jest.fn(),

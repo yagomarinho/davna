@@ -29,12 +29,20 @@ import {
   SourceRepository,
   Text,
   TextRepository,
+  Usage,
+  UsageRepository,
 } from '../entities'
 
 export const ClassroomFedURI = 'classroom.fed'
 export type ClassroomFedURI = typeof ClassroomFedURI
 
-type Edges = OccursIn | Ownership | Participation | Representation | Source
+type Edges =
+  | OccursIn
+  | Ownership
+  | Participation
+  | Representation
+  | Source
+  | Usage
 type Vertices = Agent | Audio | Classroom | Message | Participant | Text
 
 export interface ClassroomFedRepository extends FederatedRepository<
@@ -72,6 +80,11 @@ export const ClassroomFedRepository = ({
         }),
       init =>
         SourceRepository({
+          client,
+          entityContext: init.entityContext,
+        }),
+      init =>
+        UsageRepository({
           client,
           entityContext: init.entityContext,
         }),

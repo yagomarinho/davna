@@ -2,7 +2,7 @@ import { isRight, Repository } from '@davna/core'
 import { InMemoryRepository } from '@davna/infra'
 
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
-import { createClassroom } from '../create.classroom'
+import { createClassroom } from '../open.classroom'
 
 describe('createClassroom (service) - updated behavior', () => {
   let classrooms: Repository<Classroom>

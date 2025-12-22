@@ -52,8 +52,8 @@ describe('getSessionInfo service', () => {
       },
     )
 
-    await sessionsRepo.methods.set(session, '')
-    await accountsRepo.methods.set(account, '')
+    await sessionsRepo.methods.set(session)
+    await accountsRepo.methods.set(account)
     ;(signer.decode as jest.Mock).mockReturnValue({ subject: session_id })
 
     const result = await getSessionInfo(token)({
@@ -99,7 +99,7 @@ describe('getSessionInfo service', () => {
         _idempotency_key: '',
       },
     )
-    await sessionsRepo.methods.set(session, '')
+    await sessionsRepo.methods.set(session)
     // accountsRepo remains empty
     ;(signer.decode as jest.Mock).mockReturnValue({ subject: session_id })
 

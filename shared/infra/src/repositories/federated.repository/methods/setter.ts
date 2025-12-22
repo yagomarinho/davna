@@ -35,8 +35,5 @@ export interface FederatedSetter<E extends Entity> {
    * duplicated side effects.
    */
 
-  <F extends E>(
-    entity: DraftEntity<F>,
-    idempontecy_key: string,
-  ): RepositoryResult<F>
+  <F extends E>(entity: DraftEntity<F>): RepositoryResult<F>
 }

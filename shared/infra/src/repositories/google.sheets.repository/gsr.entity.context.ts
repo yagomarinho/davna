@@ -19,6 +19,12 @@ export function GSRepoEntityContext({
   spreadsheetId,
   range,
 }: ContextProps): EntityContext {
+  let _key = ''
+
+  const setIdempotency: EntityContext['setIdempotency'] = key => {
+    _key = key
+  }
+
   const validateEntity: EntityContext['validateEntity'] = entity =>
     isEntity(entity)
 
@@ -26,8 +32,8 @@ export function GSRepoEntityContext({
     id,
     created_at,
     updated_at,
-    idempotency_key,
-  }) => {
+    _idempotency_key,
+  } = {}) => {
     const auth = await GCPAuth(credentials)
     const now = new Date()
     return {
@@ -36,21 +42,19 @@ export function GSRepoEntityContext({
       _r: 'entity',
       created_at: created_at ?? now,
       updated_at: updated_at ?? now,
-      _idempotency_key: idempotency_key,
+      _idempotency_key: _idempotency_key ?? _key,
     }
   }
 
-  const declareEntity: EntityContext['declareEntity'] = async (
-    entity,
-    idempotency_key,
-  ) =>
+  const declareEntity: EntityContext['declareEntity'] = async entity =>
     validateEntity(entity)
       ? entity
-      : (entity._b(entity.props, await createMeta({ idempotency_key })) as any)
+      : (entity._b(entity.props, await createMeta()) as any)
 
   return {
     createMeta,
     declareEntity,
     validateEntity,
+    setIdempotency,
   }
 }

@@ -9,7 +9,7 @@ import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
 
 import { Classroom } from '../entities'
 
-import { createClassroom } from '../services/create.classroom'
+import { createClassroom } from '../services/open.classroom'
 
 interface Metadata {
   account: Identifier

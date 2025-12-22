@@ -5,5 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './message.handler'
+export * from './resource.resolver'
 export * from './storage'

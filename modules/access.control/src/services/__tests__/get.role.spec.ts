@@ -32,7 +32,7 @@ describe('getRole service', () => {
       description: 'This role is only for admins',
     })
 
-    await rolesRepo.methods.set(role, '')
+    await rolesRepo.methods.set(role)
 
     const result = await getRole(role_id)({
       roles: rolesRepo,

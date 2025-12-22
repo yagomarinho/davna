@@ -124,21 +124,20 @@ export function FederatedRepository<
     F extends EntitiesOf<U>,
   >(
     entity: DraftEntity<F>,
-    idempontecy_key: string,
   ) => {
     const repo = resolveRepo(entity._t)
-    return repo.methods.set(entity, idempontecy_key) as F
+    return repo.methods.set(entity)
   }
 
   const remove: FederatedRepository<
     EntitiesOf<U>
-  >['methods']['remove'] = async (id, idempontecy_key) => {
+  >['methods']['remove'] = async id => {
     const idEntity = await IDContext.getIDEntity(id)
     if (!idEntity) return
 
     const repo = resolveRepo(idEntity.props.entity_tag)
 
-    await repo.methods.remove(id, idempontecy_key)
+    await repo.methods.remove(id)
   }
 
   const query: FederatedRepository<EntitiesOf<U>>['methods']['query'] = async <
@@ -158,10 +157,9 @@ export function FederatedRepository<
     return results.flat() as EntitiesOf<U>[]
   }
 
-  const batch: FederatedRepository<EntitiesOf<U>>['methods']['batch'] = async (
-    b,
-    idempotency_key,
-  ) => {
+  const batch: FederatedRepository<
+    EntitiesOf<U>
+  >['methods']['batch'] = async b => {
     const orderedBatch = await b.reduce(
       async (acc, item) => {
         if (item.type === 'upsert') {
@@ -193,7 +191,7 @@ export function FederatedRepository<
       [...orderedBatch.entries()].map(async ([tag, orderedB]) => {
         const repo = resolveRepo(tag)
         return {
-          ...(await repo.methods.batch(orderedB, idempotency_key)),
+          ...(await repo.methods.batch(orderedB)),
           tag,
         }
       }),

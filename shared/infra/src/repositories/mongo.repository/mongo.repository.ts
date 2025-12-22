@@ -136,8 +136,8 @@ export function MongoRepository<E extends Entity>({
   )
 
   const set = verifyConnectionProxy<Repository<E>['methods']['set']>(
-    async (entity, idempontecy_key) => {
-      const e = await entityContext.declareEntity(entity, idempontecy_key)
+    async entity => {
+      const e = await entityContext.declareEntity(entity)
 
       const { _id, ...props } = toDocument(converter.to(e))
 
@@ -192,7 +192,7 @@ export function MongoRepository<E extends Entity>({
   )
 
   const batch = verifyConnectionProxy<Repository<E>['methods']['batch']>(
-    async (b, idempontecy_key) => {
+    async b => {
       const bulk = await Promise.all(
         b.map(async item => {
           if (item.type === 'remove')
@@ -202,10 +202,7 @@ export function MongoRepository<E extends Entity>({
               },
             }
 
-          const e = await entityContext.declareEntity(
-            item.data,
-            idempontecy_key,
-          )
+          const e = await entityContext.declareEntity(item.data)
 
           const { _id, ...props } = toDocument(converter.to(e))
 

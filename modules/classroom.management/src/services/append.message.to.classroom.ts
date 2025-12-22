@@ -5,98 +5,101 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Left, Right, Service } from '@davna/core'
+import { Filter, Left, QueryBuilder, Right, Service } from '@davna/core'
 
-import { MessageHandler, StorageConstructor } from '../utils'
+import { ResourceResolver } from '../utils'
 import { ClassroomFedRepository } from '../repositories'
-import { ClassroomDTO, MessageDTO } from '../dtos/output'
+
+import {
+  Classroom,
+  createMessage,
+  createOccursIn,
+  createSource,
+  Message,
+  OccursIn,
+  Participation,
+  Source,
+} from '../entities'
 
 interface Request {
   classroom_id: string
   participant_id: string
   message_type: string
-  transcription: string
-  translation: string
   data: unknown
 }
 
 interface Env {
   repository: ClassroomFedRepository
-  messageHandler: MessageHandler
-  storage: StorageConstructor
+  resourceResolver: ResourceResolver
 }
 
 interface Response {
-  classroom: ClassroomDTO
-  message: MessageDTO
+  classroom: Classroom
+  message: Message
+  source: Source
+  occursIn: OccursIn
 }
 
 export const appendMessageToClassroom = Service<Request, Env, Response>(
-  ({
-    classroom_id,
-    participant_id,
-    message_type,
-    transcription,
-    translation,
-    data,
-  }) =>
-    async ({ repository, messageHandler, storage }) => {
-      let classroom = await repository.methods.get(classroom_id)
+  ({ classroom_id, participant_id, message_type, data }) =>
+    async ({ repository, resourceResolver }) => {
+      const [classroom, participant, participation] = await Promise.all([
+        repository.methods.get(classroom_id),
+        repository.methods.get(participant_id),
+        repository.methods.query(
+          QueryBuilder<Participation>()
+            .filterBy(
+              Filter.and(
+                Filter.where('source_id', '==', participant_id),
+                Filter.where('target_id', '==', classroom_id),
+              ),
+            )
+            .build(),
+          'participation',
+        ),
+      ])
 
       if (!classroom || classroom._t !== 'classroom')
         return Left({ status: 'error', message: 'No founded classroom' })
 
-      if (
-        !classroom.participants
-          .map(participant => participant.participant_id)
-          .includes(participant_id)
-      )
+      if (!participant || participant._t !== 'participant')
+        return Left({ status: 'error', message: 'No founded participant' })
+
+      if (!participation[0])
         return Left({
           status: 'error',
           message: `This classroom doesn't contains this participant: ${participant_id}`,
         })
 
-      // Verificar os gastos do participant aqui ?
+      const [resource, message] = await Promise.all([
+        resourceResolver({
+          message_type,
+          data,
+        })({ repository }),
+        repository.methods.set(createMessage()),
+      ])
 
-      let message = await messageHandler({
-        classroom_id,
-        participant_id,
-        message_type,
-        transcription,
-        translation,
-      })(data)
-
-      // verificar se o áudio realmente existe
-      const dataExists = await audios.get(message.data.id)
-
-      if (!dataExists)
-        return Left({
-          status: 'error',
-          message: `This data with id "${message.data.id}" doesn't exists`,
-        })
-
-      const bufferExists = await storage({
-        driver: message.data.internal_ref.storage,
-      }).check(message.data.internal_ref.identifier)
-
-      if (!bufferExists)
-        return Left({
-          status: 'error',
-          message: `This file with id "${message.data.internal_ref.identifier}" doesn't exists`,
-        })
-
-      // Aqui é hora de construir uma transaction
-      message = await messages.set(message)
-      classroom = await classrooms.set(
-        Classroom.create({
-          ...classroom,
-          history: classroom.history.concat(message.id),
-        }),
-      )
+      const [source, occursIn] = await Promise.all([
+        repository.methods.set(
+          createSource({
+            source_id: resource.meta.id,
+            source_type: resource._t,
+            target_id: message.meta.id,
+          }),
+        ),
+        repository.methods.set(
+          createOccursIn({
+            source_id: message.meta.id,
+            target_id: classroom.meta.id,
+          }),
+        ),
+      ])
 
       return Right({
         classroom,
         message,
+        source,
+        occursIn,
       })
     },
 )

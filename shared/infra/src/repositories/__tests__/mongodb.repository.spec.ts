@@ -52,7 +52,6 @@ describe('mongo db repository', () => {
         value: 35,
         tags: ['moda masculina', 'viagens internacionais'],
       }),
-      fakeIdempotencyKey(1),
     )
 
     const en = await repo.methods.get(entity.meta.id)
@@ -88,10 +87,7 @@ describe('mongo db repository', () => {
       tags: ['Videogame', 'Tech', 'generative AI'],
     }
 
-    const created = await repo.methods.set(
-      createEn(data),
-      fakeIdempotencyKey(1),
-    )
+    const created = await repo.methods.set(createEn(data))
     const received = await repo.methods.get(created.meta.id)
 
     expect(received).toEqual(
@@ -122,51 +118,48 @@ describe('mongo db repository', () => {
 
   it('query() com paginação (limit + cursor)', async () => {
     await repo.infra.clear()
-    await repo.methods.batch(
-      [
-        {
-          type: 'upsert',
-          data: createEn({
-            name: 'Carlos',
-            value: 12,
-            tags: ['videogame', 'tecnologia', 'inteligência artificial'],
-          }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({
-            name: 'Miguel',
-            value: 42,
-            tags: ['tecnologia', 'trabalho remoto'],
-          }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({
-            name: 'Antonio',
-            value: 42,
-            tags: ['tecnologia', 'trabalho remoto'],
-          }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({
-            name: 'Michael',
-            value: 42,
-            tags: ['tecnologia', 'trabalho remoto'],
-          }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({
-            name: 'Felipe',
-            value: 42,
-            tags: ['tecnologia', 'trabalho remoto'],
-          }),
-        },
-      ],
-      fakeIdempotencyKey(1),
-    )
+    await repo.methods.batch([
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Carlos',
+          value: 12,
+          tags: ['videogame', 'tecnologia', 'inteligência artificial'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Miguel',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Antonio',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Michael',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Felipe',
+          value: 42,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+    ])
 
     const list = await repo.methods.query(
       QueryBuilder()
@@ -197,27 +190,24 @@ describe('mongo db repository', () => {
 
   it('query() com where leaf (>=) mapeia para $gte', async () => {
     await repo.infra.clear()
-    await repo.methods.batch(
-      [
-        {
-          type: 'upsert',
-          data: createEn({
-            name: 'Carlos',
-            value: 35,
-            tags: ['tecnologia', 'trabalho remoto'],
-          }),
-        },
-        {
-          type: 'upsert',
-          data: createEn({
-            name: 'Miguel',
-            value: 42,
-            tags: ['tecnologia', 'ia generativa'],
-          }),
-        },
-      ],
-      fakeIdempotencyKey(1),
-    )
+    await repo.methods.batch([
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Carlos',
+          value: 35,
+          tags: ['tecnologia', 'trabalho remoto'],
+        }),
+      },
+      {
+        type: 'upsert',
+        data: createEn({
+          name: 'Miguel',
+          value: 42,
+          tags: ['tecnologia', 'ia generativa'],
+        }),
+      },
+    ])
     const list = await repo.methods.query(
       QueryBuilder<En>()
         .orderBy([{ property: 'value', direction: 'desc' }])
@@ -292,7 +282,6 @@ describe('mongo db repository', () => {
         value: 12,
         tags: ['tecnologia', 'videogame'],
       }),
-      fakeIdempotencyKey(1),
     )
 
     const left = Filter.where('value', '<', 18)

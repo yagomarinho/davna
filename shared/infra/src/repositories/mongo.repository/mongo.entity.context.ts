@@ -6,30 +6,35 @@
  */
 
 import { DraftEntity, Entity, EntityContext, isEntity } from '@davna/core'
-import { concatenate } from '@davna/kernel'
 
 function isValidObjectId(id) {
   return /^[a-fA-F0-9]{24}$/.test(id)
 }
 
 export function mongoEntityContext(): EntityContext {
+  let _key = ''
+
+  const setIdempotency: EntityContext['setIdempotency'] = (key = '') => {
+    _key = key
+  }
+
   const validateEntity: EntityContext['validateEntity'] = <E extends Entity>(
     entity: DraftEntity<E>,
   ): entity is E => isEntity(entity) && isValidObjectId(entity.meta.id)
 
   const createMeta: EntityContext['createMeta'] = ({
-    id,
+    id = '',
     created_at,
     updated_at,
-    idempotency_key,
-  }) => {
+    _idempotency_key,
+  } = {}) => {
     const now = new Date()
     return {
-      id: id ?? '',
+      id,
       _r: 'entity',
       created_at: created_at ?? now,
       updated_at: updated_at ?? now,
-      _idempotency_key: idempotency_key,
+      _idempotency_key: _idempotency_key ?? _key,
     }
   }
 
@@ -37,20 +42,16 @@ export function mongoEntityContext(): EntityContext {
     E extends Entity,
   >(
     entity: DraftEntity<E>,
-    idempotency_key: string,
   ): Promise<E> =>
     entity._b(
       entity.props,
-      await createMeta(
-        concatenate(validateEntity(entity) ? entity.meta : {}, {
-          idempotency_key,
-        }),
-      ),
+      await createMeta(validateEntity(entity) ? entity.meta : {}),
     ) as any
 
   return {
     declareEntity,
     validateEntity,
     createMeta,
+    setIdempotency,
   }
 }

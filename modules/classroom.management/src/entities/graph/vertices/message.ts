@@ -35,23 +35,23 @@ declare module '@davna/core' {
   }
 }
 
-export function createMessage(props: MessageProps): DraftEntity<Message>
+export function createMessage(props?: MessageProps): DraftEntity<Message>
 export function createMessage(
-  props: MessageProps,
+  props: MessageProps | undefined,
   meta: undefined,
   _version: MessageVersion,
 ): DraftEntity<Message>
 export function createMessage(
-  props: MessageProps,
+  props: MessageProps | undefined,
   meta?: EntityMeta,
   _version?: MessageVersion,
 ): Message
 export function createMessage(
-  props: MessageProps,
+  _: MessageProps = {},
   meta?: EntityMeta,
   _version: MessageVersion = MessageVersion,
 ): Message {
-  return createEntity(MessageURI, _version, createMessage, props, meta as any)
+  return createEntity(MessageURI, _version, createMessage, {}, meta as any)
 }
 
 const converter: MongoConverter<Message> = {

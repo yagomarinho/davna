@@ -8,9 +8,9 @@
 import {
   createEntity,
   createMeta,
+  DraftEntity,
   EntityContext,
   EntityMeta,
-  Tag,
 } from '@davna/core'
 import { Edge, EdgeProps } from './edge'
 import { MongoConverter, MongoRepository } from '@davna/infra'
@@ -38,12 +38,12 @@ declare module '@davna/core' {
   }
 }
 
-export function createOccursIn(props: OccursInProps): Tag<OccursInURI>
+export function createOccursIn(props: OccursInProps): DraftEntity<OccursIn>
 export function createOccursIn(
   props: OccursInProps,
   meta: undefined,
   _version: OccursInVersion,
-): Tag<OccursInURI>
+): DraftEntity<OccursIn>
 export function createOccursIn(
   props: OccursInProps,
   meta: EntityMeta,
@@ -53,7 +53,7 @@ export function createOccursIn(
   { source_id, target_id }: OccursInProps,
   meta?: EntityMeta,
   _version: OccursInVersion = OccursInVersion,
-): Tag<OccursInURI> | OccursIn {
+): DraftEntity<OccursIn> | OccursIn {
   return createEntity(
     OccursInURI,
     _version,
