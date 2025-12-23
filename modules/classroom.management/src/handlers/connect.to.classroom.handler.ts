@@ -18,7 +18,7 @@ import { remainingConsumption } from '../helpers/remaining.consumption'
 import { StorageConstructor } from '../utils/storage'
 import { MultimediaProvider } from '../providers'
 import { showClassroom } from '../services/show.classroom'
-import { verifyConsume } from '../services/verify.consume'
+import { verifyConsume } from '../services/authorize.consumption'
 
 interface Metadata {
   account: Identifier

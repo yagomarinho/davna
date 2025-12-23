@@ -22,7 +22,6 @@ import {
   Query,
   Repository,
   Resolvable,
-  Tag,
 } from '@davna/core'
 import { FederatedRemover, FederatedSearcher, FederatedSetter } from './methods'
 
@@ -58,8 +57,7 @@ export type FedetaredURI = typeof FedetaredURI
 export interface FederatedRepository<
   E extends Entity,
   T extends string = string,
->
-  extends Omit<Repository<E, FedetaredURI>, '_t'>, Tag<T> {
+> extends Repository<E, FedetaredURI, T> {
   /**
    * Federated repository methods.
    *

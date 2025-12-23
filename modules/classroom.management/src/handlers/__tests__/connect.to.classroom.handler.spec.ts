@@ -10,7 +10,7 @@ import { Emitter } from '../../helpers/emitter'
 
 import { teacherGeneratesResponse as teacherGeneratesService } from '../../services/teacher.generates.response'
 import { showClassroom as showClassroomService } from '../../services/show.classroom'
-import { verifyConsume as verifyConsumeService } from '../../services/verify.consume'
+import { verifyConsume as verifyConsumeService } from '../../services/authorize.consumption'
 
 jest.mock('../../services/teacher.generates.response', () => ({
   teacherGeneratesResponse: jest.fn(),

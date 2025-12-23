@@ -5,10 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Left, Query, Repository, Right, Service } from '@davna/core'
-
-import { Classroom } from '../entities/classroom'
-import { Message } from '../entities/message'
+import { Filter, Left, QueryBuilder, Right, Service } from '@davna/core'
+import { ClassroomFedRepository } from '../repositories'
+import {
+  Audio,
+  Classroom,
+  ClassroomURI,
+  Message,
+  OccursIn,
+  OccursInURI,
+  Ownership,
+  OwnershipURI,
+  Participant,
+  ParticipantURI,
+  Participation,
+  ParticipationURI,
+  Representation,
+  Source,
+  Text,
+} from '../entities'
 
 interface Request {
   participant_id: string
@@ -16,40 +31,89 @@ interface Request {
 }
 
 interface Env {
-  classrooms: Repository<Classroom>
-  messages: Repository<Message>
+  repository: ClassroomFedRepository
 }
 
 interface Response {
-  classroom: Omit<Classroom, 'history'> & { history: Message[] }
+  classroom: Classroom
+  classroom_ownership: Ownership
+  occursIn: OccursIn[]
+  messages: Message[]
+  messages_ownerships: Ownership[]
+  participants: Participant[]
+  participations: Participation[]
+  sources: Source[]
+  audios: Audio[]
+  texts: Text[]
+  representations: Representation[]
 }
 
 export const showClassroom = Service<Request, Env, Response>(
   ({ classroom_id, participant_id }) =>
-    async ({ classrooms, messages }) => {
-      const classroom = await classrooms.get(classroom_id)
+    async ({ repository }) => {
+      const classroom = await repository.methods.get(classroom_id)
 
-      if (!classroom)
+      if (!classroom || !classroom_id)
         return Left({
           status: 'error',
           message: 'Classroom not founded',
         })
 
-      if (
-        !classroom.participants.find(p => p.participant_id === participant_id)
+      const participations = await repository.methods.query(
+        QueryBuilder().filterBy('target_id', '==', classroom_id).build(),
+        ParticipationURI,
       )
+
+      if (!participations.find(p => p.props.source_id === participant_id))
         return Left({
           status: 'error',
-          message: 'Not authorized to get this classroom',
+          message: 'Not authorized to show this classroom',
         })
 
+      const [classroom_ownership, occursIn, participants] = await Promise.all([
+        repository.methods.query(
+          QueryBuilder()
+            .filterBy(
+              Filter.and(
+                Filter.where('target_id', '==', classroom.meta.id),
+                Filter.where('target_type', '==', ClassroomURI),
+              ),
+            )
+            .build(),
+          OwnershipURI,
+        ),
+        repository.methods.query(
+          QueryBuilder().filterBy('target_id', '==', classroom.meta.id).build(),
+          OccursInURI,
+        ),
+        repository.methods.query(
+          QueryBuilder()
+            .filterBy(
+              'id',
+              'in',
+              participations.map(p => p.props.source_id),
+            )
+            .build(),
+          ParticipantURI,
+        ),
+      ])
+
+      const [messages] = await Promise.all([
+        repository.methods.query(QueryBuilder().orderBy().filterBy().build()),
+      ])
+
       return Right({
-        classroom: {
-          ...classroom,
-          history: await messages.query(
-            Query.where('id', 'in', classroom.history),
-          ),
-        },
+        classroom,
+        classroom_ownership,
+        occursIn,
+        messages,
+        messages_ownerships,
+        participants,
+        participations,
+        sources,
+        audios,
+        texts,
+        representations,
       })
     },
 )

@@ -13,6 +13,10 @@ import {
   AudioRepository,
   Classroom,
   ClassroomRepository,
+  Entitlement,
+  EntitlementRepository,
+  Granted,
+  GrantedRepository,
   Message,
   MessageRepository,
   OccursIn,
@@ -23,6 +27,8 @@ import {
   ParticipantRepository,
   Participation,
   ParticipationRepository,
+  PolicyAggregate,
+  PolicyAggregateRepository,
   Representation,
   RepresentationRepository,
   Source,
@@ -30,6 +36,8 @@ import {
   Text,
   TextRepository,
   Usage,
+  UsagePolicy,
+  UsagePolicyRepository,
   UsageRepository,
 } from '../entities'
 
@@ -43,12 +51,20 @@ type Edges =
   | Representation
   | Source
   | Usage
-type Vertices = Agent | Audio | Classroom | Message | Participant | Text
+  | Granted
+  | PolicyAggregate
 
-export interface ClassroomFedRepository extends FederatedRepository<
-  Edges | Vertices,
-  ClassroomFedURI
-> {}
+type Vertices =
+  | Agent
+  | Audio
+  | Classroom
+  | Message
+  | Participant
+  | Text
+  | Entitlement
+  | UsagePolicy
+
+export type ClassroomFedRepository = FederatedRepository<Edges | Vertices>
 
 type Client = ReturnType<MongoRepository<any>['infra']['createClient']>
 
@@ -88,6 +104,16 @@ export const ClassroomFedRepository = ({
           client,
           entityContext: init.entityContext,
         }),
+      init =>
+        GrantedRepository({
+          client,
+          entityContext: init.entityContext,
+        }),
+      init =>
+        PolicyAggregateRepository({
+          client,
+          entityContext: init.entityContext,
+        }),
       init => AgentRepository({ client, entityContext: init.entityContext }),
       init => AudioRepository({ client, entityContext: init.entityContext }),
       init =>
@@ -96,5 +122,9 @@ export const ClassroomFedRepository = ({
       init =>
         ParticipantRepository({ client, entityContext: init.entityContext }),
       init => TextRepository({ client, entityContext: init.entityContext }),
+      init =>
+        EntitlementRepository({ client, entityContext: init.entityContext }),
+      init =>
+        UsagePolicyRepository({ client, entityContext: init.entityContext }),
     ],
   })

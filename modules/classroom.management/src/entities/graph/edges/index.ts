@@ -6,9 +6,11 @@
  */
 
 export * from './edge'
+export * from './granted'
 export * from './occurs.in'
 export * from './ownership'
 export * from './participation'
+export * from './policy.aggregate'
 export * from './representation'
 export * from './source'
 export * from './usage'

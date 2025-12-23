@@ -4,7 +4,7 @@ import { InMemoryRepository } from '@davna/infra'
 import { Classroom } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 
-import { verifyConsume } from '../verify.consume'
+import { verifyConsume } from '../authorize.consumption'
 
 describe('verifyConsume (service)', () => {
   let classrooms: Repository<Classroom>

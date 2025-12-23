@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Entity, Repository } from '@davna/core'
+import { Repository, Tag } from '@davna/core'
 import { UnitOfWork } from './unit.of.work'
 
 export interface Compensation {
@@ -43,14 +43,17 @@ export function UnitOfWorkSaga(): UnitOfWorkSaga {
 export const SagaRepositoryURI = 'saga.repository'
 export type SagaRepositoryURI = typeof SagaRepositoryURI
 
-export function SagaRepositoryProxy<E extends Entity>(
-  repo: Repository<E>,
-  uow: UnitOfWorkSaga,
-): Repository<E, SagaRepositoryURI> {
-  const get: Repository<E>['methods']['get'] = repo.methods.get
-  const query: Repository<E>['methods']['query'] = repo.methods.query
+export type ExtendedSagaRepository<R extends Repository> = Omit<R, '_t'> &
+  Tag<SagaRepositoryURI>
 
-  const set: Repository<E>['methods']['set'] = async entity => {
+export function SagaRepositoryProxy<R extends Repository>(
+  repo: R,
+  uow: UnitOfWorkSaga,
+): ExtendedSagaRepository<R> {
+  const get: R['methods']['get'] = repo.methods.get
+  const query: R['methods']['query'] = repo.methods.query
+
+  const set: R['methods']['set'] = async entity => {
     const previous = entity.meta ? await get(entity.meta.id) : undefined
 
     const next = await repo.methods.set(entity)
@@ -63,7 +66,7 @@ export function SagaRepositoryProxy<E extends Entity>(
     return next
   }
 
-  const remove: Repository<E>['methods']['remove'] = async id => {
+  const remove: R['methods']['remove'] = async id => {
     const previous = await get(id)
     if (!previous) return
 
@@ -74,7 +77,7 @@ export function SagaRepositoryProxy<E extends Entity>(
     await repo.methods.remove(id)
   }
 
-  const batch: Repository<E>['methods']['batch'] = b =>
+  const batch: R['methods']['batch'] = b =>
     // desenvolver primeiro o retorno do batch para identificar quais ID foram criados, atualizados ou removidos
     repo.methods.batch(b)
 
@@ -86,8 +89,8 @@ export function SagaRepositoryProxy<E extends Entity>(
     batch,
   }
   return {
-    _t: repo._t,
-    meta: { _r: 'repository', _t: SagaRepositoryURI },
+    _t: SagaRepositoryURI,
+    meta: repo.meta,
     methods,
-  }
+  } as ExtendedSagaRepository<R>
 }

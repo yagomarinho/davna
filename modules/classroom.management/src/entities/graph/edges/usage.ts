@@ -14,7 +14,7 @@ import {
   RawProps,
   ValueObject,
 } from '@davna/core'
-import { AudioURI, TextURI } from '../vertices'
+import { AudioURI, TextURI, USAGE_UNITS } from '../vertices'
 import { Edge, EdgeProps } from './edge'
 import { MongoConverter, MongoRepository } from '@davna/infra'
 
@@ -28,7 +28,7 @@ export const UsageVersion = 'v1'
 export type UsageVersion = typeof UsageVersion
 
 export interface Consumption {
-  unit: string
+  unit: USAGE_UNITS
   value: number
   raw_value: number
   normalization_factor: number

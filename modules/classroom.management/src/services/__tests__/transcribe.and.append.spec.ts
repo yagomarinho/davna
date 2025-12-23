@@ -8,7 +8,7 @@ import { Message, MESSAGE_TYPE } from '../../entities/message'
 
 import { getTranscriptionFromAudio as getTranscriptionFromAudioService } from '../../helpers/get.transcription.from.audio'
 import { appendMessageToClassroom as appendMessageToClassroomService } from '../append.message.to.classroom'
-import { verifyConsume as verifyConsumeService } from '../verify.consume'
+import { verifyConsume as verifyConsumeService } from '../authorize.consumption'
 import { transcribeAndAppend } from '../transcribe.and.append'
 
 jest.mock('../../helpers/get.transcription.from.audio', () => ({

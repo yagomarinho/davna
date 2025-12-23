@@ -33,10 +33,17 @@ export interface DownloadData {
 export interface StorageResult {
   storage_type: STORAGE_TYPE
   identifier: string
+  bucket: string
+}
+
+export interface SignedUrlResult extends StorageResult {
+  url: string
+  expires_at: Date
 }
 
 export interface Storage {
   readonly upload: (data: UploadData) => Promise<StorageResult>
   readonly download: (data: DownloadData) => Promise<Buffer | undefined>
   readonly check: (id: string) => Promise<boolean>
+  readonly getSignedUrl: () => Promise<SignedUrlResult>
 }

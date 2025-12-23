@@ -4,7 +4,7 @@ import { FakeAI, STORAGE_TYPE } from '@davna/infra'
 
 import { AIGenerateResponse as AIGenerateResponseService } from '../../helpers/ai.generate.response'
 import { appendMessageToClassroom as appendMessageService } from '../append.message.to.classroom'
-import { verifyConsume as verifyConsumeService } from '../verify.consume'
+import { verifyConsume as verifyConsumeService } from '../authorize.consumption'
 
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 import { Classroom } from '../../entities/classroom'
