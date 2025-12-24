@@ -74,5 +74,5 @@ export interface EntityContext {
    */
   validateEntity: <E extends Entity>(entity: DraftEntity<E>) => entity is E
 
-  setIdempotency: (_idempotency_key: string) => void
+  setIdempotency: (key?: string) => void
 }

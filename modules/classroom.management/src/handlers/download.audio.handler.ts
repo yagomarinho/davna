@@ -5,14 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Handler, isLeft, Repository, Response } from '@davna/core'
+import { Handler, isLeft, Response } from '@davna/core'
 
-import { Audio } from '../entities/audio'
 import { downloadAudio } from '../services/download.audio'
 import { StorageConstructor } from '../utils/storage'
-
+import { ClassroomFedRepository } from '../repositories'
 interface Env {
-  audios: Repository<Audio>
+  repository: ClassroomFedRepository
   storage: StorageConstructor
 }
 
@@ -31,10 +30,10 @@ export const downloadAudioHandler = Handler(request => async (env: Env) => {
       },
     })
 
-  const { mime, buffer } = result.value
+  const { mime_type, buffer } = result.value
 
   const headers = {
-    'Content-Type': mime,
+    'Content-Type': mime_type,
     'Content-Length': buffer.length.toString(),
   }
 

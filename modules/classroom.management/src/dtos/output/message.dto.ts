@@ -5,15 +5,47 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AudioDTO } from './audio.dto'
+import { Audio, Message, Ownership } from '../../entities'
+import { AudioDTO, audioDTOfromGraph } from './audio.dto'
 import { EntityDTO } from './entity.dto'
-import { ParticipantDTO } from './participant.dto'
 
+interface Content {}
 export interface MessageDTO extends EntityDTO {
   classroom_id: string
-  participant: ParticipantDTO
-  type: string
-  data: AudioDTO
-  transcription: string
-  translation: string
+  owner_id: string
+  source: {
+    type: 'audio'
+    data: AudioDTO
+  }
+  contents: Content[]
+}
+
+interface From {
+  classroom_id: string
+  ownership: Ownership
+  audio: Audio
+  audioOwnership: Ownership
+  message: Message
+}
+
+export function messageDTOFromGraph({
+  classroom_id,
+  message,
+  ownership,
+  audio,
+  audioOwnership,
+}: From): MessageDTO {
+  const { id, created_at, updated_at } = message.meta
+  return {
+    id,
+    classroom_id,
+    owner_id: ownership.props.source_id,
+    source: {
+      type: 'audio',
+      data: audioDTOfromGraph({ audio, ownership: audioOwnership }),
+    },
+    contents: [],
+    created_at,
+    updated_at,
+  }
 }

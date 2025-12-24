@@ -16,7 +16,7 @@ interface Request {
 }
 
 interface Response {
-  mime: string
+  mime_type: string
   buffer: Buffer
 }
 
@@ -44,7 +44,7 @@ export const downloadAudio = Service<Request, Env, Response>(
       if (!buffer) return Left({ status: 'error', message: 'Audio not found' })
 
       return Right({
-        mime: audio.props.mime_type,
+        mime_type: audio.props.mime_type,
         buffer,
       })
     },

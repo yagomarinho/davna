@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2025 Yago Marinho (Davna)
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import {
   Handler,
   Identifiable,
@@ -7,16 +14,18 @@ import {
   UnitOfWorkSaga,
 } from '@davna/core'
 import { ClassroomFedRepository } from '../repositories'
-import { USAGE_UNITS } from '../entities'
+import { SUPORTED_MIME_TYPE, USAGE_UNITS } from '../entities'
 import { authorizeConsumption } from '../services/authorize.consumption'
 import { Storage } from '@davna/infra'
 import { createPresignedAudio } from '../services/create.presigned.audio'
+import { audioDTOfromGraph } from '../dtos'
 
 interface Metadata {
   account: Identifiable
 }
 
 interface Data {
+  mime_type: SUPORTED_MIME_TYPE
   duration: {
     unit: USAGE_UNITS.SECONDS
     value: number
@@ -31,7 +40,7 @@ interface Env {
 export const reserveConsumptionHandler = Handler<Env, Data, Metadata>(
   request => async env => {
     const owner_id = request.metadata.account.id
-    const { duration } = request.data
+    const { duration, mime_type } = request.data
     const { storage } = env
 
     const authorizedResult = await authorizeConsumption({
@@ -48,8 +57,10 @@ export const reserveConsumptionHandler = Handler<Env, Data, Metadata>(
     const uow = UnitOfWorkSaga()
     try {
       const repository = SagaRepositoryProxy(env.repository, uow)
+
       const createAudioResult = await createPresignedAudio({
         duration,
+        mime_type,
         owner_id,
       })({
         repository,
@@ -58,17 +69,18 @@ export const reserveConsumptionHandler = Handler<Env, Data, Metadata>(
 
       if (isLeft(createAudioResult)) throw new Error('Invalid result')
 
-      return Response.data({})
-    } catch (e: any) {
-      // eslint-disable-next-line no-console
-      console.error(e)
+      const { audio, ownership } = createAudioResult.value
 
-      await uow.rollback()
-
-      return Response({
-        metadata: { headers: { status: 500 } },
-        data: { message: 'Internal server error' },
+      return Response.data({
+        audio: audioDTOfromGraph({ audio, ownership }),
+        presigned_url: {
+          url: audio.props.metadata.props.presignedUrl,
+          expires_at: audio.props.metadata.props.expires_at,
+        },
       })
+    } catch (e: any) {
+      await uow.rollback()
+      throw e
     }
   },
 )

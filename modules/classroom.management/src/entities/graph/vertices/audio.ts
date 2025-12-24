@@ -40,7 +40,6 @@ interface StorageRef {
   type: STORAGE_TYPE
   internal_id: string
   bucket: string
-  download_url: string
 }
 
 export interface AudioProps {
@@ -141,10 +140,14 @@ export function _createAudioMetadata(
 }
 
 export function _createAudioStorage(
-  props: StorageRef,
+  { bucket, internal_id, type }: StorageRef,
   _idempotency_key: string,
 ): ValueObject<StorageRef, AudioStorageURI> {
-  return ValueObject(props, _idempotency_key, AudioStorageURI)
+  return ValueObject(
+    { bucket, internal_id, type },
+    _idempotency_key,
+    AudioStorageURI,
+  )
 }
 
 const converter: MongoConverter<Audio> = {

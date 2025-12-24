@@ -5,16 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DraftEntity, Entity, EntityContext, isEntity } from '@davna/core'
+import {
+  createMeta,
+  DraftEntity,
+  Entity,
+  EntityContext,
+  isEntity,
+} from '@davna/core'
 
 function isValidObjectId(id) {
   return /^[a-fA-F0-9]{24}$/.test(id)
 }
 
 export function mongoEntityContext(): EntityContext {
-  let _key = ''
+  let _key: string | undefined = undefined
 
-  const setIdempotency: EntityContext['setIdempotency'] = (key = '') => {
+  const setIdempotency: EntityContext['setIdempotency'] = key => {
     _key = key
   }
 
@@ -22,20 +28,19 @@ export function mongoEntityContext(): EntityContext {
     entity: DraftEntity<E>,
   ): entity is E => isEntity(entity) && isValidObjectId(entity.meta.id)
 
-  const createMeta: EntityContext['createMeta'] = ({
+  const _createMeta: EntityContext['createMeta'] = ({
     id = '',
     created_at,
     updated_at,
     _idempotency_key,
   } = {}) => {
     const now = new Date()
-    return {
+    return createMeta({
       id,
-      _r: 'entity',
       created_at: created_at ?? now,
       updated_at: updated_at ?? now,
-      _idempotency_key: _idempotency_key ?? _key,
-    }
+      _idempotency_key: _key ?? _idempotency_key ?? '',
+    })
   }
 
   const declareEntity: EntityContext['declareEntity'] = async <
@@ -45,13 +50,13 @@ export function mongoEntityContext(): EntityContext {
   ): Promise<E> =>
     entity._b(
       entity.props,
-      await createMeta(validateEntity(entity) ? entity.meta : {}),
+      await _createMeta(validateEntity(entity) ? entity.meta : {}),
     ) as any
 
   return {
     declareEntity,
     validateEntity,
-    createMeta,
+    createMeta: _createMeta,
     setIdempotency,
   }
 }

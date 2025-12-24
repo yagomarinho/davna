@@ -5,16 +5,36 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { RawProps } from '@davna/core'
+import { Audio, AudioProps, Ownership } from '../../entities'
 import { EntityDTO } from './entity.dto'
 
-export interface AudioDTO extends EntityDTO {
+export interface AudioDTO extends EntityDTO, RawProps<AudioProps> {
   owner_id: string
-  name: string
-  mime_type: string
-  duration: number
-  src: string
-  internal_ref: {
-    storage: string
-    identifier: string
+}
+
+export function audioDTOfromGraph({
+  audio,
+  ownership,
+}: {
+  audio: Audio
+  ownership: Ownership
+}): AudioDTO {
+  const { status, filename, duration, mime_type, url, storage, metadata } =
+    audio.props
+  const { id, created_at, updated_at } = audio.meta
+
+  return {
+    id,
+    owner_id: ownership.props.target_id,
+    status,
+    filename,
+    duration,
+    mime_type,
+    url,
+    storage: storage.props,
+    metadata: metadata.props,
+    created_at,
+    updated_at,
   }
 }
