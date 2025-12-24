@@ -56,6 +56,7 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
       // Declarar que toda a transação é idempotente antes de tudo
       // env.entityContext.setIdempotency(metadata.idempotency_key)
       // Esse padrão de entity.setIdempotency será realizado por um middleware
+      // antes de chamar o handler
 
       const { multimedia, storage } = env
       const {
@@ -95,8 +96,6 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
           },
         })
 
-      // Pegar o áudio através do audio_id e presigned_url
-      // Verificar se está válido o presigned_url
       const audio = await env.repository.methods.get(audio_id)
 
       if (
@@ -162,14 +161,12 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
             data: { message: 'Invalid audio to append' },
           })
 
-        // converter o áudio para um formato válido (mp4)
         const converted = await multimedia.convert({
           buffer,
           mime: audio.props.mime_type,
           name: audio.props.filename,
         })
 
-        // reescrever o áudio no formato atual
         const { bucket, identifier, storage_type } = await _storage.upload({
           source: Readable.from(converted.buffer),
           metadata: {
@@ -180,8 +177,6 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
           },
         })
 
-        // atualizar o áudio
-        // criar uma mensagem
         const [updatedAudio, message] = await Promise.all([
           repository.methods.set<Audio>(
             createAudio(
@@ -208,7 +203,6 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
           repository.methods.set(createMessage()),
         ])
 
-        // criar um attach da mensagem
         const [ownership] = await Promise.all([
           repository.methods.set(
             createOwnership({
@@ -233,8 +227,8 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
         ])
 
         // chamar o classroom interactions guidance
+        // classroomInteractionsGuidance(classroom_id)
 
-        // retornar um evento de mensagem atada
         return Response.data({
           message: messageDTOFromGraph({
             classroom_id,

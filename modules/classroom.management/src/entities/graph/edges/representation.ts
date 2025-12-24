@@ -22,6 +22,12 @@ import {
 import { Edge, EdgeProps } from './edge'
 import { MongoConverter, MongoRepository } from '@davna/infra'
 
+export enum REPRESENTATION_TYPE {
+  TRANSLATION = 'translation',
+  TRANSCRIPTION = 'transcription',
+  // SUMMARY = 'summary', // Aceitar outros tipos de representação no futuro
+}
+
 export const RepresentationURI = 'representation'
 export type RepresentationURI = typeof RepresentationURI
 
@@ -33,6 +39,7 @@ export type RepresentationVersion = typeof RepresentationVersion
 // resource.id is target_id
 export interface RepresentationProps extends EdgeProps {
   target_type: ClassroomURI | MessageURI | AudioURI | TextURI | ParticipantURI
+  type: REPRESENTATION_TYPE
 }
 
 export interface Representation extends Edge<
@@ -61,7 +68,7 @@ export function createRepresentation(
   _version?: RepresentationVersion,
 ): Representation
 export function createRepresentation(
-  { source_id, target_id, target_type }: RepresentationProps,
+  { source_id, target_id, target_type, type }: RepresentationProps,
   meta?: EntityMeta,
   _version: RepresentationVersion = RepresentationVersion,
 ): DraftEntity<Representation> | Representation {
@@ -69,7 +76,7 @@ export function createRepresentation(
     RepresentationURI,
     _version,
     createRepresentation,
-    { source_id, target_id, target_type },
+    { source_id, target_id, target_type, type },
     meta as any,
   )
 }
@@ -79,13 +86,14 @@ const converter: MongoConverter<Representation> = {
     _v,
     _t,
     meta: { id, created_at, updated_at, _idempotency_key },
-    props: { source_id, target_id, target_type },
+    props: { source_id, target_id, target_type, type },
   }) => ({
     id,
     data: {
       source_id,
       target_id,
       target_type,
+      type,
       created_at,
       updated_at,
       _idempotency_key,
@@ -99,6 +107,7 @@ const converter: MongoConverter<Representation> = {
       source_id,
       target_id,
       target_type,
+      type,
       created_at,
       updated_at,
       _idempotency_key,
@@ -106,7 +115,7 @@ const converter: MongoConverter<Representation> = {
     },
   }) =>
     createRepresentation(
-      { source_id, target_id, target_type },
+      { source_id, target_id, target_type, type },
       createMeta({ id, created_at, updated_at, _idempotency_key }),
       __version,
     ),

@@ -37,7 +37,7 @@ interface Response {
 export const openClassroom = Service<Request, Env, Response>(
   ({ owner_id, participant_ids }) =>
     async ({ repository }) => {
-      const [owner, participants] = await Promise.all([
+      const [owner, otherParticipants] = await Promise.all([
         repository.methods.get(owner_id),
         repository.methods.query(
           QueryBuilder<Participant>()
@@ -53,7 +53,11 @@ export const openClassroom = Service<Request, Env, Response>(
           message: 'Invalid owner id',
         })
 
-      if (participant_ids.some(id => !participants.find(p => p.meta.id === id)))
+      if (
+        participant_ids.some(
+          id => !otherParticipants.find(p => p.meta.id === id),
+        )
+      )
         return Left({
           status: 'error',
           message: 'Invalid participant ids related',
@@ -62,6 +66,8 @@ export const openClassroom = Service<Request, Env, Response>(
       const classroom = await repository.methods.set(
         createClassroom({ name: `classroom-${new Date().toISOString()}` }), // Essa política de criação de nomes pode mudar e deve ser externa
       )
+
+      const participants = otherParticipants.concat(owner)
 
       const [result, ownership] = await Promise.all([
         repository.methods.batch(
@@ -79,7 +85,7 @@ export const openClassroom = Service<Request, Env, Response>(
         ),
         repository.methods.set(
           createOwnership({
-            source_id: owner_id,
+            source_id: owner.meta.id,
             target_id: classroom.meta.id,
             target_type: ClassroomURI,
           }),

@@ -57,7 +57,6 @@ export const createPresignedAudio = Service<Request, Env, Response>(
           },
           storage: {
             bucket,
-            download_url: '',
             internal_id: identifier,
             type: storage_type,
           },

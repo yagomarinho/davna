@@ -5,35 +5,50 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
+import {
+  Handler,
+  Identifiable,
+  isLeft,
+  Response,
+  SagaRepositoryProxy,
+  UnitOfWorkSaga,
+} from '@davna/core'
 
-import { Classroom } from '../entities'
-
-import { createClassroom } from '../services/open.classroom'
+import { openClassroom } from '../services/open.classroom'
+import { ClassroomFedRepository } from '../repositories'
 
 interface Metadata {
-  account: Identifier
+  account: Identifiable
 }
 
 interface Env {
-  classrooms: Repository<Classroom>
+  repository: ClassroomFedRepository
 }
 
-export const createClassroomHandler = Handler<Env, any, Metadata>(
+export const openClassroomHandler = Handler<Env, any, Metadata>(
   ({ metadata }) =>
-    async ({ classrooms }) => {
+    async env => {
       const { account } = metadata
 
-      const result = await createClassroom({
-        participant_id: account.id,
-      })({ classrooms })
+      const uow = UnitOfWorkSaga()
+      try {
+        const repository = SagaRepositoryProxy(env.repository, uow)
+        const result = await openClassroom({
+          owner_id: account.id,
+          participant_ids: [],
+        })({ repository })
 
-      if (isLeft(result)) {
-        return Response.metadata({ status: 'error' })
+        if (isLeft(result)) {
+          await uow.rollback()
+          return Response.metadata({ status: 'error' })
+        }
+
+        const { classroom } = result.value
+
+        return Response.data({ classroom })
+      } catch (e) {
+        await uow.rollback()
+        throw e
       }
-
-      const { classroom } = result.value
-
-      return Response.data({ classroom })
     },
 )
