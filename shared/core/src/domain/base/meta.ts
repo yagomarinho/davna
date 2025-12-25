@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CreateMetaParams } from '@davna/core'
 import { Auditable, Idempotent, Identifiable, Resource } from '../composition'
 
 export const EntityURI = 'entity'
@@ -24,7 +25,7 @@ export function createMeta({
   id,
   updated_at,
   _idempotency_key,
-}: Omit<EntityMeta, '_r'>): EntityMeta {
+}: Required<CreateMetaParams>): EntityMeta {
   return {
     id,
     _r: 'entity',

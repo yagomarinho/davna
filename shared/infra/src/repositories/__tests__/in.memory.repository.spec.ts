@@ -1,12 +1,28 @@
-import { Batch, EntityContext, Filter, QueryBuilder } from '@davna/core'
+import {
+  Batch,
+  EntityContext,
+  Filter,
+  QueryBuilder,
+  Repository,
+} from '@davna/core'
 
 import { InMemoryRepository } from '../in.memory.repository'
-import { createEn, En, setName } from './fakes/fake.entity'
+import { createEn, En, EnURI, setName } from './fakes/fake.entity'
 import { fakeIdempotencyKey } from './fakes/fake.idempotency.key'
+import { createEntityContext } from '../in.memory.repository/create.entity.context'
 
 describe('InMemoryRepository', () => {
+  let entityContext: EntityContext
+  let repo: Repository<En>
+
+  beforeEach(() => {
+    entityContext = createEntityContext()
+    repo = InMemoryRepository<En>({ entityContext, tag: EnURI })
+  })
+
   it('should create a new entity without id and assign id/created_at/updated_at', async () => {
-    const repo = InMemoryRepository<En>()
+    entityContext.setIdempotency(fakeIdempotencyKey(1))
+
     const en = createEn({ name: 'John', value: 10, tags: [] })
     const saved = await repo.methods.set(en)
 
@@ -22,18 +38,19 @@ describe('InMemoryRepository', () => {
   it('should use a custom id provider when provided', async () => {
     let i = 100
 
-    const entityContext = {
+    const customContext = {
       declareEntity: jest.fn().mockImplementation(entity =>
         entity._b(entity.props, {
           _r: 'entity',
           id: `u-${i++}`,
           created_at: new Date(),
           updated_at: new Date(),
+          _idempotency_key: '',
         }),
       ),
     } as any as jest.Mocked<EntityContext>
 
-    const repo = InMemoryRepository<En>({ entityContext, tag: 'En' })
+    repo = InMemoryRepository<En>({ entityContext: customContext, tag: EnURI })
 
     const a = await repo.methods.set(
       createEn({ name: 'John', value: 10, tags: [] }),
@@ -48,8 +65,6 @@ describe('InMemoryRepository', () => {
   })
 
   it('should update an existing entity (same id) and refresh updated_at without duplicating', async () => {
-    const repo = InMemoryRepository<En>()
-
     const created = await repo.methods.set(
       createEn({ name: 'Ana Maria', value: 15, tags: [] }),
     )
@@ -58,13 +73,12 @@ describe('InMemoryRepository', () => {
 
     expect(updated.meta.id).toBe(created.meta.id)
 
-    const all = await repo.methods.query()
+    const { data: all } = await repo.methods.query()
     expect(all.length).toBe(1)
     expect(all[0].props.name).toBe('Ana')
   })
 
   it('should remove an entity by id', async () => {
-    const repo = InMemoryRepository<En>({})
     const john = await repo.methods.set(
       createEn({ name: 'John', value: 10, tags: [] }),
     )
@@ -79,8 +93,6 @@ describe('InMemoryRepository', () => {
   })
 
   it('should support limit and cursor for pagination', async () => {
-    const repo = InMemoryRepository<En>()
-
     const upsert: Batch<En> = Array.from({ length: 7 }, (_, i) => ({
       type: 'upsert',
       data: createEn({
@@ -92,13 +104,20 @@ describe('InMemoryRepository', () => {
 
     await repo.methods.batch(upsert)
 
-    const page1 = await repo.methods.query(QueryBuilder<En>().limit(3).build())
-    const page2 = await repo.methods.query(
-      QueryBuilder<En>().cursor('1').limit(3).build(),
+    const { data: page1, next_cursor: cursor1 } = await repo.methods.query(
+      QueryBuilder<En>().limit(3).build(),
     )
 
-    const page3 = await repo.methods.query(
-      QueryBuilder<En>().cursor('2').limit(3).build(),
+    expect(cursor1).toBeTruthy()
+
+    const { data: page2, next_cursor: cursor2 } = await repo.methods.query(
+      QueryBuilder<En>().cursor(cursor1!).limit(3).build(),
+    )
+
+    expect(cursor2).toBeTruthy()
+
+    const { data: page3 } = await repo.methods.query(
+      QueryBuilder<En>().cursor(cursor2!).limit(3).build(),
     )
 
     expect(page1.map(u => u.props.name)).toEqual(['U0', 'U1', 'U2'])
@@ -115,7 +134,7 @@ describe('InMemoryRepository', () => {
       { type: 'upsert', data: createEn({ name: 'B', value: 25, tags: [] }) },
     ])
 
-    const s1 = await repo.methods.query(
+    const { data: s1 } = await repo.methods.query(
       QueryBuilder<En>()
         .orderBy([{ property: 'name', direction: 'asc' }])
         .build(),
@@ -123,7 +142,7 @@ describe('InMemoryRepository', () => {
 
     expect(s1.map(v => v.props.name)).toEqual(['A', 'B', 'C'])
 
-    const s2 = await repo.methods.query(
+    const { data: s2 } = await repo.methods.query(
       QueryBuilder<En>()
         .orderBy([{ property: 'value', direction: 'desc' }])
         .build(),
@@ -159,10 +178,10 @@ describe('InMemoryRepository', () => {
     })
 
     it('should filter with == and !=', async () => {
-      const eq = await repo.methods.query(
+      const { data: eq } = await repo.methods.query(
         QueryBuilder<En>().filterBy('name', '==', 'Ana').build(),
       )
-      const ne = await repo.methods.query(
+      const { data: ne } = await repo.methods.query(
         QueryBuilder<En>().filterBy('name', '!=', 'Ana').build(),
       )
 
@@ -171,16 +190,16 @@ describe('InMemoryRepository', () => {
     })
 
     it('should filter with >, >=, <, <=', async () => {
-      const gt = await repo.methods.query(
+      const { data: gt } = await repo.methods.query(
         QueryBuilder<En>().filterBy('value', '>', 28).build(),
       )
-      const gte = await repo.methods.query(
+      const { data: gte } = await repo.methods.query(
         QueryBuilder<En>().filterBy('value', '>=', 28).build(),
       )
-      const lt = await repo.methods.query(
+      const { data: lt } = await repo.methods.query(
         QueryBuilder<En>().filterBy('value', '<', 28).build(),
       )
-      const lte = await repo.methods.query(
+      const { data: lte } = await repo.methods.query(
         QueryBuilder<En>().filterBy('value', '<=', 28).build(),
       )
 
@@ -191,10 +210,10 @@ describe('InMemoryRepository', () => {
     })
 
     it('should filter with in and not-in', async () => {
-      const _in = await repo.methods.query(
+      const { data: _in } = await repo.methods.query(
         QueryBuilder<En>().filterBy('name', 'in', ['Ana', 'X']).build(),
       )
-      const nin = await repo.methods.query(
+      const { data: nin } = await repo.methods.query(
         QueryBuilder<En>().filterBy('name', 'not-in', ['Ana', 'X']).build(),
       )
 
@@ -203,7 +222,7 @@ describe('InMemoryRepository', () => {
     })
 
     it('should filter with between', async () => {
-      const between = await repo.methods.query(
+      const { data: between } = await repo.methods.query(
         QueryBuilder<En>()
           .filterBy('value', 'between', { start: 25, end: 29 })
           .build(),
@@ -212,10 +231,10 @@ describe('InMemoryRepository', () => {
     })
 
     it('should filter with array-contains and array-contains-any', async () => {
-      const contains = await repo.methods.query(
+      const { data: contains } = await repo.methods.query(
         QueryBuilder<En>().filterBy('tags', 'array-contains', 'a').build(),
       )
-      const any = await repo.methods.query(
+      const { data: any } = await repo.methods.query(
         QueryBuilder<En>()
           .filterBy('tags', 'array-contains-any', ['a', 'z'])
           .build(),
@@ -253,7 +272,7 @@ describe('InMemoryRepository', () => {
         Filter.where('value', '<', 31),
         Filter.where('tags', 'array-contains', 'b'),
       )
-      const res = await repo.methods.query(
+      const { data: res } = await repo.methods.query(
         QueryBuilder<En>().filterBy(where).build(),
       )
 
@@ -265,7 +284,7 @@ describe('InMemoryRepository', () => {
         Filter.where('value', '<', 23),
         Filter.where('name', '==', 'Bruno'),
       )
-      const res = await repo.methods.query(
+      const { data: res } = await repo.methods.query(
         QueryBuilder<En>().filterBy(where).build(),
       )
       expect(res.map(v => v.props.name).sort()).toEqual(['Bruno', 'Carla'])
@@ -299,7 +318,7 @@ describe('InMemoryRepository', () => {
       }),
     )
 
-    const res = await repo.methods.query(
+    const { data: res } = await repo.methods.query(
       QueryBuilder()
         .filterBy(Filter.where('name', '==', 'None'))
         .build(),
@@ -332,7 +351,7 @@ describe('InMemoryRepository', () => {
       }),
     )
 
-    const fetched = await repo.methods.query()
+    const { data: fetched } = await repo.methods.query()
     expect(fetched.length).toBe(3)
   })
 
@@ -366,7 +385,7 @@ describe('InMemoryRepository', () => {
       }),
     )
 
-    const fetched = await repo.methods.query()
+    const { data: fetched } = await repo.methods.query()
     expect(fetched.length).toBe(2)
     expect(fetched.map(v => v.props.name).sort()).toEqual(['Miguel', 'Pablo'])
   })

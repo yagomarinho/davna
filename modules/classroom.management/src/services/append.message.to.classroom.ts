@@ -43,7 +43,13 @@ interface Response {
 export const appendMessageToClassroom = Service<Request, Env, Response>(
   ({ classroom_id, participant_id, message_type, data }) =>
     async ({ repository, resourceResolver }) => {
-      const [classroom, participant, participation] = await Promise.all([
+      const [
+        classroom,
+        participant,
+        {
+          data: [participation],
+        },
+      ] = await Promise.all([
         repository.methods.get(classroom_id),
         repository.methods.get(participant_id),
         repository.methods.query(
@@ -65,7 +71,7 @@ export const appendMessageToClassroom = Service<Request, Env, Response>(
       if (!participant || participant._t !== 'participant')
         return Left({ status: 'error', message: 'No founded participant' })
 
-      if (!participation[0])
+      if (!participation)
         return Left({
           status: 'error',
           message: `This classroom doesn't contains this participant: ${participant_id}`,

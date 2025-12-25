@@ -97,6 +97,7 @@ export function MongoDBStorage(config: any): MongoDBStorage {
             resolve({
               identifier: id,
               storage_type: STORAGE_TYPE.MONGO_GRIDFS,
+              bucket: config.bucket,
             })
           })
       }),
@@ -129,6 +130,16 @@ export function MongoDBStorage(config: any): MongoDBStorage {
       }
     },
   )
+
+  const getSignedUrl: MongoDBStorage['getSignedUrl'] = async () =>
+    // Tenho que imaginar como implementar isso aqui para o mongodb interno
+    ({
+      url: '',
+      expires_at: new Date(),
+      identifier: '',
+      storage_type: STORAGE_TYPE.MONGO_GRIDFS,
+      bucket: config.bucket,
+    })
 
   const check: MongoDBStorage['check'] = verifyConnectionProxy(
     async (id): Promise<boolean> => {
@@ -165,6 +176,7 @@ export function MongoDBStorage(config: any): MongoDBStorage {
     upload,
     download,
     check,
+    getSignedUrl,
   }
 }
 

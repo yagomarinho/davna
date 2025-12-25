@@ -39,7 +39,6 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
-      idempotency_key: 'idempotent',
     })({ signer, sessions, accounts, config })
 
     expect(isLeft(result)).toBeTruthy()
@@ -61,7 +60,6 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
-      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(removeSpy).toHaveBeenCalledWith(expired.meta!.id)
@@ -84,7 +82,6 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
-      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(removeSpy).toHaveBeenCalledWith(expired.meta!.id)
@@ -128,7 +125,6 @@ describe('refresh session service', () => {
     const result: any = await refreshSession({
       signature: stable_refresh,
       user_agent,
-      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(setSpy).not.toHaveBeenCalled()
@@ -198,7 +194,6 @@ describe('refresh session service', () => {
     const result: any = await refreshSession({
       signature: 'old.refresh',
       user_agent,
-      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(setSpy).toHaveBeenCalled()
@@ -238,31 +233,10 @@ describe('refresh session service', () => {
     const result = await refreshSession({
       signature: refresh_signature,
       user_agent,
-      idempotency_key: 'idempotent',
     })({ signer, accounts, sessions, config })
 
     expect(spy).toHaveBeenCalled()
     expect(isLeft(result)).toBeTruthy()
     expect(JSON.stringify(result)).toContain('Invalid Signature')
-  })
-
-  it('should return Left when try to refresh token with same idempotency key', async () => {
-    await sessions.methods.set(
-      createSession({
-        account_id,
-        user_agent: 'Old-UA',
-        refresh_token: refresh_signature,
-        expiresIn: new Date(Date.now() + 3 * dayTime),
-      }),
-    )
-
-    const result = await refreshSession({
-      signature: refresh_signature,
-      user_agent,
-      idempotency_key: 'idempotent',
-    })({ signer, accounts, sessions, config })
-
-    expect(isLeft(result)).toBeTruthy()
-    expect(JSON.stringify(result)).toContain('Already done')
   })
 })

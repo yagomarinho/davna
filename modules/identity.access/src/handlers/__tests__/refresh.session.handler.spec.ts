@@ -65,7 +65,6 @@ describe('refreshSessionHandler', () => {
         headers: {
           'user-agent': user_agent,
           'x-refresh-authorization': bearer,
-          'x-idempotency-key': 'idempotent',
         },
       },
     })
@@ -99,7 +98,6 @@ describe('refreshSessionHandler', () => {
         headers: {
           'user-agent': user_agent,
           'x-refresh-authorization': bearer,
-          'x-idempotency-key': 'idempotent',
         },
       },
     })
@@ -140,7 +138,6 @@ describe('refreshSessionHandler', () => {
         headers: {
           'user-agent': user_agent,
           'x-refresh-authorization': bearer,
-          'x-idempotency-key': 'idempotent',
         },
       },
     })

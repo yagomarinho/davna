@@ -70,8 +70,6 @@ export function InMemoryRepository<E extends Entity>({
     return e
   }
 
-  // idempontecy key makes no difference for hard remove operation
-  // but kept for interface consistency and for global id contexts
   const remove: Repository<E>['methods']['remove'] = id => {
     repo = repo.filter(el => el.meta.id !== id)
   }
@@ -80,6 +78,7 @@ export function InMemoryRepository<E extends Entity>({
     { filter_by, order_by, cursor_ref, batch_size } = QueryBuilder<E>().build(),
   ) => {
     let r = [...repo]
+    let next_cursor: string | undefined = undefined
 
     if (order_by && order_by.length) r.sort(applySorts(order_by))
 
@@ -87,14 +86,18 @@ export function InMemoryRepository<E extends Entity>({
 
     if (batch_size && batch_size !== Infinity) {
       const start = cursor_ref ? Number(cursor_ref) * batch_size : 0
-      const end = cursor_ref
-        ? (Number(cursor_ref) + 1) * batch_size
-        : batch_size
+      const end =
+        (cursor_ref ? (Number(cursor_ref) + 1) * batch_size : batch_size) + 1
 
       r = r.slice(start, end)
+
+      if (r.length === batch_size + 1) {
+        next_cursor = ((cursor_ref ? Number(cursor_ref) : 0) + 1).toString()
+        r = r.slice(0, -1)
+      }
     }
 
-    return r
+    return { data: r, next_cursor }
   }
 
   const batch: Repository<E>['methods']['batch'] = async b => {

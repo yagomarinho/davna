@@ -79,6 +79,7 @@ export function AWSS3Storage({
     return {
       identifier: result.Key ?? identifier,
       storage_type: STORAGE_TYPE.AWS_S3,
+      bucket,
     }
   }
 
@@ -104,10 +105,14 @@ export function AWSS3Storage({
     }
   }
 
+  // Implementar o signedUrl para o aws.s3
+  const getSignedUrl: Storage['getSignedUrl'] = async () => ({}) as any
+
   return {
     download,
     upload,
     check,
+    getSignedUrl,
   }
 }
 

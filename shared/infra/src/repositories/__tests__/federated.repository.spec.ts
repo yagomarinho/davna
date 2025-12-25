@@ -132,7 +132,7 @@ describe('FederatedRepository', () => {
     const user = await repo.methods.set(createUser({ name: 'Ana' }))
     const order = await repo.methods.set(createOrder({ value: 100 }))
 
-    const result = await repo.methods.query()
+    const { data: result } = await repo.methods.query()
 
     expect(result.map(e => e.meta.id).sort()).toEqual([
       user.meta.id,
@@ -144,7 +144,10 @@ describe('FederatedRepository', () => {
     const user = await userRepo.methods.set(createUser({ name: 'Ana' }))
     await orderRepo.methods.set(createOrder({ value: 100 }))
 
-    const result = await repo.methods.query(QueryBuilder().build(), UserURI)
+    const { data: result } = await repo.methods.query(
+      QueryBuilder().build(),
+      UserURI,
+    )
 
     expect(result).toEqual([
       expect.objectContaining({
@@ -174,8 +177,8 @@ describe('FederatedRepository', () => {
       }),
     )
 
-    expect((await userRepo.methods.query()).length).toBe(0)
-    expect((await orderRepo.methods.query()).length).toBe(2)
+    expect((await userRepo.methods.query()).data.length).toBe(0)
+    expect((await orderRepo.methods.query()).data.length).toBe(2)
   })
 
   it('should return failed batch result when any repository batch fails', async () => {

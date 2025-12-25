@@ -176,7 +176,7 @@ export function MongoRepository<E extends Entity>({
 
       if (typeof q.batch_size === 'number' && q.batch_size !== Infinity) {
         const skip = q.cursor_ref ? parseInt(q.cursor_ref) * q.batch_size : 0
-        find = find.limit(q.batch_size).skip(skip)
+        find = find.limit(q.batch_size + 1).skip(skip)
       }
 
       if (q.order_by && q.order_by.length) {
@@ -185,9 +185,23 @@ export function MongoRepository<E extends Entity>({
 
       if (projection) find.project(projection)
 
-      return (await find.toArray()).map(doc =>
+      let data = (await find.toArray()).map(doc =>
         converter.from(fromDocument(doc)),
       )
+
+      let next_cursor: string | undefined = undefined
+
+      if (data.length === q.batch_size + 1) {
+        data = data.slice(0, -1)
+        next_cursor = (
+          (q.cursor_ref ? parseInt(q.cursor_ref) : 0) + 1
+        ).toString()
+      }
+
+      return {
+        data,
+        next_cursor,
+      }
     },
   )
 

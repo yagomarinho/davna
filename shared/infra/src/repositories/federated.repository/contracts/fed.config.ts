@@ -5,13 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Entity, EntityContext, RepositoryResult } from '@davna/core'
+import {
+  DraftEntity,
+  Entity,
+  EntityContext,
+  RepositoryResult,
+} from '@davna/core'
 import { ID } from '@davna/kernel'
 
 import { RepoInitilizer } from './repo.initializer'
 
 export interface IDContext extends EntityContext {
-  getEntityTag<T extends Entity>(entity: T): string
+  getEntityTag<T extends Entity>(entity: DraftEntity<T>): string
   getIDEntity(id: string): RepositoryResult<ID | undefined>
 }
 

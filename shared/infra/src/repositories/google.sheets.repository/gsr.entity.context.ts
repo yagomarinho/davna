@@ -19,7 +19,7 @@ export function GSRepoEntityContext({
   spreadsheetId,
   range,
 }: ContextProps): EntityContext {
-  let _key = ''
+  let _key: string | undefined = undefined
 
   const setIdempotency: EntityContext['setIdempotency'] = key => {
     _key = key
@@ -42,7 +42,7 @@ export function GSRepoEntityContext({
       _r: 'entity',
       created_at: created_at ?? now,
       updated_at: updated_at ?? now,
-      _idempotency_key: _idempotency_key ?? _key,
+      _idempotency_key: _key ?? _idempotency_key ?? '',
     }
   }
 

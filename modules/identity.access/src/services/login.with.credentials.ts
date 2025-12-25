@@ -16,7 +16,6 @@ interface Request {
   email: string
   password: string
   user_agent: string
-  idempotency_key: string
 }
 
 interface Token {
@@ -39,22 +38,15 @@ interface Env {
 }
 
 export const loginWithCredentials = Service<Request, Env, TokenResponse>(
-  ({ email, password, user_agent, idempotency_key }) =>
+  ({ email, password, user_agent }) =>
     async ({ auth, signer, sessions, accounts, config }) => {
       try {
-        const [alreadyDone] = await sessions.methods.query(
-          QueryBuilder()
-            .filterBy('_idempotency_key', '==', idempotency_key)
-            .build(),
-        )
-
-        if (alreadyDone)
-          return Left({ status: 'error', message: 'Already done' })
-
         const now = new Date()
         const user = await auth.authenticate(email, password)
 
-        let [account] = await accounts.methods.query(
+        let {
+          data: [account],
+        } = await accounts.methods.query(
           QueryBuilder().filterBy('external_ref', '==', user.id).build(),
         )
 

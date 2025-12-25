@@ -20,7 +20,7 @@ import { EntityContext, isEntity } from '@davna/core'
 
 export function createEntityContext(): EntityContext {
   let n = 0
-  let _key = ''
+  let _key: string | undefined = undefined
 
   const setIdempotency: EntityContext['setIdempotency'] = key => {
     _key = key
@@ -41,7 +41,7 @@ export function createEntityContext(): EntityContext {
       _r: 'entity',
       created_at: created_at ?? now,
       updated_at: updated_at ?? now,
-      _idempotency_key: _idempotency_key ?? _key,
+      _idempotency_key: _key ?? _idempotency_key ?? '',
     }
   }
 

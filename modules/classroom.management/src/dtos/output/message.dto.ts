@@ -7,9 +7,9 @@
 
 import { Audio, Message, Ownership } from '../../entities'
 import { AudioDTO, audioDTOfromGraph } from './audio.dto'
+import { Content } from './content'
 import { EntityDTO } from './entity.dto'
 
-interface Content {}
 export interface MessageDTO extends EntityDTO {
   classroom_id: string
   owner_id: string
@@ -22,16 +22,16 @@ export interface MessageDTO extends EntityDTO {
 
 interface From {
   classroom_id: string
-  ownership: Ownership
+  message: Message
+  messageOwnership: Ownership
   audio: Audio
   audioOwnership: Ownership
-  message: Message
 }
 
 export function messageDTOFromGraph({
   classroom_id,
   message,
-  ownership,
+  messageOwnership,
   audio,
   audioOwnership,
 }: From): MessageDTO {
@@ -39,7 +39,7 @@ export function messageDTOFromGraph({
   return {
     id,
     classroom_id,
-    owner_id: ownership.props.source_id,
+    owner_id: messageOwnership.props.source_id,
     source: {
       type: 'audio',
       data: audioDTOfromGraph({ audio, ownership: audioOwnership }),

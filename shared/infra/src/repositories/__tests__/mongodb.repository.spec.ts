@@ -3,6 +3,7 @@ import { MongoConverter, MongoRepository } from '../mongo.repository'
 import { createEn, En, EnURI } from './fakes/fake.entity'
 import { MongoWithURIConfig } from '../mongo.repository/mongo.client.config'
 import { fakeIdempotencyKey } from './fakes/fake.idempotency.key'
+import { mongoEntityContext } from '../mongo.repository/mongo.entity.context'
 
 const converter: MongoConverter<En> = {
   to: ({
@@ -28,12 +29,14 @@ const converter: MongoConverter<En> = {
     ),
 }
 
+const entityContext = mongoEntityContext()
 const baseConfig: MongoWithURIConfig<En> = {
   uri: process.env.MONGODB_DEFAULT_CONNECT_URI || 'mongodb://localhost:27017',
   database: 'db',
   collection: 'en',
   converter,
   tag: EnURI,
+  entityContext,
 }
 
 describe('mongo db repository', () => {
@@ -46,6 +49,8 @@ describe('mongo db repository', () => {
   })
 
   it('get() busca por _id e aplica converter.from', async () => {
+    entityContext.setIdempotency(fakeIdempotencyKey(1))
+
     entity = await repo.methods.set(
       createEn({
         name: 'Carlos',
@@ -111,7 +116,7 @@ describe('mongo db repository', () => {
   })
 
   it('query() sem where aplica filtro vazio', async () => {
-    const all = await repo.methods.query()
+    const { data: all } = await repo.methods.query()
 
     expect(all.length).toBe(1)
   })
@@ -161,7 +166,7 @@ describe('mongo db repository', () => {
       },
     ])
 
-    const list = await repo.methods.query(
+    const { data: list } = await repo.methods.query(
       QueryBuilder()
         .filterBy('tags', 'array-contains', 'tecnologia')
         .cursor('1')
@@ -173,7 +178,7 @@ describe('mongo db repository', () => {
   })
 
   it('query() com sorts aplica .sort corretamente', async () => {
-    const all = await repo.methods.query(
+    const { data: all } = await repo.methods.query(
       QueryBuilder()
         .orderBy([{ property: 'name', direction: 'desc' }])
         .build(),
@@ -208,7 +213,7 @@ describe('mongo db repository', () => {
         }),
       },
     ])
-    const list = await repo.methods.query(
+    const { data: list } = await repo.methods.query(
       QueryBuilder<En>()
         .orderBy([{ property: 'value', direction: 'desc' }])
         .filterBy('value', '>=', 18)
@@ -226,7 +231,7 @@ describe('mongo db repository', () => {
   })
 
   it("query() com where 'array-contains' mapeia para { field: value }", async () => {
-    const list = await repo.methods.query(
+    const { data: list } = await repo.methods.query(
       QueryBuilder<En>()
         .filterBy('tags', 'array-contains', 'tecnologia')
         .orderBy([{ property: 'value', direction: 'asc' }])
@@ -244,7 +249,7 @@ describe('mongo db repository', () => {
   })
 
   it("query() com where 'between' mapeia para $gte/$lte", async () => {
-    const list = await repo.methods.query(
+    const { data: list } = await repo.methods.query(
       QueryBuilder<En>()
         .filterBy('value', 'between', { start: 18, end: 45 })
         .orderBy([{ property: 'value', direction: 'asc' }])
@@ -262,7 +267,7 @@ describe('mongo db repository', () => {
   })
 
   it("query() com where 'in' mapeia para $in", async () => {
-    const list = await repo.methods.query(
+    const { data: list } = await repo.methods.query(
       QueryBuilder<En>()
         .filterBy('name', 'in', ['Mônica', 'Marcos', 'Miguel'])
         .build(),
@@ -288,7 +293,9 @@ describe('mongo db repository', () => {
     const right = Filter.where('tags', 'array-contains', 'tecnologia')
     const and = Filter.and(left, right)
 
-    const list = await repo.methods.query(QueryBuilder().filterBy(and).build())
+    const { data: list } = await repo.methods.query(
+      QueryBuilder().filterBy(and).build(),
+    )
 
     expect(list).toEqual([
       expect.objectContaining({
@@ -297,13 +304,15 @@ describe('mongo db repository', () => {
     ])
 
     const or = Filter.or(left, right)
-    const list2 = await repo.methods.query(QueryBuilder().filterBy(or).build())
+    const { data: list2 } = await repo.methods.query(
+      QueryBuilder().filterBy(or).build(),
+    )
 
     expect(list2.length).toEqual(3)
   })
 
   it("query() com 'array-contains-any' vira $in", async () => {
-    const list = await repo.methods.query(
+    const { data: list } = await repo.methods.query(
       QueryBuilder<En>()
         .filterBy('tags', 'array-contains-any', [
           'viagens internacionais',

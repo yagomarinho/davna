@@ -26,7 +26,6 @@ export const refreshSessionHandler = Handler(
       const user_agent: string = request.metadata.headers['user-agent']
       const bearer: string =
         request.metadata.headers[config.auth.jwt.refresh_token.headerName]
-      const idempotency_key = request.metadata.headers['x-idempotency-key']
 
       if (!bearer)
         return Response({
@@ -56,7 +55,6 @@ export const refreshSessionHandler = Handler(
       const result = await refreshSession({
         signature,
         user_agent,
-        idempotency_key,
       })({
         accounts,
         sessions,

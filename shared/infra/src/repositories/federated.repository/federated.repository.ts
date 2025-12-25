@@ -20,6 +20,7 @@ import {
   ExtractEntityTag,
   ExtractSearchablePropertiesFromEntity,
   Query,
+  QueryResult,
   Repository,
   Resolvable,
 } from '@davna/core'
@@ -146,13 +147,15 @@ export function FederatedRepository<
   ) => {
     if (tag) {
       const repo = resolveRepo(tag)
-      return repo.methods.query(q) as F[]
+      return (await repo.methods.query(q)) as QueryResult<F>
     }
 
+    // Como performar uma query com batch_size, limit e cursor em todos os repositórios?
     const results = await Promise.all(
       [...repoByTag.values()].map(repo => repo.methods.query(q)),
     )
-    return results.flat() as EntitiesOf<U>[]
+
+    return { data: results.map(result => result.data).flat() }
   }
 
   const batch: FederatedRepository<

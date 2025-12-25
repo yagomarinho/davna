@@ -48,7 +48,9 @@ interface Response {
 export const authorizeConsumption = Service<Data, Env, Response[]>(
   ({ owner_id, requested_consumption }) =>
     async ({ repository }) => {
-      const [participant] = await repository.methods.query(
+      const {
+        data: [participant],
+      } = await repository.methods.query(
         QueryBuilder().filterBy('subject_id', '==', owner_id).build(),
         ParticipantURI,
       )
@@ -59,7 +61,9 @@ export const authorizeConsumption = Service<Data, Env, Response[]>(
           message: `No founded participant related with subject_id: ${owner_id}`,
         })
 
-      const [granted] = await repository.methods.query(
+      const {
+        data: [granted],
+      } = await repository.methods.query(
         QueryBuilder<Granted>()
           .orderBy([{ property: 'priority', direction: 'desc' }])
           .filterBy(
@@ -86,12 +90,12 @@ export const authorizeConsumption = Service<Data, Env, Response[]>(
           message: `Participant has no active entitlement for conversation usage`,
         })
 
-      const entitlementPolicies = await repository.methods.query(
+      const { data: entitlementPolicies } = await repository.methods.query(
         QueryBuilder().filterBy('source_id', '==', entitlement.meta.id).build(),
         PolicyAggregateURI,
       )
 
-      const policies = entitlementPolicies.length
+      const { data: policies } = entitlementPolicies.length
         ? await repository.methods.query(
             QueryBuilder()
               .filterBy(
@@ -102,7 +106,7 @@ export const authorizeConsumption = Service<Data, Env, Response[]>(
               .build(),
             UsagePolicyURI,
           )
-        : []
+        : { data: [] }
 
       if (!policies.length)
         return Left({
@@ -118,7 +122,7 @@ export const authorizeConsumption = Service<Data, Env, Response[]>(
             [AGGREGATION_POLICY.PER_MONTH]: month,
           }
 
-          const usages = await repository.methods.query(
+          const { data: usages } = await repository.methods.query(
             QueryBuilder<Usage>()
               .filterBy(
                 'created_at',

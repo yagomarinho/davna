@@ -8,9 +8,11 @@
 import { RawProps } from '@davna/core'
 import { Audio, AudioProps, Ownership } from '../../entities'
 import { EntityDTO } from './entity.dto'
+import { Content } from './content'
 
 export interface AudioDTO extends EntityDTO, RawProps<AudioProps> {
   owner_id: string
+  contents: Content[]
 }
 
 export function audioDTOfromGraph({
@@ -36,5 +38,6 @@ export function audioDTOfromGraph({
     metadata: metadata.props,
     created_at,
     updated_at,
+    contents: [],
   }
 }

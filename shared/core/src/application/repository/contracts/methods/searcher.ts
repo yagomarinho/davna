@@ -9,6 +9,11 @@ import { Entity } from '../../../../domain'
 import { ExtractSearchablePropertiesFromEntity, Query } from '../../query'
 import { RepositoryResult } from '../types'
 
+export interface QueryResult<E extends Entity> {
+  data: E[]
+  next_cursor?: string
+}
+
 /**
  * Represents the query operation of a repository.
  *
@@ -26,5 +31,7 @@ import { RepositoryResult } from '../types'
  */
 
 export interface RepositorySearcher<E extends Entity> {
-  (q?: Query<ExtractSearchablePropertiesFromEntity<E>>): RepositoryResult<E[]>
+  (
+    q?: Query<ExtractSearchablePropertiesFromEntity<E>>,
+  ): RepositoryResult<QueryResult<E>>
 }

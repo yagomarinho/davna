@@ -37,12 +37,10 @@ interface Response {
 export const openClassroom = Service<Request, Env, Response>(
   ({ owner_id, participant_ids }) =>
     async ({ repository }) => {
-      const [owner, otherParticipants] = await Promise.all([
+      const [owner, { data: otherParticipants }] = await Promise.all([
         repository.methods.get(owner_id),
         repository.methods.query(
-          QueryBuilder<Participant>()
-            .filterBy('id', 'in', participant_ids)
-            .build(),
+          QueryBuilder().filterBy('id', 'in', participant_ids).build(),
           ParticipantURI,
         ),
       ])

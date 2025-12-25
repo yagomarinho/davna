@@ -53,7 +53,6 @@ describe('loginWithCredentialsHandler', () => {
       metadata: {
         headers: {
           'user-agent': user_agent,
-          'x-idempotency-key': 'idempotent',
         },
       },
     })
@@ -91,7 +90,6 @@ describe('loginWithCredentialsHandler', () => {
       metadata: {
         headers: {
           'user-agent': user_agent,
-          'x-idempotency-key': 'idempotent',
         },
       },
     })

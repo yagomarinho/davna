@@ -5,20 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Filter, Handler, QueryBuilder, Response } from '@davna/core'
+import { Handler, isLeft, Response } from '@davna/core'
 import { ClassroomFedRepository } from '../repositories'
+import { messageDTOFromGraph } from '../dtos'
 import {
-  AudioURI,
-  Message,
-  MessageURI,
-  OccursIn,
-  OccursInURI,
-  Representation,
-  REPRESENTATION_TYPE,
-  RepresentationURI,
-  Source,
-  SourceURI,
-} from '../entities'
+  fetchUnprocessedMessages,
+  UnprocessedMessage,
+} from '../services/fetch.unprocessed.messages'
 
 interface Data {
   classroom_id: string
@@ -30,80 +23,56 @@ interface Env {
   repository: ClassroomFedRepository
 }
 
-export const fetchUnprocessedMessages = Handler<Env, Data, Metadata>(
+export const fetchUnprocessedMessagesHandler = Handler<Env, Data, Metadata>(
   request =>
     async ({ repository }) => {
       const { classroom_id } = request.data
+      const batch_size = 5 // Isso deve ser
+      let cursor_ref: string | undefined = undefined
 
-      const occursIn = await repository.methods.query(
-        QueryBuilder<OccursIn>()
-          .filterBy('target_id', '==', classroom_id)
-          .build(),
-        OccursInURI,
-      )
+      let done = false
+      const unprocessed_messages: UnprocessedMessage[] = []
 
-      const messages_ids = occursIn.map(occurs => occurs.props.source_id)
+      while (!done) {
+        const result = await fetchUnprocessedMessages({
+          classroom_id,
+          batch_size,
+          cursor_ref,
+        })({
+          repository,
+        })
 
-      const sources = await repository.methods.query(
-        QueryBuilder<Source>()
-          .filterBy(
-            Filter.and(
-              Filter.where('target_id', 'in', messages_ids),
-              Filter.where('source_type', '==', AudioURI),
-            ),
-          )
-          .build(),
-        SourceURI,
-      )
+        if (isLeft(result))
+          return Response({
+            metadata: { headers: { status: 400 } },
+            data: { message: (result.value as any).message },
+          })
 
-      const audios_ids = sources.map(source => source.props.source_id)
+        const page = result.value.unprocessed_messages
 
-      const representations = await repository.methods.query(
-        QueryBuilder<Representation>()
-          .orderBy([{ property: 'target_id', direction: 'asc' }])
-          .filterBy(
-            Filter.and(
-              Filter.where('target_id', 'in', audios_ids),
-              Filter.or(
-                Filter.where('type', '==', REPRESENTATION_TYPE.TRANSCRIPTION),
-                Filter.where('type', '==', REPRESENTATION_TYPE.TRANSLATION),
-              ),
-            ),
-          )
-          .build(),
-        RepresentationURI,
-      )
+        cursor_ref = result.value.next_cursor
+        unprocessed_messages.push(...page)
 
-      const audio_to_message_map = new Map(
-        sources.map(source => [source.props.source_id, source.props.target_id]),
-      )
-
-      const initMap = audios_ids.reduce(
-        (acc, audio_id) => ((acc[audio_id] = 0), acc),
-        {} as { [x: string]: number },
-      )
-
-      const representations_count = representations.reduce(
-        (acc, rep) => (
-          (acc[rep.props.target_id] = (acc[rep.props.target_id] ?? 0) + 1),
-          acc
-        ),
-        initMap,
-      )
-
-      const unprocessed_messages_ids = Object.entries(representations_count)
-        .filter(([, times]) => times < 2)
-        .map(([audio_id]) => audio_to_message_map.get(audio_id)!)
-
-      const unprocessed_messages = await repository.methods.query(
-        QueryBuilder<Message>()
-          .filterBy('id', 'in', unprocessed_messages_ids)
-          .build(),
-        MessageURI,
-      )
+        if (page.length < batch_size || !cursor_ref) done = true
+      }
 
       return Response.data({
-        unprocessed_messages,
+        unprocessed_messages: unprocessed_messages.map(
+          ({
+            audio,
+            audioOwnership,
+            classroom_id,
+            message,
+            messageOwnership,
+          }) =>
+            messageDTOFromGraph({
+              classroom_id,
+              message,
+              messageOwnership,
+              audio,
+              audioOwnership,
+            }),
+        ),
       })
     },
 )

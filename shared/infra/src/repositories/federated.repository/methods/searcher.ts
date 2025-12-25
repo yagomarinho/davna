@@ -11,6 +11,7 @@ import {
   ExtractEntityTag,
   ExtractSearchablePropertiesFromEntity,
   Query,
+  QueryResult,
   RepositoryResult,
 } from '@davna/core'
 
@@ -37,7 +38,7 @@ export interface FederatedSearcher<E extends Entity> {
    * Returns all entities of the federated set that are
    * visible to the current search context.
    */
-  (): RepositoryResult<E[]>
+  (): RepositoryResult<QueryResult<E>>
 
   /**
    * Execute a property-based federated search.
@@ -47,7 +48,7 @@ export interface FederatedSearcher<E extends Entity> {
    */
   (
     query: Query<ExtractSearchablePropertiesFromEntity<E>>,
-  ): RepositoryResult<E[]>
+  ): RepositoryResult<QueryResult<E>>
 
   /**
    * Execute a tagged federated search.
@@ -59,5 +60,5 @@ export interface FederatedSearcher<E extends Entity> {
   <F extends ExtractEntityTag<E> = ExtractEntityTag<E>>(
     q: Query<ExtractSearchablePropertiesFromEntity<EntityOf<F>>>,
     tag: F,
-  ): RepositoryResult<EntityOf<F>[]>
+  ): RepositoryResult<QueryResult<EntityOf<F>>>
 }
