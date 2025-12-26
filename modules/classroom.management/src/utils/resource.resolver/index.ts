@@ -5,13 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Metadata } from '@davna/kernel'
-
-export interface ContentData {
-  content: string
-  metadata: Metadata
-}
-export interface Content {
-  type: string
-  data: ContentData
-}
+export * from './mapper'
+export * from './mapper.init'
+export * from './resource.resolver'
