@@ -1,8 +1,13 @@
-import { IDContext } from '@davna/infra'
 import { fetchUnprocessedMessages } from '../../message/fetch.unprocessed.messages'
 import { isRight, QueryBuilder } from '@davna/core'
 import { ClassroomFedRepository } from '../../../repositories'
-import { ClassroomURI } from '../../../entities'
+import {
+  AudioURI,
+  ClassroomURI,
+  createRepresentation,
+  createText,
+  REPRESENTATION_TYPE,
+} from '../../../entities'
 import {
   ClassroomFedFake,
   fillRepository,
@@ -11,17 +16,8 @@ import {
 describe('fetch unprocessed messages service', () => {
   let repo: ClassroomFedRepository
 
-  const IDContext = {
-    getIDEntity: jest.fn(),
-    declareEntity: jest.fn(),
-    createMeta: jest.fn(),
-    getEntityTag: jest.fn(),
-    setIdempotency: jest.fn(),
-    validateEntity: jest.fn(),
-  } as any as jest.Mocked<IDContext>
-
   beforeAll(async () => {
-    repo = ClassroomFedFake({ IDContext })
+    repo = ClassroomFedFake()
 
     await fillRepository(repo)
 
@@ -49,8 +45,29 @@ describe('fetch unprocessed messages service', () => {
   it('should be able to return an empty list when all audios are already processed', async () => {
     const classroom_id = 'classroom-1'
 
-    repo.methods.set()
+    const { data: audios } = await repo.methods.query(
+      QueryBuilder().build(),
+      AudioURI,
+    )
 
+    const audio2 = audios.find(audio => audio.props.filename === 'audio2')!
+    expect(audio2).toBeDefined()
+
+    await repo.methods.set(
+      createRepresentation({
+        target_type: AudioURI,
+        target_id: audio2.meta.id,
+        source_id: (
+          await repo.methods.set(
+            createText({
+              content: 'This is translation of audio2',
+              metadata: {},
+            }),
+          )
+        ).meta.id,
+        type: REPRESENTATION_TYPE.TRANSLATION,
+      }),
+    )
     const result = await fetchUnprocessedMessages({
       classroom_id,
     })({ repository: repo })

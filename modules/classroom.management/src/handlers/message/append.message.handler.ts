@@ -196,7 +196,7 @@ export const appendMessageHandler = Handler<Env, Data>(
           participant_id: participant.meta.id,
           message_type: 'audio',
           data: {
-            type: 'audio',
+            type: 'identifier',
             content: persistedAudioResult.value.meta.id,
           },
         })({ repository })

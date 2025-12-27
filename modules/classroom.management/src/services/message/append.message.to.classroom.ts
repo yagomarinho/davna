@@ -22,13 +22,17 @@ import {
   Participation,
   Source,
 } from '../../entities'
-import { Resource, resourceResolver } from '../../utils/resource.resolver'
+import {
+  MapperInit,
+  Resource,
+  resourceResolver,
+} from '../../utils/resource.resolver'
 
 interface Request {
   classroom_id: string
   participant_id: string
-  message_type: string
-  data: unknown // Tornar data um tipo legítimo para facilitar no typecheck
+  message_type: MapperInit['message_type']
+  data: MapperInit['data']
 }
 
 interface Env {

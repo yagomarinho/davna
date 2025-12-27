@@ -1,29 +1,25 @@
-import { isLeft, isRight, Left } from '@davna/core'
+import { isLeft, isRight } from '@davna/core'
+import { IDContext } from '@davna/infra'
 
-import { appendMessageToClassroom } from '../append-message-to-classroom'
 import {
   Classroom,
-  createAgent,
   createClassroom,
-  createOccursIn,
   createParticipant,
   createParticipation,
-  createResource,
   Message,
   OccursIn,
-  Participation,
+  PARTICIPANT_ROLE,
   Source,
 } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
-import { ClassroomFedFake } from './fakes/classroom.fed.fake'
-import { IDContextFake } from './fakes/id.context.fake'
-import { IDContext } from '@davna/infra'
-import { ResourceResolver } from '../../../utils/resource.resolver'
+
+import { IDContextFake } from '../../__fakes__/id.context.fake'
+import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
+import { appendMessageToClassroom } from '../append.message.to.classroom'
 
 describe('append message to classroom service', () => {
   let repository: ClassroomFedRepository
   let IDContext: IDContext
-  let resourceResolver: ResourceResolver
 
   beforeEach(async () => {
     IDContext = IDContextFake()
@@ -44,6 +40,7 @@ describe('append message to classroom service', () => {
       createParticipation({
         source_id: participant.meta.id,
         target_id: classroom.meta.id,
+        participant_role: PARTICIPANT_ROLE.STUDENT,
       }),
     )
 
@@ -51,10 +48,9 @@ describe('append message to classroom service', () => {
       classroom_id: classroom.meta.id,
       participant_id: participant.meta.id,
       message_type: 'text',
-      data: { text: 'hello' },
+      data: { type: 'content', content: 'hello' },
     })({
       repository,
-      resourceResolver,
     })
 
     expect(isRight(result)).toBeTruthy()
@@ -104,10 +100,9 @@ describe('append message to classroom service', () => {
       classroom_id: classroom.meta.id,
       participant_id: participant.meta.id,
       message_type: 'text',
-      data: { text: 'hello' },
+      data: { type: 'content', content: 'hello' },
     })({
       repository,
-      resourceResolver,
     })
 
     expect(isLeft(result)).toBeTruthy()
@@ -125,19 +120,17 @@ describe('append message to classroom service', () => {
       createParticipation({
         source_id: participant.meta.id,
         target_id: classroom.meta.id,
+        participant_role: PARTICIPANT_ROLE.STUDENT,
       }),
     )
-
-    resourceResolver = () => async () => Left({ error: 'invalid' })
 
     const result = await appendMessageToClassroom({
       classroom_id: classroom.meta.id,
       participant_id: participant.meta.id,
-      message_type: 'invalid',
-      data: {},
+      message_type: 'invalid' as any,
+      data: {} as any,
     })({
       repository,
-      resourceResolver,
     })
 
     expect(isLeft(result)).toBeTruthy()
