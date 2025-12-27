@@ -3,7 +3,10 @@ import { fetchUnprocessedMessages } from '../../message/fetch.unprocessed.messag
 import { isRight, QueryBuilder } from '@davna/core'
 import { ClassroomFedRepository } from '../../../repositories'
 import { ClassroomURI } from '../../../entities'
-import { ClassroomFedFake, fillRepository } from './fakes/classroom.fed.fake'
+import {
+  ClassroomFedFake,
+  fillRepository,
+} from '../../__fakes__/classroom.fed.fake'
 
 describe('fetch unprocessed messages service', () => {
   let repo: ClassroomFedRepository

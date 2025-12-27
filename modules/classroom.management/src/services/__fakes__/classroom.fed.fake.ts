@@ -10,7 +10,7 @@ import {
   InMemoryRepository,
   STORAGE_TYPE,
 } from '@davna/infra'
-import { ClassroomFedRepository, ClassroomFedURI } from '../../../repositories'
+import { ClassroomFedRepository, ClassroomFedURI } from '../../repositories'
 import {
   Agent,
   AgentURI,
@@ -56,7 +56,7 @@ import {
   UsagePolicy,
   UsagePolicyURI,
   UsageURI,
-} from '../../../entities'
+} from '../../entities'
 import { IDContextFake } from './id.context.fake'
 
 export function ClassroomFedFake(

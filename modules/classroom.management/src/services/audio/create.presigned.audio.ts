@@ -13,7 +13,7 @@ import {
   createOwnership,
   createUsage,
   Ownership,
-  SUPORTED_MIME_TYPE,
+  SUPPORTED_MIME_TYPE,
   Usage,
   USAGE_UNITS,
 } from '../../entities'
@@ -22,7 +22,7 @@ import { Storage } from '@davna/infra'
 
 interface Request {
   owner_id: string
-  mime_type: SUPORTED_MIME_TYPE
+  mime_type: SUPPORTED_MIME_TYPE
   duration: {
     unit: USAGE_UNITS.SECONDS
     value: number

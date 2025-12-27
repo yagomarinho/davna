@@ -9,9 +9,9 @@ import {
   Participant,
 } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
-import { ClassroomFedFake } from './fakes/classroom.fed.fake'
-import { IDContextFake } from './fakes/id.context.fake'
 import { IDContext } from '@davna/infra'
+import { IDContextFake } from '../../__fakes__/id.context.fake'
+import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
 
 describe('open classroom service', () => {
   let repository: ClassroomFedRepository

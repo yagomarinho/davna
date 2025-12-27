@@ -13,19 +13,20 @@ import {
   SagaRepositoryProxy,
   UnitOfWorkSaga,
 } from '@davna/core'
-import { ClassroomFedRepository } from '../repositories'
-import { SUPORTED_MIME_TYPE, USAGE_UNITS } from '../entities'
-import { authorizeConsumption } from '../services/usage/authorize.consumption'
 import { Storage } from '@davna/infra'
-import { createPresignedAudio } from '../services/audio/create.presigned.audio'
-import { audioDTOfromGraph } from '../dtos'
+
+import { ClassroomFedRepository } from '../../repositories'
+import { SUPPORTED_MIME_TYPE, USAGE_UNITS } from '../../entities'
+import { authorizeConsumption } from '../../services/usage/authorize.consumption'
+import { createPresignedAudio } from '../../services/audio/create.presigned.audio'
+import { audioDTOfromGraph } from '../../dtos'
 
 interface Metadata {
   account: Identifiable
 }
 
 interface Data {
-  mime_type: SUPORTED_MIME_TYPE
+  mime_type: SUPPORTED_MIME_TYPE
   duration: {
     unit: USAGE_UNITS.SECONDS
     value: number
@@ -37,7 +38,7 @@ interface Env {
   storage: Storage
 }
 
-export const reserveConsumptionHandler = Handler<Env, Data, Metadata>(
+export const createPresignedAudioHandler = Handler<Env, Data, Metadata>(
   request => async env => {
     const owner_id = request.metadata.account.id
     const { duration, mime_type } = request.data

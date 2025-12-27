@@ -7,7 +7,7 @@
 
 import { Left, Request, Right } from '@davna/core'
 import { mixed, object, string, ValidationError } from 'yup'
-import { SUPORTED_MIME_TYPE } from '../entities'
+import { SUPPORTED_MIME_TYPE } from '../entities'
 
 const metadataSchema = object({
   file: object({
@@ -17,8 +17,8 @@ const metadataSchema = object({
       ) // adicionar futuramente um validador de tamanho
       .required(),
     originalname: string().required(),
-    mimetype: string<SUPORTED_MIME_TYPE>()
-      .oneOf(Object.values(SUPORTED_MIME_TYPE))
+    mimetype: string<SUPPORTED_MIME_TYPE>()
+      .oneOf(Object.values(SUPPORTED_MIME_TYPE))
       .required(),
   }).required(),
 })

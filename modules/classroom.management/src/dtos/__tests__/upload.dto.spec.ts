@@ -1,9 +1,9 @@
 import { isLeft, isRight } from '@davna/core'
 import { uploadValidation } from '../upload.audio.dto'
-import { SUPORTED_MIME_TYPE } from '../../entities'
+import { SUPPORTED_MIME_TYPE } from '../../entities'
 
 describe('uploadValidation', () => {
-  const validMime = SUPORTED_MIME_TYPE.MP4
+  const validMime = SUPPORTED_MIME_TYPE.MP4
 
   it('should return Right and preserve buffer, originalname and mimetype when metadata is valid', async () => {
     const request: any = {

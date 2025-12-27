@@ -4,10 +4,10 @@ import { downloadAudio } from '../download.audio'
 import { isLeft, isRight } from '@davna/core'
 
 import { StorageConstructor } from '../../../utils/storage'
-import { createAudio, SUPORTED_MIME_TYPE } from '../../../entities'
-import { ClassroomFedFake } from './fakes/classroom.fed.fake'
-import { IDContextFake } from './fakes/id.context.fake'
+import { createAudio, SUPPORTED_MIME_TYPE } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
+import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
+import { IDContextFake } from '../../__fakes__/id.context.fake'
 
 describe('downloadAudio Service', () => {
   let repository: ClassroomFedRepository
@@ -46,7 +46,7 @@ describe('downloadAudio Service', () => {
       createAudio({
         status: 'persistent',
         filename: 'test-audio',
-        mime_type: SUPORTED_MIME_TYPE.MP3,
+        mime_type: SUPPORTED_MIME_TYPE.MP3,
         url: 'https://example.com/audio.mp3',
         duration: 2000,
         metadata: {},
@@ -85,7 +85,7 @@ describe('downloadAudio Service', () => {
       createAudio({
         status: 'persistent',
         filename: 'lesson-audio',
-        mime_type: SUPORTED_MIME_TYPE.MP3,
+        mime_type: SUPPORTED_MIME_TYPE.MP3,
         url: 'https://example.com/lesson.mp3',
         duration: 3000,
         metadata: {},
@@ -119,7 +119,7 @@ describe('downloadAudio Service', () => {
       createAudio({
         status: 'persistent',
         filename: 'practice-audio',
-        mime_type: SUPORTED_MIME_TYPE.MP3,
+        mime_type: SUPPORTED_MIME_TYPE.MP3,
         metadata: {},
         url: 'https://example.com/practice.mp3',
         duration: 1500,

@@ -1,163 +1,151 @@
-import { isRight, Repository } from '@davna/core'
-import { InMemoryRepository } from '@davna/infra'
+import { isLeft, isRight } from '@davna/core'
+
+import { showClassroom } from '../show.classroom'
 import {
-  Audio,
-  AudioMessage,
   Classroom,
-  Message,
-  MESSAGE_TYPE,
+  ClassroomURI,
+  Ownership,
   PARTICIPANT_ROLE,
-  SUPORTED_MIME_TYPE,
+  Participant,
+  Participation,
+  createClassroom,
+  createOwnership,
+  createParticipant,
+  createParticipation,
 } from '../../../entities'
-import { showClassroom } from '../../classroom/show.classroom'
+import { ClassroomFedRepository } from '../../../repositories'
+import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
+import { IDContextFake } from '../../__fakes__/id.context.fake'
+import { IDContext } from '@davna/infra'
 
-describe('showClassroom (service) - updated behavior', () => {
-  const transcription = 'This is transcription'
-  const translation = 'This is translation'
-
-  let classrooms: Repository<Classroom>
-  let messages: Repository<Message>
+describe('show classroom service', () => {
+  let repository: ClassroomFedRepository
+  let IDContext: IDContext
 
   beforeEach(async () => {
-    classrooms = InMemoryRepository<Classroom>()
-    messages = InMemoryRepository<Message>()
+    IDContext = IDContextFake()
+    repository = ClassroomFedFake({ IDContext })
 
     jest.clearAllMocks()
   })
 
-  afterEach(() => {
-    jest.clearAllMocks()
-  })
+  it('should be able to show a classroom when participant is authorized', async () => {
+    const owner = await repository.methods.set(
+      createParticipant({ subject_id: 'owner', type: 'costumer' }),
+    )
 
-  it('should return Right with classroom and full history when participant is present', async () => {
-    const classroom_id = 'classroom-1'
-    const participant_id = 'student-1'
+    const viewer = await repository.methods.set(
+      createParticipant({ subject_id: 'viewer', type: 'costumer' }),
+    )
 
-    let message1: Message = AudioMessage.create({
-      classroom_id,
-      participant_id,
-      transcription,
-      translation,
-      type: MESSAGE_TYPE.AUDIO,
-      data: Audio.create({
-        id: 'audio.id',
-        owner_id: participant_id,
-        name: 'audio',
-        duration: 3000,
-        mime: SUPORTED_MIME_TYPE.MP4,
-        src: '/download/audio.id',
+    const classroom = await repository.methods.set(
+      createClassroom({ name: 'classroom' }),
+    )
+
+    const ownership = await repository.methods.set(
+      createOwnership({
+        source_id: owner.meta.id,
+        target_id: classroom.meta.id,
+        target_type: ClassroomURI,
       }),
-    })
+    )
 
-    let message2: Message = AudioMessage.create({
-      classroom_id,
-      participant_id: 'agent',
-      transcription,
-      translation,
-      type: MESSAGE_TYPE.AUDIO,
-      data: Audio.create({
-        id: 'audio.id',
-        owner_id: participant_id,
-        name: 'audio',
-        duration: 3000,
-        mime: SUPORTED_MIME_TYPE.MP4,
-        src: '/download/audio.id',
+    const participationOwner = await repository.methods.set(
+      createParticipation({
+        source_id: owner.meta.id,
+        target_id: classroom.meta.id,
+        participant_role: PARTICIPANT_ROLE.STUDENT,
       }),
-    })
+    )
 
-    message1 = await messages.set(message1)
-    message2 = await messages.set(message2)
+    const participationViewer = await repository.methods.set(
+      createParticipation({
+        source_id: viewer.meta.id,
+        target_id: classroom.meta.id,
+        participant_role: PARTICIPANT_ROLE.STUDENT,
+      }),
+    )
 
-    const classroom: Classroom = Classroom.create({
-      id: classroom_id,
-      owner_id: participant_id,
-      participants: [
-        { participant_id: 'agent', role: PARTICIPANT_ROLE.TEACHER },
-        { participant_id, role: PARTICIPANT_ROLE.STUDENT },
-      ],
-      history: [message1.id, message2.id],
-    })
-
-    await classrooms.set(classroom)
-
-    const result = await showClassroom({ classroom_id, participant_id })({
-      classrooms,
-      messages,
-    })
+    const result = await showClassroom({
+      classroom_id: classroom.meta.id,
+      participant_id: viewer.meta.id,
+    })({ repository })
 
     expect(isRight(result)).toBeTruthy()
 
     const value = (result as any).value as {
-      classroom: Omit<Classroom, 'history'> & { history: Message[] }
+      classroom: Classroom
+      classroom_ownership: Ownership
+      participants: Participant[]
+      participations: Participation[]
     }
 
-    expect(value.classroom.id).toEqual(classroom_id)
-    expect(value.classroom.participants).toEqual(
+    expect(value.classroom).toEqual(classroom)
+    expect(value.classroom_ownership).toEqual(ownership)
+
+    expect(value.participants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          participant_id: 'agent',
-          role: PARTICIPANT_ROLE.TEACHER,
+          meta: expect.objectContaining({ id: owner.meta.id }),
         }),
         expect.objectContaining({
-          participant_id,
-          role: PARTICIPANT_ROLE.STUDENT,
+          meta: expect.objectContaining({ id: viewer.meta.id }),
         }),
       ]),
     )
 
-    expect(value.classroom.history).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: message1.id }),
-        expect.objectContaining({ id: message2.id }),
-      ]),
+    expect(value.participations).toEqual(
+      expect.arrayContaining([participationOwner, participationViewer]),
     )
   })
 
-  it('should return Left when classroom is not found', async () => {
-    const classroom_id = 'non-existent'
-    const participant_id = 'student-1'
+  it('should not be able to show classroom when classroom does not exist', async () => {
+    const participant = await repository.methods.set(
+      createParticipant({ subject_id: 'any', type: 'costumer' }),
+    )
 
-    const result = await showClassroom({ classroom_id, participant_id })({
-      classrooms,
-      messages,
-    })
+    const result = await showClassroom({
+      classroom_id: 'invalid-classroom',
+      participant_id: participant.meta.id,
+    })({ repository })
 
-    expect(isRight(result)).toBeFalsy()
-
-    const value = (result as any).value
-    expect(value).toEqual({
-      status: 'error',
-      message: 'Classroom not founded',
-    })
+    expect(isLeft(result)).toBeTruthy()
   })
 
-  it('should return Left when participant is not authorized to view the classroom', async () => {
-    const classroom_id = 'classroom-2'
-    const participant_id = 'intruder'
+  it('should not be able to show classroom when participant has no participation', async () => {
+    const owner = await repository.methods.set(
+      createParticipant({ subject_id: 'owner', type: 'costumer' }),
+    )
 
-    const classroom: Classroom = Classroom.create({
-      id: classroom_id,
-      owner_id: 'student-2',
-      participants: [
-        { participant_id: 'agent', role: PARTICIPANT_ROLE.TEACHER },
-        { participant_id: 'student-2', role: PARTICIPANT_ROLE.STUDENT },
-      ],
-      history: [],
-    })
+    const outsider = await repository.methods.set(
+      createParticipant({ subject_id: 'outsider', type: 'costumer' }),
+    )
 
-    await classrooms.set(classroom)
+    const classroom = await repository.methods.set(
+      createClassroom({ name: 'classroom' }),
+    )
 
-    const result = await showClassroom({ classroom_id, participant_id })({
-      classrooms,
-      messages,
-    })
+    await repository.methods.set(
+      createOwnership({
+        source_id: owner.meta.id,
+        target_id: classroom.meta.id,
+        target_type: ClassroomURI,
+      }),
+    )
 
-    expect(isRight(result)).toBeFalsy()
+    await repository.methods.set(
+      createParticipation({
+        source_id: owner.meta.id,
+        target_id: classroom.meta.id,
+        participant_role: PARTICIPANT_ROLE.STUDENT,
+      }),
+    )
 
-    const value = (result as any).value
-    expect(value).toEqual({
-      status: 'error',
-      message: 'Not authorized to get this classroom',
-    })
+    const result = await showClassroom({
+      classroom_id: classroom.meta.id,
+      participant_id: outsider.meta.id,
+    })({ repository })
+
+    expect(isLeft(result)).toBeTruthy()
   })
 })

@@ -5,20 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { GPTModel, STORAGE_TYPE } from '@davna/infra'
-import { Handler, Identifier, isLeft, Repository, Response } from '@davna/core'
-
-import { Audio, Classroom, Message, PARTICIPANT_ROLE } from '../entities'
-import { Emitter } from '../helpers/emitter'
-
-import { teacherGeneratesResponse } from '../services/teacher.generates.response'
-
-import { MessageHandler } from '../utils/resource.resolver'
-import { remainingConsumption } from '../helpers/remaining.consumption'
-import { StorageConstructor } from '../utils/storage'
-import { MultimediaProvider } from '../providers'
-import { showClassroom } from '../services/classroom/show.classroom'
-import { verifyConsume } from '../services/usage/authorize.consumption'
+import { Handler } from '@davna/core'
+import { ClassroomFedRepository } from '../../repositories'
 
 interface Metadata {
   account: Identifier
@@ -30,30 +18,12 @@ interface Data {
 }
 
 interface Env {
-  emitter: Emitter
-  audios: Repository<Audio>
-  classrooms: Repository<Classroom>
-  messages: Repository<Message>
-  gpt: GPTModel
-  multimedia: MultimediaProvider
-  messageHandler: MessageHandler
-  storage: StorageConstructor
-  storage_driver: STORAGE_TYPE
+  repository: ClassroomFedRepository
 }
 
 export const connectToClassroomHandler = Handler<Env, Data, Metadata>(
   ({ data, metadata }) =>
-    async ({
-      emitter,
-      audios,
-      classrooms,
-      messages,
-      gpt,
-      multimedia,
-      messageHandler,
-      storage,
-      storage_driver,
-    }) => {
+    async ({}) => {
       const { classroom_id, reply_strategy = 'lax' } = data
       const { account } = metadata
 

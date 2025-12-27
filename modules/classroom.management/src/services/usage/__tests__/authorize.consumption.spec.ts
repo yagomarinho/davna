@@ -1,174 +1,192 @@
-import { Left, Right } from '@davna/core'
+import { isLeft, isRight } from '@davna/core'
+import { IDContext } from '@davna/infra'
 
-import { authorizeConsumption } from '../../usage/authorize.consumption'
+import { authorizeConsumption } from '../authorize.consumption'
+
+import {
+  AGGREGATION_POLICY,
+  AudioURI,
+  USAGE_UNITS,
+  createEntitlement,
+  createGranted,
+  createParticipant,
+  createPolicyAggregate,
+  createUsage,
+  createUsagePolicy,
+} from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
-import { ClassroomFedFake } from './fakes/classroom.fed.fake'
+import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
+import { IDContextFake } from '../../__fakes__/id.context.fake'
 
-describe('authorizeConsumption (service)', () => {
+describe('authorize consumption service', () => {
   let repository: ClassroomFedRepository
-
-  const owner_id = 'owner-1'
-  const other_owner = 'owner-2'
-
-  const actualDay = new Date(new Date().toDateString())
-  const yesterday = new Date(actualDay)
-  yesterday.setDate(yesterday.getDate() - 1)
+  let IDContext: IDContext
 
   beforeEach(async () => {
-    repository = ClassroomFedFake()
+    IDContext = IDContextFake()
+    repository = ClassroomFedFake({ IDContext })
 
     jest.clearAllMocks()
   })
 
-  afterEach(() => {
-    jest.clearAllMocks()
-  })
+  it('should be able to authorize consumption when participant has available daily usage', async () => {
+    const owner_id = 'owner'
+    const requested_consumption = 10
 
-  it('should return Right with total consume (less than 1h) when user has classes updated today', async () => {
-    const classroomToCheck: Classroom = {
-      id: 'class-check',
-      owner_id,
-      participants: [],
-      history: ['m1', 'm2'],
-      updated_at: actualDay,
-    } as any
+    const participant = await repository.methods.set(
+      createParticipant({ subject_id: owner_id, type: 'costumer' }),
+    )
 
-    const classIgnored: Classroom = {
-      id: 'class-old',
-      owner_id,
-      participants: [],
-      history: ['m3'],
-      updated_at: yesterday,
-    } as any
+    const entitlement = await repository.methods.set(createEntitlement({}))
 
-    await classrooms.set(classroomToCheck)
-    await classrooms.set(classIgnored)
-
-    // two messages in history; only m1 and m2 are in the class we care about
-    const msg1: Message = {
-      id: 'm1',
-      participant_id: 'p1',
-      type: MESSAGE_TYPE.AUDIO,
-      created_at: new Date(actualDay.getTime() + 1000), // later today
-      data: { duration: 30 * 60 * 1000 }, // 30 minutes
-    } as any
-
-    const msg2: Message = {
-      id: 'm2',
-      participant_id: 'p2',
-      type: MESSAGE_TYPE.AUDIO,
-      created_at: new Date(actualDay.getTime() + 2000),
-      data: { duration: 20 * 60 * 1000 }, // 20 minutes
-    } as any
-
-    // message from old class (should be ignored because class updated_at is yesterday)
-    const msg3: Message = {
-      id: 'm3',
-      participant_id: 'p3',
-      type: MESSAGE_TYPE.AUDIO,
-      created_at: new Date(actualDay.getTime() + 3000),
-      data: { duration: 120 * 60 * 1000 }, // 2 hours
-    } as any
-
-    await messages.set(msg1)
-    await messages.set(msg2)
-    await messages.set(msg3)
-
-    const svc = authorizeConsumption({ classroom: classroomToCheck })
-
-    const result = await svc({
-      classrooms,
-      messages,
-    })
-
-    const expectedConsume = msg1.data.duration + msg2.data.duration // 50 minutes in ms
-
-    expect(result).toEqual(Right({ consume: expectedConsume }))
-  })
-
-  it('should return Left when total consume for today is >= 1 hour', async () => {
-    const classroomToCheck: Classroom = {
-      id: 'class-check-2',
-      owner_id,
-      participants: [],
-      history: ['m4', 'm5'],
-      updated_at: actualDay,
-    } as any
-
-    await classrooms.set(classroomToCheck)
-
-    const msg4: Message = {
-      id: 'm4',
-      participant_id: 'p1',
-      type: MESSAGE_TYPE.AUDIO,
-      created_at: new Date(actualDay.getTime() + 1000),
-      data: { duration: 30 * 60 * 1000 }, // 30 min
-    } as any
-
-    const msg5: Message = {
-      id: 'm5',
-      participant_id: 'p2',
-      type: MESSAGE_TYPE.AUDIO,
-      created_at: new Date(actualDay.getTime() + 2000),
-      data: { duration: 30 * 60 * 1000 }, // 30 min -> total 1h
-    } as any
-
-    await messages.set(msg4)
-    await messages.set(msg5)
-
-    const svc = authorizeConsumption({ classroom: classroomToCheck })
-
-    const result = await svc({
-      classrooms,
-      messages,
-    })
-
-    expect(result).toEqual(
-      Left({
-        status: 'error',
-        message: "This user can't consume more today",
+    await repository.methods.set(
+      createGranted({
+        source_id: participant.meta.id,
+        target_id: entitlement.meta.id,
+        expires_at: new Date(Date.now() + 60_000),
+        priority: 10,
       }),
     )
+
+    const policy = await repository.methods.set(
+      createUsagePolicy({
+        aggregation: AGGREGATION_POLICY.PER_DAY,
+        maxConsumption: 100,
+        unit: USAGE_UNITS.TOKENS,
+      }),
+    )
+
+    await repository.methods.set(
+      createPolicyAggregate({
+        source_id: entitlement.meta.id,
+        target_id: policy.meta.id,
+      }),
+    )
+
+    await repository.methods.set(
+      createUsage({
+        source_id: participant.meta.id,
+        target_id: 'audio-1',
+        target_type: AudioURI,
+        consumption: {
+          unit: USAGE_UNITS.TOKENS,
+          value: 25,
+          raw_value: 25,
+          normalization_factor: 1,
+          precision: 0,
+        },
+      }),
+    )
+
+    const result = await authorizeConsumption({
+      owner_id,
+      requested_consumption,
+    })({ repository })
+
+    expect(isRight(result)).toBeTruthy()
+
+    const value = (result as any).value
+
+    expect(value).toEqual([
+      expect.objectContaining({
+        policy: expect.objectContaining({
+          aggregation: AGGREGATION_POLICY.PER_DAY,
+          maxConsumption: 100,
+          unit: USAGE_UNITS.TOKENS,
+        }),
+        consumption: { value: 25 },
+      }),
+    ])
   })
 
-  it('should ignore classes not owned by the classroom owner and return Right 0 when no matching messages', async () => {
-    const classroomToCheck: Classroom = {
-      id: 'class-check-3',
+  it('should not be able to authorize consumption when requested consumption exceeds policy limit', async () => {
+    const owner_id = 'owner'
+
+    const participant = await repository.methods.set(
+      createParticipant({ subject_id: owner_id, type: 'costumer' }),
+    )
+
+    const entitlement = await repository.methods.set(createEntitlement({}))
+
+    await repository.methods.set(
+      createGranted({
+        source_id: participant.meta.id,
+        target_id: entitlement.meta.id,
+        expires_at: new Date(Date.now() + 60_000),
+        priority: 1,
+      }),
+    )
+
+    const policy = await repository.methods.set(
+      createUsagePolicy({
+        aggregation: AGGREGATION_POLICY.PER_DAY,
+        maxConsumption: 30,
+        unit: USAGE_UNITS.TOKENS,
+      }),
+    )
+
+    await repository.methods.set(
+      createPolicyAggregate({
+        source_id: entitlement.meta.id,
+        target_id: policy.meta.id,
+      }),
+    )
+
+    await repository.methods.set(
+      createUsage({
+        source_id: participant.meta.id,
+        target_id: 'audio-1',
+        target_type: AudioURI,
+        consumption: {
+          unit: USAGE_UNITS.TOKENS,
+          value: 25,
+          raw_value: 25,
+          normalization_factor: 1,
+          precision: 0,
+        },
+      }),
+    )
+
+    const result = await authorizeConsumption({
       owner_id,
-      participants: [],
-      history: [],
-      updated_at: actualDay,
-    } as any
+      requested_consumption: 10,
+    })({ repository })
 
-    const otherClass: Classroom = {
-      id: 'class-other',
-      owner_id: other_owner,
-      participants: [],
-      history: ['mx'],
-      updated_at: actualDay,
-    } as any
+    expect(isLeft(result)).toBeTruthy()
+  })
 
-    await classrooms.set(classroomToCheck)
-    await classrooms.set(otherClass)
+  it('should not be able to authorize consumption when participant has no active policies', async () => {
+    const owner_id = 'owner'
 
-    // message from other owner's class - should be ignored
-    const mx: Message = {
-      id: 'mx',
-      participant_id: 'pX',
-      type: MESSAGE_TYPE.AUDIO,
-      created_at: new Date(actualDay.getTime() + 1000),
-      data: { duration: 2 * 60 * 1000 },
-    } as any
+    const participant = await repository.methods.set(
+      createParticipant({ subject_id: owner_id, type: 'costumer' }),
+    )
 
-    await messages.set(mx)
+    const entitlement = await repository.methods.set(createEntitlement({}))
 
-    const svc = authorizeConsumption({ classroom: classroomToCheck })
+    await repository.methods.set(
+      createGranted({
+        source_id: participant.meta.id,
+        target_id: entitlement.meta.id,
+        expires_at: new Date(Date.now() + 60_000),
+        priority: 1,
+      }),
+    )
 
-    const result = await svc({
-      classrooms,
-      messages,
-    })
+    const result = await authorizeConsumption({
+      owner_id,
+      requested_consumption: 1,
+    })({ repository })
 
-    expect(result).toEqual(Right({ consume: 0 }))
+    expect(isLeft(result)).toBeTruthy()
+  })
+
+  it('should not be able to authorize consumption when participant does not exist', async () => {
+    const result = await authorizeConsumption({
+      owner_id: 'invalid-owner',
+      requested_consumption: 5,
+    })({ repository })
+
+    expect(isLeft(result)).toBeTruthy()
   })
 })

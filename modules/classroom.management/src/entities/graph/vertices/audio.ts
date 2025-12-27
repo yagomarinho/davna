@@ -30,7 +30,7 @@ export type AudioStorageURI = typeof AudioStorageURI
 export const AudioVersion = 'v1'
 export type AudioVersion = typeof AudioVersion
 
-export enum SUPORTED_MIME_TYPE {
+export enum SUPPORTED_MIME_TYPE {
   OPUS = 'audio/webm; codecs=opus',
   WEBM = 'audio/webm',
   MP3 = 'audio/mpeg',

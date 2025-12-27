@@ -8,21 +8,14 @@
 import { Filter, Left, QueryBuilder, Right, Service } from '@davna/core'
 import { ClassroomFedRepository } from '../../repositories'
 import {
-  Audio,
   Classroom,
   ClassroomURI,
-  Message,
-  OccursIn,
-  OccursInURI,
   Ownership,
   OwnershipURI,
   Participant,
   ParticipantURI,
   Participation,
   ParticipationURI,
-  Representation,
-  Source,
-  Text,
 } from '../../entities'
 
 interface Request {
@@ -37,15 +30,8 @@ interface Env {
 interface Response {
   classroom: Classroom
   classroom_ownership: Ownership
-  occursIn: OccursIn[]
-  messages: Message[]
-  messages_ownerships: Ownership[]
   participants: Participant[]
   participations: Participation[]
-  sources: Source[]
-  audios: Audio[]
-  texts: Text[]
-  representations: Representation[]
 }
 
 export const showClassroom = Service<Request, Env, Response>(
@@ -53,13 +39,13 @@ export const showClassroom = Service<Request, Env, Response>(
     async ({ repository }) => {
       const classroom = await repository.methods.get(classroom_id)
 
-      if (!classroom || !classroom_id)
+      if (!classroom || classroom._t !== ClassroomURI)
         return Left({
           status: 'error',
           message: 'Classroom not founded',
         })
 
-      const participations = await repository.methods.query(
+      const { data: participations } = await repository.methods.query(
         QueryBuilder().filterBy('target_id', '==', classroom_id).build(),
         ParticipationURI,
       )
@@ -70,7 +56,12 @@ export const showClassroom = Service<Request, Env, Response>(
           message: 'Not authorized to show this classroom',
         })
 
-      const [classroom_ownership, occursIn, participants] = await Promise.all([
+      const [
+        {
+          data: [classroom_ownership],
+        },
+        { data: participants },
+      ] = await Promise.all([
         repository.methods.query(
           QueryBuilder()
             .filterBy(
@@ -81,10 +72,6 @@ export const showClassroom = Service<Request, Env, Response>(
             )
             .build(),
           OwnershipURI,
-        ),
-        repository.methods.query(
-          QueryBuilder().filterBy('target_id', '==', classroom.meta.id).build(),
-          OccursInURI,
         ),
         repository.methods.query(
           QueryBuilder()
@@ -98,22 +85,11 @@ export const showClassroom = Service<Request, Env, Response>(
         ),
       ])
 
-      const [messages] = await Promise.all([
-        repository.methods.query(QueryBuilder().orderBy().filterBy().build()),
-      ])
-
       return Right({
         classroom,
         classroom_ownership,
-        occursIn,
-        messages,
-        messages_ownerships,
         participants,
         participations,
-        sources,
-        audios,
-        texts,
-        representations,
       })
     },
 )

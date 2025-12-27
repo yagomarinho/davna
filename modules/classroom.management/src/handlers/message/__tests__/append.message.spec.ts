@@ -6,7 +6,7 @@ import { FakeAI, STORAGE_TYPE as _STORAGE_TYPE } from '@davna/infra'
 
 import { appendAndReplyHandler } from '../append.and.reply.handler'
 
-import { Audio, SUPORTED_MIME_TYPE } from '../../entities/audio'
+import { Audio, SUPPORTED_MIME_TYPE } from '../../entities/audio'
 import { Classroom, PARTICIPANT_ROLE } from '../../entities/classroom'
 import { Message, MESSAGE_TYPE } from '../../entities/message'
 
@@ -81,7 +81,7 @@ describe('appendAndReplyHandler', () => {
         id: audio_id,
         owner_id: 'owner.id',
         name: 'audio.name',
-        mime: SUPORTED_MIME_TYPE.OPUS,
+        mime: SUPPORTED_MIME_TYPE.OPUS,
         duration: 3000,
         internal_ref: {
           identifier: internalRef,

@@ -13,12 +13,13 @@ import {
   SagaRepositoryProxy,
   UnitOfWorkSaga,
 } from '@davna/core'
-
-import { openClassroom } from '../services/classroom/open.classroom'
-import { ClassroomFedRepository } from '../repositories'
+import { ClassroomFedRepository } from '../../repositories'
+import { openClassroom } from '../../services/classroom/open.classroom'
+import { getParticipant } from '../../services/participant/get.participant'
 
 interface Metadata {
   account: Identifiable
+  agent_id: string
 }
 
 interface Env {
@@ -28,14 +29,29 @@ interface Env {
 export const openClassroomHandler = Handler<Env, any, Metadata>(
   ({ metadata }) =>
     async env => {
-      const { account } = metadata
+      const { account, agent_id } = metadata
+
+      const participantResult = await getParticipant({
+        participant_id: agent_id,
+      })({
+        repository: env.repository,
+      })
+
+      if (isLeft(participantResult))
+        return Response({
+          metadata: { headers: { status: 400 } },
+          data: { message: `Invalid agent id: ${agent_id}` },
+        })
+
+      const participant = participantResult.value
 
       const uow = UnitOfWorkSaga()
       try {
         const repository = SagaRepositoryProxy(env.repository, uow)
+
         const result = await openClassroom({
           owner_id: account.id,
-          participant_ids: [],
+          participant_ids: [participant.meta.id],
         })({ repository })
 
         if (isLeft(result)) {
