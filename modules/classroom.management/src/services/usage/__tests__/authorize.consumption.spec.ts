@@ -79,7 +79,7 @@ describe('authorize consumption service', () => {
     )
 
     const result = await authorizeConsumption({
-      owner_id,
+      participant_id: participant.meta.id,
       requested_consumption,
     })({ repository })
 
@@ -148,7 +148,7 @@ describe('authorize consumption service', () => {
     )
 
     const result = await authorizeConsumption({
-      owner_id,
+      participant_id: participant.meta.id,
       requested_consumption: 10,
     })({ repository })
 
@@ -174,7 +174,7 @@ describe('authorize consumption service', () => {
     )
 
     const result = await authorizeConsumption({
-      owner_id,
+      participant_id: participant.meta.id,
       requested_consumption: 1,
     })({ repository })
 
@@ -183,7 +183,7 @@ describe('authorize consumption service', () => {
 
   it('should not be able to authorize consumption when participant does not exist', async () => {
     const result = await authorizeConsumption({
-      owner_id: 'invalid-owner',
+      participant_id: 'invalid-participant',
       requested_consumption: 5,
     })({ repository })
 

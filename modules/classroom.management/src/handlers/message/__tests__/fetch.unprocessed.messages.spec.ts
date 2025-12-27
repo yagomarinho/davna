@@ -275,8 +275,9 @@ describe('fetch unprocessed messages handler', () => {
     const result = await fetchUnprocessedMessagesHandler(
       Request.data({
         classroom_id: 'classroom-1',
+        batch_size: 1,
       }),
-    )({ repository, config: { batch_size: 1 } } as any)
+    )({ repository } as any)
 
     expect(result.data).toEqual({
       unprocessed_messages: [

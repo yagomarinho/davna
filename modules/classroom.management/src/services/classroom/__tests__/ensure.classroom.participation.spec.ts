@@ -20,13 +20,13 @@ describe('ensure classroom participation service', () => {
   })
 
   it('should be able to ensure participation when subject is participant and has participation in classroom', async () => {
-    const subject_id = 'subject-1'
+    const participant_id = 'participant-1'
     const classroom_id = 'classroom-1'
 
     const participant = {
       _t: ParticipantURI,
       meta: {
-        id: 'participant-1',
+        id: participant_id,
       },
     }
 
@@ -44,14 +44,14 @@ describe('ensure classroom participation service', () => {
       },
     }
 
-    repository.methods.query
-      .mockResolvedValueOnce({ data: [participant] })
-      .mockResolvedValueOnce({ data: [participation] })
+    repository.methods.query.mockResolvedValueOnce({ data: [participation] })
 
-    repository.methods.get.mockResolvedValue(classroom)
+    repository.methods.get
+      .mockResolvedValueOnce(participant)
+      .mockResolvedValueOnce(classroom)
 
     const result = await ensureClassroomParticipation({
-      subject_id,
+      participant_id,
       classroom_id,
     })({
       repository: repository as any,
@@ -60,18 +60,20 @@ describe('ensure classroom participation service', () => {
     expect(isRight(result)).toBeTruthy()
   })
 
-  it('should not be able to ensure participation when subject is not a participant', async () => {
-    const subject_id = 'subject-1'
+  it('should not be able to ensure participation when has not a participant', async () => {
+    const participant_id = 'participant-1'
     const classroom_id = 'classroom-1'
 
     repository.methods.query.mockResolvedValueOnce({ data: [] })
-    repository.methods.get.mockResolvedValue({
-      _t: ClassroomURI,
-      meta: { id: classroom_id },
-    })
+    repository.methods.get
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce({
+        _t: ClassroomURI,
+        meta: { id: classroom_id },
+      })
 
     const result = await ensureClassroomParticipation({
-      subject_id,
+      participant_id,
       classroom_id,
     })({
       repository: repository as any,
@@ -81,7 +83,7 @@ describe('ensure classroom participation service', () => {
   })
 
   it('should not be able to ensure participation when classroom does not exist', async () => {
-    const subject_id = 'subject-1'
+    const participant_id = 'participant-1'
     const classroom_id = 'classroom-1'
 
     const participant = {
@@ -91,11 +93,13 @@ describe('ensure classroom participation service', () => {
       },
     }
 
-    repository.methods.query.mockResolvedValueOnce({ data: [participant] })
-    repository.methods.get.mockResolvedValue(null)
+    repository.methods.query.mockResolvedValueOnce({ data: [] })
+    repository.methods.get
+      .mockResolvedValueOnce(participant)
+      .mockResolvedValueOnce(undefined)
 
     const result = await ensureClassroomParticipation({
-      subject_id,
+      participant_id,
       classroom_id,
     })({
       repository: repository as any,
@@ -105,7 +109,7 @@ describe('ensure classroom participation service', () => {
   })
 
   it('should not be able to ensure participation when participant has no participation with classroom', async () => {
-    const subject_id = 'subject-1'
+    const participant_id = 'participant-1'
     const classroom_id = 'classroom-1'
 
     const participant = {
@@ -122,14 +126,14 @@ describe('ensure classroom participation service', () => {
       },
     }
 
-    repository.methods.query
-      .mockResolvedValueOnce({ data: [participant] })
-      .mockResolvedValueOnce({ data: [] })
+    repository.methods.query.mockResolvedValueOnce({ data: [] })
 
-    repository.methods.get.mockResolvedValue(classroom)
+    repository.methods.get
+      .mockResolvedValueOnce(participant)
+      .mockResolvedValue(classroom)
 
     const result = await ensureClassroomParticipation({
-      subject_id,
+      participant_id,
       classroom_id,
     })({
       repository: repository as any,

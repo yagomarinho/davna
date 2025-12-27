@@ -15,24 +15,17 @@ import { messageDTOFromGraph } from '../../dtos'
 
 interface Data {
   classroom_id: string
+  batch_size?: number
 }
-
-interface Metadata {}
 
 interface Env {
   repository: ClassroomFedRepository
-  config?: {
-    batch_size?: number
-  }
 }
 
-const DEFAULT_BATCH_SIZE = 5
-
-export const fetchUnprocessedMessagesHandler = Handler<Env, Data, Metadata>(
-  request =>
-    async ({ repository, config }) => {
-      const { classroom_id } = request.data
-      const batch_size = config?.batch_size ?? DEFAULT_BATCH_SIZE
+export const fetchUnprocessedMessagesHandler = Handler<Env, Data>(
+  ({ data }) =>
+    async ({ repository }) => {
+      const { classroom_id, batch_size = 5 } = data
       let cursor_ref: string | undefined = undefined
 
       let done = false

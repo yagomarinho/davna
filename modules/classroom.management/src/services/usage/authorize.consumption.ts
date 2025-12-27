@@ -21,7 +21,6 @@ import {
   EntitlementURI,
   Granted,
   GrantedURI,
-  ParticipantURI,
   PolicyAggregateURI,
   Usage,
   UsagePolicyProps,
@@ -30,7 +29,7 @@ import {
 } from '../../entities'
 
 interface Data {
-  owner_id: string
+  participant_id: string
   requested_consumption: number
 }
 
@@ -46,19 +45,14 @@ interface Response {
 }
 
 export const authorizeConsumption = Service<Data, Env, Response[]>(
-  ({ owner_id, requested_consumption }) =>
+  ({ participant_id, requested_consumption }) =>
     async ({ repository }) => {
-      const {
-        data: [participant],
-      } = await repository.methods.query(
-        QueryBuilder().filterBy('subject_id', '==', owner_id).build(),
-        ParticipantURI,
-      )
+      const participant = await repository.methods.get(participant_id)
 
       if (!participant)
         return Left({
           status: 'error',
-          message: `No founded participant related with subject_id: ${owner_id}`,
+          message: `No founded participant related with id: ${participant_id}`,
         })
 
       const {

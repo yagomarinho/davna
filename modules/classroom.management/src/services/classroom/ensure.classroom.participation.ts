@@ -7,15 +7,10 @@
 
 import { Filter, Left, QueryBuilder, Right, Service } from '@davna/core'
 import { ClassroomFedRepository } from '../../repositories'
-import {
-  ClassroomURI,
-  Participant,
-  ParticipantURI,
-  ParticipationURI,
-} from '../../entities'
+import { ClassroomURI, ParticipationURI } from '../../entities'
 
 interface Data {
-  subject_id: string
+  participant_id: string
   classroom_id: string
 }
 
@@ -24,21 +19,28 @@ interface Env {
 }
 
 export const ensureClassroomParticipation = Service<Data, Env, void>(
-  ({ subject_id, classroom_id }) =>
+  ({ participant_id, classroom_id }) =>
     async ({ repository }) => {
       const [
-        {
-          data: [participant],
-        },
+        participant,
         classroom,
+        {
+          data: [participation],
+        },
       ] = await Promise.all([
-        repository.methods.query(
-          QueryBuilder<Participant>()
-            .filterBy('subject_id', '==', subject_id)
-            .build(),
-          ParticipantURI,
-        ),
+        repository.methods.get(participant_id),
         repository.methods.get(classroom_id),
+        repository.methods.query(
+          QueryBuilder()
+            .filterBy(
+              Filter.and(
+                Filter.where('source_id', '==', participant_id),
+                Filter.where('target_id', '==', classroom_id),
+              ),
+            )
+            .build(),
+          ParticipationURI,
+        ),
       ])
 
       if (!participant)
@@ -52,20 +54,6 @@ export const ensureClassroomParticipation = Service<Data, Env, void>(
           status: 'error',
           message: 'Has no classroom to append message',
         })
-
-      const {
-        data: [participation],
-      } = await repository.methods.query(
-        QueryBuilder()
-          .filterBy(
-            Filter.and(
-              Filter.where('source_id', '==', participant.meta.id),
-              Filter.where('target_id', '==', classroom.meta.id),
-            ),
-          )
-          .build(),
-        ParticipationURI,
-      )
 
       if (!participation)
         return Left({

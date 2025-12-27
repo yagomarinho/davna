@@ -7,7 +7,6 @@
 
 import {
   Handler,
-  Identifiable,
   isLeft,
   Response,
   SagaRepositoryProxy,
@@ -24,7 +23,7 @@ import {
   ensureOwnershipToTargetResource,
   getAudio,
   getOwnershipFromResource,
-  getParticipantBySubjectId,
+  getParticipant,
   invalidatePresignedURL,
   persistAudio,
 } from '../../services'
@@ -37,12 +36,9 @@ interface AudioInfo {
 }
 
 interface Data {
+  participant_id: string
   classroom_id: string
   resource: AudioInfo // | TextDTO (future implementation)
-}
-
-interface Metadata {
-  account: Identifiable
 }
 
 interface Env {
@@ -51,8 +47,8 @@ interface Env {
   storage: StorageConstructor
 }
 
-export const appendMessageHandler = Handler<Env, Data, Metadata>(
-  ({ data, metadata }) =>
+export const appendMessageHandler = Handler<Env, Data>(
+  ({ data }) =>
     async env => {
       // Declarar que toda a transação é idempotente antes de tudo
       // env.entityContext.setIdempotency(metadata.idempotency_key)
@@ -61,6 +57,7 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
 
       const { multimedia, storage } = env
       const {
+        participant_id,
         resource: {
           id: audio_id,
           metadata: { presigned_url },
@@ -68,11 +65,9 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
         classroom_id,
       } = data
 
-      const owner_id = metadata.account.id
-
       const ensureParticipation = await ensureClassroomParticipation({
         classroom_id,
-        subject_id: owner_id,
+        participant_id,
       })({ repository: env.repository })
 
       if (isLeft(ensureParticipation))
@@ -81,8 +76,8 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
           data: { message: ensureParticipation.value.message },
         })
 
-      const participantResult = await getParticipantBySubjectId({
-        subject_id: owner_id,
+      const participantResult = await getParticipant({
+        participant_id,
       })({ repository: env.repository })
 
       const participant: Participant = participantResult.value as any
@@ -117,7 +112,7 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
         const ensureAudioOnwershipResult =
           await ensureOwnershipToTargetResource({
             target: audio,
-            owner_id,
+            owner_id: participant_id,
           })({ repository })
 
         if (isLeft(ensureAudioOnwershipResult)) {

@@ -20,8 +20,8 @@ describe('create presigned audio handler', () => {
 
   const storage = {}
 
-  const account = {
-    id: 'account-1',
+  const participant = {
+    id: 'participant-id',
   }
 
   beforeEach(() => {
@@ -39,14 +39,12 @@ describe('create presigned audio handler', () => {
     )
 
     const result = await createPresignedAudioHandler(
-      Request({
-        metadata: { account },
-        data: {
-          mime_type: SUPPORTED_MIME_TYPE.MP3,
-          duration: {
-            unit: USAGE_UNITS.SECONDS,
-            value: 60,
-          },
+      Request.data({
+        participant_id: participant.id,
+        mime_type: SUPPORTED_MIME_TYPE.MP3,
+        duration: {
+          unit: USAGE_UNITS.SECONDS,
+          value: 60,
         },
       }),
     )({ repository, storage } as any)
@@ -95,14 +93,12 @@ describe('create presigned audio handler', () => {
     )
 
     const result = await createPresignedAudioHandler(
-      Request({
-        metadata: { account },
-        data: {
-          mime_type: SUPPORTED_MIME_TYPE.MP3,
-          duration: {
-            unit: USAGE_UNITS.SECONDS,
-            value: 120,
-          },
+      Request.data({
+        participant_id: participant.id,
+        mime_type: SUPPORTED_MIME_TYPE.MP3,
+        duration: {
+          unit: USAGE_UNITS.SECONDS,
+          value: 120,
         },
       }),
     )({ repository, storage } as any)
@@ -133,14 +129,12 @@ describe('create presigned audio handler', () => {
 
     await expect(
       createPresignedAudioHandler(
-        Request({
-          metadata: { account },
-          data: {
-            mime_type: SUPPORTED_MIME_TYPE.MP3,
-            duration: {
-              unit: USAGE_UNITS.SECONDS,
-              value: 10,
-            },
+        Request.data({
+          participant_id: participant.id,
+          mime_type: SUPPORTED_MIME_TYPE.MP3,
+          duration: {
+            unit: USAGE_UNITS.SECONDS,
+            value: 10,
           },
         }),
       )({ repository, storage } as any),

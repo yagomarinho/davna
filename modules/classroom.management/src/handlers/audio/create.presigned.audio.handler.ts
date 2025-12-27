@@ -7,7 +7,6 @@
 
 import {
   Handler,
-  Identifiable,
   isLeft,
   Response,
   SagaRepositoryProxy,
@@ -21,11 +20,8 @@ import { authorizeConsumption } from '../../services/usage/authorize.consumption
 import { createPresignedAudio } from '../../services/audio/create.presigned.audio'
 import { audioDTOfromGraph } from '../../dtos'
 
-interface Metadata {
-  account: Identifiable
-}
-
 interface Data {
+  participant_id: string
   mime_type: SUPPORTED_MIME_TYPE
   duration: {
     unit: USAGE_UNITS.SECONDS
@@ -38,14 +34,13 @@ interface Env {
   storage: Storage
 }
 
-export const createPresignedAudioHandler = Handler<Env, Data, Metadata>(
+export const createPresignedAudioHandler = Handler<Env, Data>(
   request => async env => {
-    const owner_id = request.metadata.account.id
-    const { duration, mime_type } = request.data
+    const { participant_id, duration, mime_type } = request.data
     const { storage } = env
 
     const authorizedResult = await authorizeConsumption({
-      owner_id,
+      participant_id,
       requested_consumption: duration.value,
     })({ repository: env.repository })
 
@@ -62,7 +57,7 @@ export const createPresignedAudioHandler = Handler<Env, Data, Metadata>(
       const createAudioResult = await createPresignedAudio({
         duration,
         mime_type,
-        owner_id,
+        owner_id: participant_id,
       })({
         repository,
         storage,

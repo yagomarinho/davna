@@ -15,7 +15,7 @@ import {
   ensureOwnershipToTargetResource,
   getAudio,
   getOwnershipFromResource,
-  getParticipantBySubjectId,
+  getParticipant,
   invalidatePresignedURL,
   persistAudio,
 } from '../../../services'
@@ -38,8 +38,6 @@ describe('append message handler', () => {
 
   const storage = jest.fn(() => storageInstance)
 
-  const account = { id: 'account-1' }
-
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -58,7 +56,7 @@ describe('append message handler', () => {
       meta: { id: 'participant-1' },
     }
 
-    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+    ;(getParticipant as any as jest.Mock).mockReturnValue(() =>
       Promise.resolve(Right(participant)),
     )
 
@@ -173,14 +171,12 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request({
-        metadata: { account },
-        data: {
-          classroom_id,
-          resource: {
-            id: audio_id,
-            metadata: { presigned_url },
-          } as any,
+      Request.data({
+        participant_id: participant.meta.id,
+        classroom_id,
+        resource: {
+          id: audio_id,
+          metadata: { presigned_url },
         },
       }),
     )({ repository, multimedia, storage } as any)
@@ -203,14 +199,12 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request({
-        metadata: { account },
-        data: {
-          classroom_id: 'classroom-1',
-          resource: {
-            id: 'audio-1',
-            metadata: { presigned_url: 'url' },
-          } as any,
+      Request.data({
+        participant_id: 'not-participant',
+        classroom_id: 'classroom-1',
+        resource: {
+          id: 'audio-1',
+          metadata: { presigned_url: 'url' },
         },
       }),
     )({ repository } as any)
@@ -223,7 +217,7 @@ describe('append message handler', () => {
     ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
       Promise.resolve(Right(undefined)),
     )
-    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+    ;(getParticipant as any as jest.Mock).mockReturnValue(() =>
       Promise.resolve(Right({ meta: { id: 'p1' } })),
     )
     ;(getAudio as any as jest.Mock).mockReturnValue(() =>
@@ -237,14 +231,12 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request({
-        metadata: { account },
-        data: {
-          classroom_id: 'classroom-1',
-          resource: {
-            id: 'audio-1',
-            metadata: { presigned_url: 'expected-url' },
-          } as any,
+      Request.data({
+        participant_id: 'participant-1',
+        classroom_id: 'classroom-1',
+        resource: {
+          id: 'audio-1',
+          metadata: { presigned_url: 'expected-url' },
         },
       }),
     )({ repository } as any)
@@ -257,7 +249,7 @@ describe('append message handler', () => {
     ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
       Promise.resolve(Right(undefined)),
     )
-    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+    ;(getParticipant as any as jest.Mock).mockReturnValue(() =>
       Promise.resolve(Right({ meta: { id: 'p1' } })),
     )
     ;(getAudio as any as jest.Mock).mockReturnValue(() =>
@@ -289,14 +281,12 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request({
-        metadata: { account },
-        data: {
-          classroom_id: 'classroom',
-          resource: {
-            id: 'audio',
-            metadata: { presigned_url: 'url' },
-          },
+      Request.data({
+        participant_id: 'p1',
+        classroom_id: 'classroom',
+        resource: {
+          id: 'audio',
+          metadata: { presigned_url: 'url' },
         },
       }),
     )({ repository } as any)
