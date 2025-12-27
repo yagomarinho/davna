@@ -1,11 +1,11 @@
-import { Left, Repository, Request, Right } from '@davna/core'
-import { InMemoryRepository } from '@davna/infra'
+import { Left, Request, Right } from '@davna/core'
 
-import { Audio } from '../../entities/audio'
-import { downloadAudio as service } from '../../services/audio/download.audio'
+import { downloadAudio as service } from '../../../services/audio/download.audio'
 import { downloadAudioHandler } from '../download.audio.handler'
+import { ClassroomFedRepository } from '../../../repositories'
+import { ClassroomFedFake } from '../../../services/__fakes__/classroom.fed.fake'
 
-jest.mock('../../services/download.audio', () => ({
+jest.mock('../../../services/audio/download.audio', () => ({
   downloadAudio: jest.fn(),
 }))
 
@@ -14,10 +14,10 @@ const downloadAudio = service as any as jest.Mock
 describe('downloadAudioHandler', () => {
   const audio_id = 'audio-1'
 
-  let audios: Repository<Audio>
+  let repository: ClassroomFedRepository
 
   beforeEach(() => {
-    audios = InMemoryRepository<Audio>()
+    repository = ClassroomFedFake()
     jest.clearAllMocks()
   })
 
@@ -34,7 +34,7 @@ describe('downloadAudioHandler', () => {
     downloadAudio.mockImplementationOnce(() => async () => Left(errorPayload))
 
     const result = await downloadAudioHandler(req)({
-      audios,
+      repository,
       storage: (() => ({})) as any,
     })
 
@@ -59,15 +59,15 @@ describe('downloadAudioHandler', () => {
     })
 
     const buffer = Buffer.from('audio-binary-data')
-    const mime = 'audio/mpeg'
-    const servicePayload = { mime, buffer }
+    const mime_type = 'audio/mpeg'
+    const servicePayload = { mime_type, buffer }
 
     downloadAudio.mockImplementationOnce(
       () => async () => Right(servicePayload),
     )
 
     const result = await downloadAudioHandler(req)({
-      audios,
+      repository,
       storage: (() => ({})) as any,
     })
 
@@ -79,7 +79,7 @@ describe('downloadAudioHandler', () => {
     expect(result.metadata).toEqual(
       expect.objectContaining({
         headers: expect.objectContaining({
-          'Content-Type': mime,
+          'Content-Type': mime_type,
           'Content-Length': buffer.length.toString(),
         }),
       }),

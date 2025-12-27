@@ -7,7 +7,7 @@
 
 import { Left, Request, Right } from '@davna/core'
 import { mixed, object, string, ValidationError } from 'yup'
-import { SUPPORTED_MIME_TYPE } from '../entities'
+import { SUPPORTED_MIME_TYPE } from '../../entities'
 
 const metadataSchema = object({
   file: object({

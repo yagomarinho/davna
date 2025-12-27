@@ -75,13 +75,13 @@ describe('show classroom service', () => {
 
     const value = (result as any).value as {
       classroom: Classroom
-      classroom_ownership: Ownership
+      classroomOwnership: Ownership
       participants: Participant[]
       participations: Participation[]
     }
 
     expect(value.classroom).toEqual(classroom)
-    expect(value.classroom_ownership).toEqual(ownership)
+    expect(value.classroomOwnership).toEqual(ownership)
 
     expect(value.participants).toEqual(
       expect.arrayContaining([

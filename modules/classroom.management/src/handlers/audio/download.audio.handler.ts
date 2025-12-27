@@ -7,9 +7,10 @@
 
 import { Handler, isLeft, Response } from '@davna/core'
 
-import { downloadAudio } from '../services/audio/download.audio'
-import { StorageConstructor } from '../utils/storage'
-import { ClassroomFedRepository } from '../repositories'
+import { ClassroomFedRepository } from '../../repositories'
+import { StorageConstructor } from '../../utils'
+import { downloadAudio } from '../../services/audio/download.audio'
+
 interface Env {
   repository: ClassroomFedRepository
   storage: StorageConstructor

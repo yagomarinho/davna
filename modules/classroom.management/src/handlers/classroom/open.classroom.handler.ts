@@ -19,7 +19,7 @@ import { getParticipant } from '../../services/participant/get.participant'
 
 interface Metadata {
   account: Identifiable
-  agent_id: string
+  agent_participant_id: string
 }
 
 interface Env {
@@ -29,10 +29,10 @@ interface Env {
 export const openClassroomHandler = Handler<Env, any, Metadata>(
   ({ metadata }) =>
     async env => {
-      const { account, agent_id } = metadata
+      const { account, agent_participant_id } = metadata
 
       const participantResult = await getParticipant({
-        participant_id: agent_id,
+        participant_id: agent_participant_id,
       })({
         repository: env.repository,
       })
@@ -40,7 +40,7 @@ export const openClassroomHandler = Handler<Env, any, Metadata>(
       if (isLeft(participantResult))
         return Response({
           metadata: { headers: { status: 400 } },
-          data: { message: `Invalid agent id: ${agent_id}` },
+          data: { message: `Invalid agent id: ${agent_participant_id}` },
         })
 
       const participant = participantResult.value
@@ -56,7 +56,10 @@ export const openClassroomHandler = Handler<Env, any, Metadata>(
 
         if (isLeft(result)) {
           await uow.rollback()
-          return Response.metadata({ status: 'error' })
+          return Response({
+            metadata: { headers: { status: 404 } },
+            data: { message: result.value.message },
+          })
         }
 
         const { classroom } = result.value

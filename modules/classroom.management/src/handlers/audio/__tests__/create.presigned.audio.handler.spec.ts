@@ -1,197 +1,149 @@
-import { Left, Repository, Request, Right } from '@davna/core'
+import { Left, Request, Right } from '@davna/core'
 
-jest.mock('../../services/upload.audio', () => ({
-  uploadAudio: jest.fn(),
-}))
+import { createPresignedAudioHandler } from '../create.presigned.audio.handler'
+import { authorizeConsumption } from '../../../services/usage/authorize.consumption'
+import { createPresignedAudio } from '../../../services/audio/create.presigned.audio'
+import {
+  AudioURI,
+  OwnershipURI,
+  SUPPORTED_MIME_TYPE,
+  USAGE_UNITS,
+} from '../../../entities'
 
-const uploadAudio = service as any as jest.Mock
+jest.mock('../../../services/usage/authorize.consumption')
+jest.mock('../../../services/audio/create.presigned.audio')
 
-describe('uploadAudioHandler', () => {
-  const owner_id = 'owner-1'
-  const filename = 'recording.mp3'
-  const mime = 'audio/mpeg'
+describe('create presigned audio handler', () => {
+  const repository = {
+    methods: {},
+  }
 
-  let audios: Repository<Audio>
-  let storage: jest.Mocked<StorageConstructor>
-  let multimedia: jest.Mocked<MultimediaProvider>
-  const storage_driver = STORAGE_TYPE.MONGO_GRIDFS
+  const storage = {}
+
+  const account = {
+    id: 'account-1',
+  }
 
   beforeEach(() => {
-    audios = InMemoryRepository<Audio>()
-    storage = () => ({
-      upload: jest.fn(),
-      download: jest.fn(),
-      check: jest.fn(),
-    })
-    multimedia = {
-      metadata: jest.fn(),
-      convert: jest.fn().mockImplementation(({ buffer, name, mime }) => ({
-        buffer,
-        name,
-        mime,
-        duration: 120,
-      })),
-    }
     jest.clearAllMocks()
   })
 
-  afterEach(() => {
-    jest.clearAllMocks()
-  })
-
-  it('should return 400 Invalid metadata when validation fails', async () => {
-    // make name invalid (empty)
-    const file = {
-      originalname: '', // will fail string().required()
-      mimetype: mime,
-      buffer: Buffer.from('ok'),
-    }
-
-    const req = Request.metadata({
-      file,
-      account: { id: owner_id },
-    })
-
-    const result = await uploadAudioHandler(req)({
-      audios,
-      storage,
-      multimedia,
-      storage_driver,
-    })
-
-    expect(result).toBeDefined()
-    expect(result).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({ message: 'Invalid metadata' }),
-        metadata: expect.objectContaining({
-          headers: expect.objectContaining({ status: 400 }),
+  it('should return 401 when consumption is not authorized', async () => {
+    ;(authorizeConsumption as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(
+        Left({
+          status: 'error',
+          message: 'Has no consumption left',
         }),
-      }),
+      ),
     )
 
-    expect(uploadAudio).not.toHaveBeenCalled()
+    const result = await createPresignedAudioHandler(
+      Request({
+        metadata: { account },
+        data: {
+          mime_type: SUPPORTED_MIME_TYPE.MP3,
+          duration: {
+            unit: USAGE_UNITS.SECONDS,
+            value: 60,
+          },
+        },
+      }),
+    )({ repository, storage } as any)
+
+    expect(result.metadata?.headers?.status).toBe(401)
+    expect(result.data).toEqual({
+      message: 'Has no consumption left. Try again later',
+    })
   })
 
-  it('should return 400 Invalid file shape when file.buffer is not a Buffer', async () => {
-    const file = {
-      originalname: filename,
-      mimetype: mime,
-      buffer: {} as any, // invalid shape
+  it('should create presigned audio when consumption is authorized', async () => {
+    ;(authorizeConsumption as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right([])),
+    )
+
+    const audio = {
+      _t: AudioURI,
+      meta: { id: 'audio-1' },
+      props: {
+        storage: {
+          props: {},
+        },
+        metadata: {
+          props: {
+            presignedUrl: 'https://signed.url',
+            expires_at: new Date('2030-01-01'),
+          },
+        },
+      },
     }
 
-    const req = Request.metadata({
-      file,
-      account: { id: owner_id },
-    })
+    const ownership = {
+      _t: OwnershipURI,
+      props: {
+        target_id: 'audio-1',
+      },
+    }
 
-    const result = await uploadAudioHandler(req)({
-      audios,
-      storage,
-      multimedia,
-      storage_driver,
-    })
-
-    expect(result).toBeDefined()
-    expect(result).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({ message: 'Invalid file shape' }),
-        metadata: expect.objectContaining({
-          headers: expect.objectContaining({ status: 400 }),
+    ;(createPresignedAudio as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(
+        Right({
+          audio,
+          ownership,
         }),
-      }),
+      ),
     )
 
-    expect(uploadAudio).not.toHaveBeenCalled()
+    const result = await createPresignedAudioHandler(
+      Request({
+        metadata: { account },
+        data: {
+          mime_type: SUPPORTED_MIME_TYPE.MP3,
+          duration: {
+            unit: USAGE_UNITS.SECONDS,
+            value: 120,
+          },
+        },
+      }),
+    )({ repository, storage } as any)
+
+    expect(result.data).toEqual({
+      audio: expect.objectContaining({
+        id: 'audio-1',
+      }),
+      presigned_url: {
+        url: 'https://signed.url',
+        expires_at: new Date('2030-01-01'),
+      },
+    })
   })
 
-  it('should return 400 when uploadAudio service returns Left (error)', async () => {
-    const file = {
-      originalname: filename,
-      mimetype: mime,
-      buffer: Buffer.from('audio-bytes'),
-    }
-
-    const req = Request.metadata({
-      file,
-      account: { id: owner_id },
-    })
-
-    const errorPayload = { message: 'storage failure' }
-    uploadAudio.mockImplementationOnce(() => async () => Left(errorPayload))
-
-    const result = await uploadAudioHandler(req)({
-      audios,
-      storage,
-      multimedia,
-      storage_driver,
-    })
-
-    expect(result).toBeDefined()
-    expect(result).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({ message: errorPayload.message }),
-        metadata: expect.objectContaining({
-          headers: expect.objectContaining({ status: 400 }),
+  it('should throw when createPresignedAudio returns Left', async () => {
+    ;(authorizeConsumption as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right([])),
+    )
+    ;(createPresignedAudio as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(
+        Left({
+          status: 'error',
+          message: 'invalid audio',
         }),
-      }),
+      ),
     )
 
-    expect(uploadAudio).toHaveBeenCalledTimes(1)
-    const calledWith = uploadAudio.mock.calls[0][0]
-    expect(calledWith).toEqual(
-      expect.objectContaining({
-        buffer: file.buffer,
-        duration: expect.any(Number),
-        mime,
-        name: filename,
-        owner_id,
-      }),
-    )
-  })
-
-  it('should return Response.data when uploadAudio service returns Right', async () => {
-    const file = {
-      originalname: filename,
-      mimetype: mime,
-      buffer: Buffer.from('audio-bytes'),
-    }
-
-    const req = Request.metadata({
-      file,
-      account: { id: owner_id },
-    })
-
-    const servicePayload = {
-      id: 'audio-1',
-      owner_id,
-      name: filename,
-      mime,
-      duration: 120,
-      url: 'https://cdn.example/audio-1.mp3',
-    }
-
-    uploadAudio.mockImplementationOnce(() => async () => Right(servicePayload))
-
-    const result = await uploadAudioHandler(req)({
-      audios,
-      storage,
-      multimedia,
-      storage_driver,
-    })
-
-    expect(result).toBeDefined()
-    expect(result).toEqual(expect.objectContaining({ data: servicePayload }))
-
-    expect(uploadAudio).toHaveBeenCalledTimes(1)
-    const calledWith = uploadAudio.mock.calls[0][0]
-    expect(calledWith).toEqual(
-      expect.objectContaining({
-        buffer: file.buffer,
-        duration: expect.any(Number),
-        mime,
-        name: filename,
-        owner_id,
-      }),
-    )
+    await expect(
+      createPresignedAudioHandler(
+        Request({
+          metadata: { account },
+          data: {
+            mime_type: SUPPORTED_MIME_TYPE.MP3,
+            duration: {
+              unit: USAGE_UNITS.SECONDS,
+              value: 10,
+            },
+          },
+        }),
+      )({ repository, storage } as any),
+    ).rejects.toThrow()
   })
 })

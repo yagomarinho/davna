@@ -29,7 +29,7 @@ interface Env {
 
 interface Response {
   classroom: Classroom
-  classroom_ownership: Ownership
+  classroomOwnership: Ownership
   participants: Participant[]
   participations: Participation[]
 }
@@ -58,7 +58,7 @@ export const showClassroom = Service<Request, Env, Response>(
 
       const [
         {
-          data: [classroom_ownership],
+          data: [classroomOwnership],
         },
         { data: participants },
       ] = await Promise.all([
@@ -87,7 +87,7 @@ export const showClassroom = Service<Request, Env, Response>(
 
       return Right({
         classroom,
-        classroom_ownership,
+        classroomOwnership,
         participants,
         participations,
       })
