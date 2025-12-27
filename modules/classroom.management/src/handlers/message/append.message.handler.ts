@@ -6,37 +6,37 @@
  */
 
 import {
-  Filter,
   Handler,
   Identifiable,
   isLeft,
-  QueryBuilder,
   Response,
   SagaRepositoryProxy,
   UnitOfWorkSaga,
 } from '@davna/core'
-import { ClassroomFedRepository } from '../repositories'
-import { AudioDTO, messageDTOFromGraph } from '../dtos'
+import { concatenate } from '@davna/kernel'
+
+import { ClassroomFedRepository } from '../../repositories'
+import { AudioDTO, messageDTOFromGraph } from '../../dtos'
 import {
   Audio,
   AudioURI,
-  ClassroomURI,
   createAudio,
   createMessage,
   createOccursIn,
   createOwnership,
   createSource,
   Ownership,
-  OwnershipURI,
   Participant,
-  ParticipantURI,
-} from '../entities'
-import { MultimediaProvider } from '../providers'
-import { StorageConstructor } from '../utils'
+} from '../../entities'
+import { MultimediaProvider } from '../../providers'
+import { StorageConstructor } from '../../utils'
 import { Readable } from 'node:stream'
-import { concatenate } from '@davna/kernel'
-import { ensureClassroomParticipation } from '../services/ensure.classroom.participation'
-import { getAudio } from '../services/audio/get.audio'
+import { ensureClassroomParticipation } from '../../services/classroom/ensure.classroom.participation'
+import { getAudio } from '../../services/audio/get.audio'
+import { getParticipantBySubjectId } from '../../services/participant/get.participant.by.subject.id'
+import { invalidatePresignedURL } from '../../services/audio/invalidate.presigned.url'
+import { getOwnershipFromResource } from '../../services/ownership/get.ownership.from.resource'
+import { ensureOwnershipToTargetResource } from '../../services/ownership/ensure.ownership.to.target.resource'
 
 interface Data {
   classroom_id: string
@@ -83,6 +83,12 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
           data: { message: ensureParticipation.value.message },
         })
 
+      const participantResult = await getParticipantBySubjectId({
+        subject_id: owner_id,
+      })({ repository: env.repository })
+
+      const participant: Participant = participantResult.value as any
+
       const audioResult = await getAudio({ audio_id })({
         repository: env.repository,
       })
@@ -102,44 +108,35 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
       try {
         const repository = SagaRepositoryProxy(env.repository, uow)
         // invalidar parcialmente o presigned para que outro serviço não possa utilizá-lo
-        await repository.methods.set(
-          createAudio(
-            concatenate(audio.props, {
-              storage: audio.props.storage.props,
-              metadata: concatenate(audio.props.metadata.props, {
-                presigned_url: undefined,
-                expires_at: undefined,
-              }),
-            }),
-            audio.meta,
-          ),
-        )
+
+        await invalidatePresignedURL({ audio })({
+          repository,
+        })
 
         if (audio.props.metadata.props.expires_at < new Date())
           throw new Error('Invalid presigned url')
 
-        const {
-          data: [audioOwnership],
-        } = await env.repository.methods.query(
-          QueryBuilder<Ownership>()
-            .filterBy(
-              Filter.and(
-                Filter.where('source_id', '==', participant.meta.id),
-                Filter.where('target_id', '==', audio.meta.id),
-              ),
-            )
-            .build(),
-          OwnershipURI,
-        )
+        const ensureAudioOnwershipResult =
+          await ensureOwnershipToTargetResource({
+            target: audio,
+            owner_id,
+          })({ repository })
 
-        if (!audioOwnership)
+        if (isLeft(ensureAudioOnwershipResult))
           return Response({
             metadata: { header: { status: 401 } },
             data: {
-              message:
-                'This account has no authorization to handle this resource',
+              message: ensureAudioOnwershipResult.value.message,
             },
           })
+
+        const audioOwnershipResult = await getOwnershipFromResource({
+          target: audio,
+        })({
+          repository,
+        })
+
+        const audioOwnership: Ownership = audioOwnershipResult.value as any
 
         const _storage = storage({
           driver: audio.props.storage.props.type,

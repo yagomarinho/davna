@@ -5,3 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export * from './store.derived.contents.handler'

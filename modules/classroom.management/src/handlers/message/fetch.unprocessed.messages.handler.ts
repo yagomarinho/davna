@@ -6,12 +6,12 @@
  */
 
 import { Handler, isLeft, Response } from '@davna/core'
-import { ClassroomFedRepository } from '../repositories'
-import { messageDTOFromGraph } from '../dtos'
+import { ClassroomFedRepository } from '../../repositories'
 import {
   fetchUnprocessedMessages,
   UnprocessedMessage,
-} from '../services/message/fetch.unprocessed.messages'
+} from '../../services/message/fetch.unprocessed.messages'
+import { messageDTOFromGraph } from '../../dtos'
 
 interface Data {
   classroom_id: string
@@ -21,13 +21,18 @@ interface Metadata {}
 
 interface Env {
   repository: ClassroomFedRepository
+  config?: {
+    batch_size?: number
+  }
 }
+
+const DEFAULT_BATCH_SIZE = 5
 
 export const fetchUnprocessedMessagesHandler = Handler<Env, Data, Metadata>(
   request =>
-    async ({ repository }) => {
+    async ({ repository, config }) => {
       const { classroom_id } = request.data
-      const batch_size = 5 // Isso deve ser
+      const batch_size = config?.batch_size ?? DEFAULT_BATCH_SIZE
       let cursor_ref: string | undefined = undefined
 
       let done = false

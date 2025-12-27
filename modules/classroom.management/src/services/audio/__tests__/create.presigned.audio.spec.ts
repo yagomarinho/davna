@@ -67,7 +67,9 @@ describe('create presigned audio service', () => {
           mime_type: 'audio/mpeg',
           duration: 120,
           metadata: expect.objectContaining({
-            presignedUrl: 'https://signed.url',
+            props: expect.objectContaining({
+              presignedUrl: 'https://signed.url',
+            }),
           }),
         }),
       }),

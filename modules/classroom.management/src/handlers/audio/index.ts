@@ -5,9 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PARTICIPANT_ROLE } from '../../entities'
-
-export interface ParticipantDTO {
-  participant_id: string
-  role: PARTICIPANT_ROLE
-}
+export * from './create.presigned.audio.handler'
+export * from './download.audio.handler'

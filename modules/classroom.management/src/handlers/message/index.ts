@@ -5,3 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export * from './append.message.handler'
+export * from './fetch.classroom.history.handler'
+export * from './fetch.unprocessed.messages.handler'

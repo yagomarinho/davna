@@ -1,7 +1,7 @@
 import { isLeft, isRight } from '@davna/core'
 
 import { getAudio } from '../get.audio'
-import { createAudio } from '../../../entities'
+import { createAudio, createMessage } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
 import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
 import { IDContextFake } from '../../__fakes__/id.context.fake'
@@ -52,13 +52,7 @@ describe('get audio service', () => {
   })
 
   it('should not be able to get audio when entity is not an audio', async () => {
-    const notAudio = await repository.methods.set({
-      _t: 'any-other-entity',
-      meta: {
-        id: 'entity-id',
-      },
-      props: {},
-    } as any)
+    const notAudio = await repository.methods.set(createMessage())
 
     const result = await getAudio({ audio_id: notAudio.meta.id })({
       repository,
