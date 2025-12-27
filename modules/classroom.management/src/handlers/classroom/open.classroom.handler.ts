@@ -57,7 +57,7 @@ export const openClassroomHandler = Handler<Env, any, Metadata>(
         if (isLeft(result)) {
           await uow.rollback()
           return Response({
-            metadata: { headers: { status: 404 } },
+            metadata: { headers: { status: 400 } },
             data: { message: result.value.message },
           })
         }

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './audio'
-export * from './classroom'
-export * from './message'
-export * from './representation'
-export * from './usage'
+export * from './ensure.classroom.participation'
+export * from './open.classroom'
+export * from './show.classroom'

@@ -5,8 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './audio'
-export * from './classroom'
-export * from './message'
-export * from './representation'
-export * from './usage'
+export * from './ensure.ownership.to.target.resource'
+export * from './get.ownership.from.resource'

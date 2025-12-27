@@ -13,36 +13,39 @@ import {
   Classroom,
   createMessage,
   createOccursIn,
+  createOwnership,
   createSource,
   Message,
+  MessageURI,
   OccursIn,
+  Ownership,
   Participation,
   Source,
 } from '../../entities'
-import { Resource, ResourceResolver } from '../../utils/resource.resolver'
+import { Resource, resourceResolver } from '../../utils/resource.resolver'
 
 interface Request {
   classroom_id: string
   participant_id: string
   message_type: string
-  data: unknown
+  data: unknown // Tornar data um tipo legítimo para facilitar no typecheck
 }
 
 interface Env {
   repository: ClassroomFedRepository
-  resourceResolver: ResourceResolver
 }
 
 interface Response {
   classroom: Classroom
-  message: Message
-  source: Source
   occursIn: OccursIn
+  message: Message
+  messageOwnership: Ownership
+  source: Source
 }
 
 export const appendMessageToClassroom = Service<Request, Env, Response>(
   ({ classroom_id, participant_id, message_type, data }) =>
-    async ({ repository, resourceResolver }) => {
+    async ({ repository }) => {
       const [
         classroom,
         participant,
@@ -93,7 +96,7 @@ export const appendMessageToClassroom = Service<Request, Env, Response>(
 
       const resource: Resource = resolverResult.value
 
-      const [source, occursIn] = await Promise.all([
+      const [source, occursIn, messageOwnership] = await Promise.all([
         repository.methods.set(
           createSource({
             source_id: resource.meta.id,
@@ -107,13 +110,21 @@ export const appendMessageToClassroom = Service<Request, Env, Response>(
             target_id: classroom.meta.id,
           }),
         ),
+        repository.methods.set(
+          createOwnership({
+            source_id: participant.meta.id,
+            target_id: message.meta.id,
+            target_type: MessageURI,
+          }),
+        ),
       ])
 
       return Right({
         classroom,
-        message,
-        source,
         occursIn,
+        message,
+        messageOwnership,
+        source,
       })
     },
 )

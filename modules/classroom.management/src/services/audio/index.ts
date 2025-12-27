@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './audio'
-export * from './classroom'
-export * from './message'
-export * from './representation'
-export * from './usage'
+export * from './create.presigned.audio'
+export * from './download.audio'
+export * from './get.audio'
+export * from './invalidate.presigned.url'
+export * from './persist.audio'

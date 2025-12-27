@@ -6,10 +6,10 @@
  */
 
 import { RawProps, Right, Service } from '@davna/core'
+import { concatenate } from '@davna/kernel'
+
 import { Audio, AudioProps, createAudio } from '../../entities'
 import { ClassroomFedRepository } from '../../repositories'
-import { Storage } from '@davna/infra'
-import { concatenate } from '@davna/kernel'
 
 interface Request {
   audio: Audio
@@ -17,7 +17,6 @@ interface Request {
 }
 interface Env {
   repository: ClassroomFedRepository
-  storage: Storage
 }
 
 export const persistAudio = Service<Request, Env, Audio>(

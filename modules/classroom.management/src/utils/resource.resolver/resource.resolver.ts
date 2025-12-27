@@ -27,7 +27,7 @@ export interface ResourceResolver {
   >
 }
 
-export const ResourceResolver: ResourceResolver =
+export const resourceResolver: ResourceResolver =
   init =>
   async ({ repository }) => {
     try {

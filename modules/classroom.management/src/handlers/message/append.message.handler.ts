@@ -14,33 +14,31 @@ import {
   UnitOfWorkSaga,
 } from '@davna/core'
 import { concatenate } from '@davna/kernel'
-
+import { messageDTOFromGraph } from '../../dtos'
 import { ClassroomFedRepository } from '../../repositories'
-import { AudioDTO, messageDTOFromGraph } from '../../dtos'
-import {
-  Audio,
-  AudioURI,
-  createAudio,
-  createMessage,
-  createOccursIn,
-  createOwnership,
-  createSource,
-  Ownership,
-  Participant,
-} from '../../entities'
 import { MultimediaProvider } from '../../providers'
 import { StorageConstructor } from '../../utils'
+import {
+  appendMessageToClassroom,
+  ensureClassroomParticipation,
+  ensureOwnershipToTargetResource,
+  getAudio,
+  getOwnershipFromResource,
+  getParticipantBySubjectId,
+  invalidatePresignedURL,
+  persistAudio,
+} from '../../services'
+import { Ownership, Participant } from '../../entities'
 import { Readable } from 'node:stream'
-import { ensureClassroomParticipation } from '../../services/classroom/ensure.classroom.participation'
-import { getAudio } from '../../services/audio/get.audio'
-import { getParticipantBySubjectId } from '../../services/participant/get.participant.by.subject.id'
-import { invalidatePresignedURL } from '../../services/audio/invalidate.presigned.url'
-import { getOwnershipFromResource } from '../../services/ownership/get.ownership.from.resource'
-import { ensureOwnershipToTargetResource } from '../../services/ownership/ensure.ownership.to.target.resource'
+
+interface AudioInfo {
+  id: string
+  metadata: { presigned_url: string }
+}
 
 interface Data {
   classroom_id: string
-  resource: AudioDTO // | TextDTO (future implementation)
+  resource: AudioInfo // | TextDTO (future implementation)
 }
 
 interface Metadata {
@@ -98,7 +96,7 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
         audioResult.value.props.metadata.props.presigned_url !== presigned_url
       )
         return Response({
-          metadata: { header: { status: 400 } },
+          metadata: { headers: { status: 400 } },
           data: { message: 'Invalid audio to append' },
         })
 
@@ -122,13 +120,15 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
             owner_id,
           })({ repository })
 
-        if (isLeft(ensureAudioOnwershipResult))
+        if (isLeft(ensureAudioOnwershipResult)) {
+          await uow.rollback()
           return Response({
-            metadata: { header: { status: 401 } },
+            metadata: { headers: { status: 401 } },
             data: {
               message: ensureAudioOnwershipResult.value.message,
             },
           })
+        }
 
         const audioOwnershipResult = await getOwnershipFromResource({
           target: audio,
@@ -146,11 +146,13 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
           identifier: audio.props.storage.props.internal_id,
         })
 
-        if (!buffer)
+        if (!buffer) {
+          await uow.rollback()
           return Response({
-            metadata: { header: { status: 400 } },
+            metadata: { headers: { status: 400 } },
             data: { message: 'Invalid audio to append' },
           })
+        }
 
         const converted = await multimedia.convert({
           buffer,
@@ -168,53 +170,51 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
           },
         })
 
-        const [updatedAudio, message] = await Promise.all([
-          repository.methods.set<Audio>(
-            createAudio(
-              {
-                status: 'persistent',
-                filename: audio.props.filename,
-                mime_type: converted.mime,
-                duration: converted.duration,
-                url: `${process.env.API_BASE_URL}/audio/${audio.meta.id}`, // Tornar essa geração de nome externa
-                metadata: concatenate(audio.props.metadata.props, {
-                  presigned_url: undefined,
-                  expires_at: undefined,
-                }),
-                storage: {
-                  bucket,
-                  internal_id: identifier,
-                  type: storage_type,
-                },
-              },
-              audio.meta,
-            ),
-          ),
-          repository.methods.set(createMessage()),
-        ])
+        const persistedAudioResult = await persistAudio({
+          audio,
+          props: {
+            filename: audio.props.filename,
+            mime_type: converted.mime,
+            duration: converted.duration,
+            metadata: concatenate(audio.props.metadata.props, {
+              presigned_url: undefined,
+              expires_at: undefined,
+            }),
+            storage: {
+              bucket,
+              internal_id: identifier,
+              type: storage_type,
+            },
+          },
+        })({ repository })
 
-        const [messageOwnership] = await Promise.all([
-          repository.methods.set(
-            createOwnership({
-              source_id: participant.meta.id,
-              target_id: message.meta.id,
-              target_type: 'message',
-            }),
-          ),
-          repository.methods.set(
-            createSource({
-              source_id: updatedAudio.meta.id,
-              target_id: message.meta.id,
-              source_type: AudioURI,
-            }),
-          ),
-          repository.methods.set(
-            createOccursIn({
-              source_id: message.meta.id,
-              target_id: classroom_id,
-            }),
-          ),
-        ])
+        if (isLeft(persistedAudioResult)) {
+          await uow.rollback()
+          return Response({
+            metadata: { headers: { status: 400 } },
+            data: { message: 'Invalid audio to append' },
+          })
+        }
+
+        const appendMessageResult = await appendMessageToClassroom({
+          classroom_id,
+          participant_id: participant.meta.id,
+          message_type: 'audio',
+          data: {
+            type: 'audio',
+            content: persistedAudioResult.value.meta.id,
+          },
+        })({ repository })
+
+        if (isLeft(appendMessageResult)) {
+          await uow.rollback()
+          return Response({
+            metadata: { headers: { status: 400 } },
+            data: { message: appendMessageResult.value.message },
+          })
+        }
+
+        const { message, messageOwnership } = appendMessageResult.value
 
         // chamar o classroom interactions guidance
         // classroomInteractionsGuidance(classroom_id)
@@ -224,7 +224,7 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
             classroom_id,
             message,
             messageOwnership,
-            audio: updatedAudio,
+            audio: persistedAudioResult.value,
             audioOwnership,
           }),
         })

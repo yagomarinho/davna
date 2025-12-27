@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './audio'
-export * from './classroom'
-export * from './message'
-export * from './representation'
-export * from './usage'
+export * from './create.participant.for.subject'
+export * from './get.participant'
+export * from './get.participant.by.subject.id'
