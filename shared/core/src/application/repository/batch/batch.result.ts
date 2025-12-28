@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Identifiable } from '@davna/core'
+
 /**
  * Represents the result of a batch operation.
  *
@@ -18,4 +20,8 @@ export interface BatchResult {
 
   /** Timestamp representing when the batch operation was executed */
   time: Date
+
+  upserted_ids: Identifiable[]
+
+  removed_ids: Identifiable[]
 }

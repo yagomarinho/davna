@@ -6,6 +6,7 @@ import {
   ClassroomURI,
   createRepresentation,
   createText,
+  REPRESENTATION_KIND,
   REPRESENTATION_TYPE,
 } from '../../../entities'
 import {
@@ -66,6 +67,7 @@ describe('fetch unprocessed messages service', () => {
           )
         ).meta.id,
         type: REPRESENTATION_TYPE.TRANSLATION,
+        kind: REPRESENTATION_KIND.TRANSFORMATION,
       }),
     )
     const result = await fetchUnprocessedMessages({

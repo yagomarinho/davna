@@ -7,6 +7,7 @@ import {
   createRepresentation,
   createSource,
   createText,
+  REPRESENTATION_KIND,
   REPRESENTATION_TYPE,
 } from '../../../entities'
 
@@ -94,6 +95,7 @@ describe('fetch classroom history handler', () => {
       target_id: audio.meta.id,
       target_type: 'audio',
       type: REPRESENTATION_TYPE.TRANSCRIPTION,
+      kind: REPRESENTATION_KIND.TRANSFORMATION,
     })
 
     repository.methods.query

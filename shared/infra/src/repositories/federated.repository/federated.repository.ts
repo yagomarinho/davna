@@ -202,12 +202,20 @@ export function FederatedRepository<
       return {
         status: 'failed',
         time: new Date(),
+        upserted_ids: [],
+        removed_ids: [],
         failures: results.filter(r => r.status === 'failed').map(r => r.tag),
       }
 
     return {
       status: 'successful',
       time: new Date(),
+      upserted_ids: results.flatMap(result =>
+        result.upserted_ids.map(({ id }) => ({ id, _t: result.tag })),
+      ),
+      removed_ids: results.flatMap(result =>
+        result.removed_ids.map(({ id }) => ({ id, _t: result.tag })),
+      ),
     }
   }
 

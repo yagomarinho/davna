@@ -117,7 +117,12 @@ export function InMemoryRepository<E extends Entity>({
 
     repo = repo.filter(el => !entities_id.includes(el.meta.id)).concat(entities)
 
-    return { status: 'successful', time: new Date() }
+    return {
+      status: 'successful',
+      time: new Date(),
+      removed_ids: toRemoveId.map(id => ({ id })),
+      upserted_ids: entities_id.map(id => ({ id })),
+    }
   }
 
   return {

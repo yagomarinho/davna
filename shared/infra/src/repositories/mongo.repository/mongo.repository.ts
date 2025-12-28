@@ -7,7 +7,13 @@
 
 import { Collection, Document, MongoClient, MongoClientOptions } from 'mongodb'
 
-import { Entity, QueryBuilder, Repository, RepositoryResult } from '@davna/core'
+import {
+  Entity,
+  Identifiable,
+  QueryBuilder,
+  Repository,
+  RepositoryResult,
+} from '@davna/core'
 
 import { MongoClientConfig, MongoWithURIConfig } from './mongo.client.config'
 import { CONNECTION_STATUS } from './connection.status'
@@ -207,18 +213,24 @@ export function MongoRepository<E extends Entity>({
 
   const batch = verifyConnectionProxy<Repository<E>['methods']['batch']>(
     async b => {
+      const upserted_ids: Identifiable[] = []
+      const removed_ids: Identifiable[] = []
       const bulk = await Promise.all(
         b.map(async item => {
-          if (item.type === 'remove')
+          if (item.type === 'remove') {
+            removed_ids.push({ id: item.data })
             return {
               deleteOne: {
                 filter: { _id: mongoId(item.data) },
               },
             }
+          }
 
           const e = await entityContext.declareEntity(item.data)
 
           const { _id, ...props } = toDocument(converter.to(e))
+
+          upserted_ids.push({ id: _id.toString() })
 
           return {
             updateOne: {
@@ -235,6 +247,8 @@ export function MongoRepository<E extends Entity>({
       return {
         status: result.isOk() ? 'successful' : 'failed',
         time: new Date(),
+        upserted_ids,
+        removed_ids,
       }
     },
   )

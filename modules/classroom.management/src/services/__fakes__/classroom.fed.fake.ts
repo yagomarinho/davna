@@ -46,6 +46,7 @@ import {
   PolicyAggregate,
   PolicyAggregateURI,
   Representation,
+  REPRESENTATION_KIND,
   REPRESENTATION_TYPE,
   RepresentationURI,
   Source,
@@ -294,6 +295,7 @@ export async function fillRepository(repo: ClassroomFedRepository) {
         target_id: audio1.meta.id,
         source_id: transcription1.meta.id,
         type: REPRESENTATION_TYPE.TRANSCRIPTION,
+        kind: REPRESENTATION_KIND.TRANSFORMATION,
       }),
     ),
     repo.methods.set(
@@ -302,6 +304,7 @@ export async function fillRepository(repo: ClassroomFedRepository) {
         target_id: audio1.meta.id,
         source_id: translation1.meta.id,
         type: REPRESENTATION_TYPE.TRANSLATION,
+        kind: REPRESENTATION_KIND.TRANSFORMATION,
       }),
     ),
     repo.methods.set(
@@ -310,6 +313,7 @@ export async function fillRepository(repo: ClassroomFedRepository) {
         target_id: audio2.meta.id,
         source_id: transcription2.meta.id,
         type: REPRESENTATION_TYPE.TRANSCRIPTION,
+        kind: REPRESENTATION_KIND.TRANSFORMATION,
       }),
     ),
   ])
