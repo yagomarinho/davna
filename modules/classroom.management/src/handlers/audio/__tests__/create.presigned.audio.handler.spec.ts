@@ -3,12 +3,8 @@ import { Left, Request, Right } from '@davna/core'
 import { createPresignedAudioHandler } from '../create.presigned.audio.handler'
 import { authorizeConsumption } from '../../../services/usage/authorize.consumption'
 import { createPresignedAudio } from '../../../services/audio/create.presigned.audio'
-import {
-  AudioURI,
-  OwnershipURI,
-  SUPPORTED_MIME_TYPE,
-  USAGE_UNITS,
-} from '../../../entities'
+import { AudioURI, OwnershipURI, SUPPORTED_MIME_TYPE } from '../../../entities'
+import { TIME_UNITS } from '@davna/kernel'
 
 jest.mock('../../../services/usage/authorize.consumption')
 jest.mock('../../../services/audio/create.presigned.audio')
@@ -43,7 +39,7 @@ describe('create presigned audio handler', () => {
         participant_id: participant.id,
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         duration: {
-          unit: USAGE_UNITS.SECONDS,
+          unit: TIME_UNITS.SEC,
           value: 60,
         },
       }),
@@ -97,7 +93,7 @@ describe('create presigned audio handler', () => {
         participant_id: participant.id,
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         duration: {
-          unit: USAGE_UNITS.SECONDS,
+          unit: TIME_UNITS.SEC,
           value: 120,
         },
       }),
@@ -133,7 +129,7 @@ describe('create presigned audio handler', () => {
           participant_id: participant.id,
           mime_type: SUPPORTED_MIME_TYPE.MP3,
           duration: {
-            unit: USAGE_UNITS.SECONDS,
+            unit: TIME_UNITS.SEC,
             value: 10,
           },
         }),

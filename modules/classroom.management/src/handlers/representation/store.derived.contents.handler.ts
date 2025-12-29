@@ -7,6 +7,8 @@
 
 import {
   Handler,
+  Identifiable,
+  isLeft,
   Response,
   SagaRepositoryProxy,
   UnitOfWorkSaga,
@@ -17,31 +19,43 @@ import {
   createOwnership,
   createRepresentation,
   createText,
-  RepresentationBase,
+  createUsage,
   TextURI,
 } from '../../entities'
 
-import { Metadata } from '@davna/kernel'
-
-interface Content extends RepresentationBase {
-  target_id: string
-  content: string
-  metadata: Metadata
-}
+import { getParticipantBySubjectId } from '../../services'
+import { DerivedContent } from '../../dtos'
 
 interface Data {
   participant_id: string
-  contents: Content[]
+  contents: DerivedContent[]
+}
+
+interface Metadata {
+  account: Identifiable
 }
 
 interface Env {
   repository: ClassroomFedRepository
 }
 
-export const storeDerivedContentsHandler = Handler<Env, Data>(
-  ({ data }) =>
+export const storeDerivedContentsHandler = Handler<Env, Data, Metadata>(
+  ({ data, metadata }) =>
     async env => {
+      const { id: account_id } = metadata.account
       const { contents, participant_id } = data
+
+      const accountParticipantResult = await getParticipantBySubjectId({
+        subject_id: account_id,
+      })({ repository: env.repository })
+
+      if (isLeft(accountParticipantResult))
+        return Response({
+          metadata: { headers: { status: 401 } },
+          data: { message: 'Invalid account id' },
+        })
+
+      const account_participant = accountParticipantResult.value
 
       const uow = UnitOfWorkSaga()
       try {
@@ -56,6 +70,7 @@ export const storeDerivedContentsHandler = Handler<Env, Data>(
               target_type,
               content,
               metadata,
+              consumption,
             }) => {
               const text = await repository.methods.set(
                 createText({ content, metadata }),
@@ -76,6 +91,23 @@ export const storeDerivedContentsHandler = Handler<Env, Data>(
                     target_type,
                     target_id,
                     source_id: text.meta.id,
+                  }),
+                ),
+                repository.methods.set(
+                  createUsage({
+                    target_type: TextURI,
+                    target_id: text.meta.id,
+                    source_id: account_participant.meta.id,
+                    consumption: {
+                      unit: consumption.unit,
+                      value: consumption.value,
+                      raw_value: consumption.raw_value,
+                      normalization_factor: consumption.normalization_factor,
+                      precision: consumption.precision,
+                    },
+                    metadata: {
+                      text_owner_id: participant_id,
+                    },
                   }),
                 ),
               ])

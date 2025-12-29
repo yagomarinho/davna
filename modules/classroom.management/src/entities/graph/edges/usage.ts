@@ -17,12 +17,16 @@ import {
 import { AudioURI, TextURI, USAGE_UNITS } from '../vertices'
 import { Edge, EdgeProps } from './edge'
 import { MongoConverter, MongoRepository } from '@davna/infra'
+import { Metadata } from '@davna/kernel'
 
 export const UsageURI = 'usage'
 export type UsageURI = typeof UsageURI
 
 export const ConsumptionURI = 'usage.consumption'
 export type ConsumptionURI = typeof ConsumptionURI
+
+export const UsageMetadataURI = 'usage.metadata'
+export type UsageMetadataURI = typeof UsageMetadataURI
 
 export const UsageVersion = 'v1'
 export type UsageVersion = typeof UsageVersion
@@ -41,6 +45,7 @@ export interface Consumption {
 export interface UsageProps extends EdgeProps {
   target_type: AudioURI | TextURI
   consumption: ValueObject<Consumption>
+  metadata: Metadata
 }
 
 export interface Usage extends Edge<UsageProps, UsageURI, UsageVersion> {}
@@ -63,7 +68,13 @@ export function createUsage(
   _version?: UsageVersion,
 ): Usage
 export function createUsage(
-  { source_id, target_id, target_type, consumption }: RawProps<UsageProps>,
+  {
+    source_id,
+    target_id,
+    target_type,
+    consumption,
+    metadata,
+  }: RawProps<UsageProps>,
   meta?: EntityMeta,
   _version: UsageVersion = UsageVersion,
 ): DraftEntity<Usage> | Usage {
@@ -72,10 +83,8 @@ export function createUsage(
       source_id,
       target_id,
       target_type,
-      consumption: _createUsageConsumption(
-        consumption,
-        meta?._idempotency_key ?? '',
-      ),
+      consumption: _createUsageConsumption(consumption, meta),
+      metadata: _createUsageMetadata(metadata, meta),
     },
     meta as any,
     _version,
@@ -94,7 +103,7 @@ export function _createUsage(
   _version?: UsageVersion,
 ): Usage
 export function _createUsage(
-  { source_id, target_id, target_type, consumption }: UsageProps,
+  { source_id, target_id, target_type, consumption, metadata }: UsageProps,
   meta?: EntityMeta,
   _version: UsageVersion = UsageVersion,
 ): DraftEntity<Usage> | Usage {
@@ -102,16 +111,23 @@ export function _createUsage(
     UsageURI,
     _version,
     _createUsage,
-    { source_id, target_id, target_type, consumption },
+    { source_id, target_id, target_type, consumption, metadata },
     meta as any,
   )
 }
 
 export function _createUsageConsumption(
   props: Consumption,
-  _idempotency_key: string,
+  meta?: EntityMeta,
 ): ValueObject<Consumption, ConsumptionURI> {
-  return ValueObject(props, _idempotency_key, ConsumptionURI)
+  return ValueObject(props, meta?._idempotency_key ?? '', ConsumptionURI)
+}
+
+export function _createUsageMetadata(
+  props: Metadata,
+  meta?: EntityMeta,
+): ValueObject<Metadata> {
+  return ValueObject(props, meta?._idempotency_key ?? '', UsageMetadataURI)
 }
 
 const converter: MongoConverter<Usage> = {
@@ -119,14 +135,15 @@ const converter: MongoConverter<Usage> = {
     _v,
     _t,
     meta: { id, created_at, updated_at, _idempotency_key },
-    props: { source_id, target_id, target_type, consumption },
+    props: { source_id, target_id, target_type, consumption, metadata },
   }) => ({
     id,
     data: {
       source_id,
       target_id,
       target_type,
-      consumption,
+      consumption: consumption.props,
+      metadata: metadata.props,
       created_at,
       updated_at,
       _idempotency_key,
@@ -141,6 +158,7 @@ const converter: MongoConverter<Usage> = {
       target_id,
       target_type,
       consumption,
+      metadata,
       created_at,
       updated_at,
       _idempotency_key,
@@ -153,6 +171,7 @@ const converter: MongoConverter<Usage> = {
         target_id,
         target_type,
         consumption,
+        metadata,
       },
       createMeta({ id, created_at, updated_at, _idempotency_key }),
       __version,

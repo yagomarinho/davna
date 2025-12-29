@@ -44,6 +44,7 @@ export interface SignedUrlResult extends StorageResult {
 export interface Storage {
   readonly upload: (data: UploadData) => Promise<StorageResult>
   readonly download: (data: DownloadData) => Promise<Buffer | undefined>
+  readonly remove: (id: string) => Promise<boolean>
   readonly check: (id: string) => Promise<boolean>
   readonly getSignedUrl: () => Promise<SignedUrlResult>
 }

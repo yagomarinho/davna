@@ -6,7 +6,7 @@ import { authorizeConsumption } from '../authorize.consumption'
 import {
   AGGREGATION_POLICY,
   AudioURI,
-  USAGE_UNITS,
+  COUNT_UNITS,
   createEntitlement,
   createGranted,
   createParticipant,
@@ -52,7 +52,7 @@ describe('authorize consumption service', () => {
       createUsagePolicy({
         aggregation: AGGREGATION_POLICY.PER_DAY,
         maxConsumption: 100,
-        unit: USAGE_UNITS.TOKENS,
+        unit: COUNT_UNITS.TKS,
       }),
     )
 
@@ -69,18 +69,20 @@ describe('authorize consumption service', () => {
         target_id: 'audio-1',
         target_type: AudioURI,
         consumption: {
-          unit: USAGE_UNITS.TOKENS,
+          unit: COUNT_UNITS.TKS,
           value: 25,
           raw_value: 25,
           normalization_factor: 1,
           precision: 0,
         },
+        metadata: {},
       }),
     )
 
     const result = await authorizeConsumption({
       participant_id: participant.meta.id,
       requested_consumption,
+      usage_unit: COUNT_UNITS.TKS,
     })({ repository })
 
     expect(isRight(result)).toBeTruthy()
@@ -92,9 +94,9 @@ describe('authorize consumption service', () => {
         policy: expect.objectContaining({
           aggregation: AGGREGATION_POLICY.PER_DAY,
           maxConsumption: 100,
-          unit: USAGE_UNITS.TOKENS,
+          unit: COUNT_UNITS.TKS,
         }),
-        consumption: { value: 25 },
+        consumption: { value: 25, estimatedAfterRequest: 35 },
       }),
     ])
   })
@@ -121,7 +123,7 @@ describe('authorize consumption service', () => {
       createUsagePolicy({
         aggregation: AGGREGATION_POLICY.PER_DAY,
         maxConsumption: 30,
-        unit: USAGE_UNITS.TOKENS,
+        unit: COUNT_UNITS.TKS,
       }),
     )
 
@@ -138,18 +140,20 @@ describe('authorize consumption service', () => {
         target_id: 'audio-1',
         target_type: AudioURI,
         consumption: {
-          unit: USAGE_UNITS.TOKENS,
+          unit: COUNT_UNITS.TKS,
           value: 25,
           raw_value: 25,
           normalization_factor: 1,
           precision: 0,
         },
+        metadata: {},
       }),
     )
 
     const result = await authorizeConsumption({
       participant_id: participant.meta.id,
       requested_consumption: 10,
+      usage_unit: COUNT_UNITS.TKS,
     })({ repository })
 
     expect(isLeft(result)).toBeTruthy()
@@ -176,6 +180,7 @@ describe('authorize consumption service', () => {
     const result = await authorizeConsumption({
       participant_id: participant.meta.id,
       requested_consumption: 1,
+      usage_unit: COUNT_UNITS.TKS,
     })({ repository })
 
     expect(isLeft(result)).toBeTruthy()
@@ -185,6 +190,7 @@ describe('authorize consumption service', () => {
     const result = await authorizeConsumption({
       participant_id: 'invalid-participant',
       requested_consumption: 5,
+      usage_unit: COUNT_UNITS.TKS,
     })({ repository })
 
     expect(isLeft(result)).toBeTruthy()

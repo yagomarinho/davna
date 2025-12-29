@@ -5,5 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export * from './check.duration.tolerance'
+export * from './ensure.duration.in.secs'
 export * from './resource.resolver'
 export * from './storage'

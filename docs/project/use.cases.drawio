@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="tuRzOzxRdiTzMijx6_mF" name="append msg and reply with gen ai">
-        <mxGraphModel dx="812" dy="333" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="834" dy="808" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -395,7 +395,7 @@
                         <mxPoint x="-617.3921568627451" y="1850" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="155" value="Check Maximum Estimated Consume" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="154" vertex="1" connectable="0">
+                <mxCell id="155" value="Check Maximum Estimated Consumption" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="154" vertex="1" connectable="0">
                     <mxGeometry x="-0.0708" relative="1" as="geometry">
                         <mxPoint as="offset"/>
                     </mxGeometry>

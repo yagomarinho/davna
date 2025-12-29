@@ -6,6 +6,7 @@
  */
 
 export * from './converter'
+export * from './duration'
 export * from './merge'
 export * from './metadata'
 export * from './valid.object'

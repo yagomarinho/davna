@@ -6,3 +6,5 @@
  */
 
 export * from './authorize.consumption'
+export * from './get.resource.usages'
+export * from './update.usage'

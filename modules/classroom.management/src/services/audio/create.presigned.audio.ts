@@ -15,18 +15,21 @@ import {
   Ownership,
   SUPPORTED_MIME_TYPE,
   Usage,
-  USAGE_UNITS,
 } from '../../entities'
 import { ClassroomFedRepository } from '../../repositories'
 import { Storage } from '@davna/infra'
+import { Duration } from '@davna/kernel'
 
+export enum CONFIDENCE {
+  DETERMINISTIC = 'deterministic',
+  ESTIMATED = 'estimated',
+}
 interface Request {
+  usage_participant_id: string
   owner_id: string
   mime_type: SUPPORTED_MIME_TYPE
-  duration: {
-    unit: USAGE_UNITS.SECONDS
-    value: number
-  }
+  duration: Duration
+  confidence: CONFIDENCE
 }
 interface Env {
   repository: ClassroomFedRepository
@@ -39,7 +42,7 @@ interface Response {
 }
 
 export const createPresignedAudio = Service<Request, Env, Response>(
-  ({ owner_id, duration, mime_type }) =>
+  ({ owner_id, duration, mime_type, usage_participant_id, confidence }) =>
     async ({ repository, storage }) => {
       const { url, expires_at, identifier, storage_type, bucket } =
         await storage.getSignedUrl()
@@ -52,7 +55,7 @@ export const createPresignedAudio = Service<Request, Env, Response>(
           duration: duration.value,
           url: '',
           metadata: {
-            presignedUrl: url,
+            presigned_url: url,
             expires_at,
           },
           storage: {
@@ -68,7 +71,7 @@ export const createPresignedAudio = Service<Request, Env, Response>(
       const [usage, ownership] = await Promise.all([
         repository.methods.set(
           createUsage({
-            source_id: owner_id,
+            source_id: usage_participant_id,
             target_id: audio.meta.id,
             target_type: AudioURI,
             consumption: {
@@ -77,6 +80,12 @@ export const createPresignedAudio = Service<Request, Env, Response>(
               raw_value: duration.value * normalization_factor,
               normalization_factor,
               precision: 0,
+            },
+            metadata: {
+              presigned_url: url,
+              expires_at,
+              audio_owner_id: owner_id,
+              confidence,
             },
           }),
         ),

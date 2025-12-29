@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Duration } from '@davna/kernel'
+
 export interface Multimedia {
   buffer: Buffer
   name: string
@@ -14,7 +16,7 @@ export interface Multimedia {
 export interface MediaInfo {
   name: string
   mime: string
-  duration: number
+  duration: Duration
   codec: string
   format: string
 }

@@ -16,18 +16,23 @@ import { concatenate } from '@davna/kernel'
 import { messageDTOFromGraph } from '../../dtos'
 import { ClassroomFedRepository } from '../../repositories'
 import { MultimediaProvider } from '../../providers'
-import { StorageConstructor } from '../../utils'
+import {
+  ensureDurationInSeconds,
+  checkDurationTolerance,
+  StorageConstructor,
+} from '../../utils'
 import {
   appendMessageToClassroom,
   ensureClassroomParticipation,
   ensureOwnershipToTargetResource,
   getAudio,
-  getOwnershipFromResource,
   getParticipant,
+  getResourceUsages,
   invalidatePresignedURL,
   persistAudio,
+  updateUsage,
 } from '../../services'
-import { Ownership, Participant } from '../../entities'
+import { Participant } from '../../entities'
 import { Readable } from 'node:stream'
 
 interface AudioInfo {
@@ -50,11 +55,6 @@ interface Env {
 export const appendMessageHandler = Handler<Env, Data>(
   ({ data }) =>
     async env => {
-      // Declarar que toda a transação é idempotente antes de tudo
-      // env.entityContext.setIdempotency(metadata.idempotency_key)
-      // Esse padrão de entity.setIdempotency será realizado por um middleware
-      // antes de chamar o handler
-
       const { multimedia, storage } = env
       const {
         participant_id,
@@ -95,43 +95,59 @@ export const appendMessageHandler = Handler<Env, Data>(
           data: { message: 'Invalid audio to append' },
         })
 
-      const uow = UnitOfWorkSaga()
       const audio = audioResult.value
+
+      const ensureAudioOnwershipResult = await ensureOwnershipToTargetResource({
+        target: audio,
+        owner_id: participant_id,
+      })({ repository: env.repository })
+
+      if (isLeft(ensureAudioOnwershipResult)) {
+        return Response({
+          metadata: { headers: { status: 401 } },
+          data: {
+            message: ensureAudioOnwershipResult.value.message,
+          },
+        })
+      }
+
+      const audioOwnership = ensureAudioOnwershipResult.value
+
+      const audioUsageResult = await getResourceUsages({
+        resource_id: audio.meta.id,
+      })({ repository: env.repository })
+
+      if (isLeft(audioUsageResult)) {
+        return Response({
+          metadata: { headers: { status: 500 } },
+          data: { message: 'No resource usage founded' },
+        })
+      }
+
+      const usages = audioUsageResult.value
+      const usage = usages.find(
+        u => u.props.metadata.props.presigned_url === presigned_url,
+      )
+
+      if (!usage) {
+        return Response({
+          metadata: { headers: { status: 500 } },
+          data: { message: 'No resource usage founded' },
+        })
+      }
+
+      const uow = UnitOfWorkSaga()
 
       try {
         const repository = SagaRepositoryProxy(env.repository, uow)
-        // invalidar parcialmente o presigned para que outro serviço não possa utilizá-lo
 
+        // invalidar parcialmente o presigned para que outro serviço não possa utilizá-lo
         await invalidatePresignedURL({ audio })({
           repository,
         })
 
         if (audio.props.metadata.props.expires_at < new Date())
           throw new Error('Invalid presigned url')
-
-        const ensureAudioOnwershipResult =
-          await ensureOwnershipToTargetResource({
-            target: audio,
-            owner_id: participant_id,
-          })({ repository })
-
-        if (isLeft(ensureAudioOnwershipResult)) {
-          await uow.rollback()
-          return Response({
-            metadata: { headers: { status: 401 } },
-            data: {
-              message: ensureAudioOnwershipResult.value.message,
-            },
-          })
-        }
-
-        const audioOwnershipResult = await getOwnershipFromResource({
-          target: audio,
-        })({
-          repository,
-        })
-
-        const audioOwnership: Ownership = audioOwnershipResult.value as any
 
         const _storage = storage({
           driver: audio.props.storage.props.type,
@@ -155,10 +171,39 @@ export const appendMessageHandler = Handler<Env, Data>(
           name: audio.props.filename,
         })
 
+        const duration = ensureDurationInSeconds(converted.duration)
+
+        if (!checkDurationTolerance(duration, usage)) {
+          uow.registerCompensation(async () => {
+            await _storage.remove(audio.props.storage.props.internal_id)
+          })
+          await uow.rollback()
+          return Response({
+            metadata: { headers: { status: 400 } },
+            data: { message: 'Invalid audio to append' },
+          })
+        }
+
+        await updateUsage({
+          usage,
+          props: {
+            consumption: concatenate(usage.props.consumption.props, {
+              value: duration.value,
+            }),
+            metadata: concatenate(usage.props.metadata.props, {
+              presigned_url: undefined,
+              expires_at: undefined,
+              confidence: undefined,
+            }),
+          },
+        })({
+          repository,
+        })
+
         const { bucket, identifier, storage_type } = await _storage.upload({
           source: Readable.from(converted.buffer),
           metadata: {
-            duration: converted.duration,
+            duration: duration.value,
             mime: converted.mime,
             name: audio.props.filename,
             owner_id: participant.meta.id,
@@ -170,7 +215,7 @@ export const appendMessageHandler = Handler<Env, Data>(
           props: {
             filename: audio.props.filename,
             mime_type: converted.mime,
-            duration: converted.duration,
+            duration: duration.value,
             metadata: concatenate(audio.props.metadata.props, {
               presigned_url: undefined,
               expires_at: undefined,

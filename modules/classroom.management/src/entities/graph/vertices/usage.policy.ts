@@ -14,6 +14,7 @@ import {
   EntityMeta,
 } from '@davna/core'
 import { MongoConverter, MongoRepository } from '@davna/infra'
+import { TIME_UNITS } from '@davna/kernel'
 
 export const UsagePolicyURI = 'usage-policy'
 export type UsagePolicyURI = typeof UsagePolicyURI
@@ -27,10 +28,11 @@ export enum AGGREGATION_POLICY {
   PER_MONTH = 'per_month',
 }
 
-export enum USAGE_UNITS {
-  SECONDS = 'seconds',
-  TOKENS = 'tokens',
+export enum COUNT_UNITS {
+  TKS = 'tokens',
 }
+
+export type USAGE_UNITS = TIME_UNITS | COUNT_UNITS
 
 export interface UsagePolicyProps {
   unit: USAGE_UNITS

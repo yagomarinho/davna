@@ -1,18 +1,18 @@
 import { isRight } from '@davna/core'
 
-import { createPresignedAudio } from '../create.presigned.audio'
+import { CONFIDENCE, createPresignedAudio } from '../create.presigned.audio'
 import {
   Audio,
   AudioURI,
   Ownership,
   SUPPORTED_MIME_TYPE,
   Usage,
-  USAGE_UNITS,
 } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
 import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
 import { IDContextFake } from '../../__fakes__/id.context.fake'
 import { IDContext, Storage } from '@davna/infra'
+import { TIME_UNITS } from '@davna/kernel'
 
 describe('create presigned audio service', () => {
   let repository: ClassroomFedRepository
@@ -38,12 +38,15 @@ describe('create presigned audio service', () => {
 
   it('should be able to create a presigned audio and persist audio, usage and ownership', async () => {
     const owner_id = 'owner-1'
+    const usage_participant_id = 'participant_id'
 
     const result = await createPresignedAudio({
+      confidence: CONFIDENCE.DETERMINISTIC,
       owner_id,
+      usage_participant_id: usage_participant_id,
       mime_type: SUPPORTED_MIME_TYPE.MP3,
       duration: {
-        unit: USAGE_UNITS.SECONDS,
+        unit: TIME_UNITS.SEC,
         value: 120,
       },
     })({
@@ -68,7 +71,7 @@ describe('create presigned audio service', () => {
           duration: 120,
           metadata: expect.objectContaining({
             props: expect.objectContaining({
-              presignedUrl: 'https://signed.url',
+              presigned_url: 'https://signed.url',
             }),
           }),
         }),
@@ -78,13 +81,19 @@ describe('create presigned audio service', () => {
     expect(usage).toEqual(
       expect.objectContaining({
         props: expect.objectContaining({
-          source_id: owner_id,
+          source_id: usage_participant_id,
           target_id: audio.meta.id,
           target_type: AudioURI,
           consumption: expect.objectContaining({
             props: expect.objectContaining({
-              unit: USAGE_UNITS.SECONDS,
+              unit: TIME_UNITS.SEC,
               value: 120,
+            }),
+          }),
+          metadata: expect.objectContaining({
+            props: expect.objectContaining({
+              presigned_url: 'https://signed.url',
+              confidence: CONFIDENCE.DETERMINISTIC,
             }),
           }),
         }),

@@ -23,6 +23,7 @@ import {
   GrantedURI,
   PolicyAggregateURI,
   Usage,
+  USAGE_UNITS,
   UsagePolicyProps,
   UsagePolicyURI,
   UsageURI,
@@ -30,7 +31,8 @@ import {
 
 interface Data {
   participant_id: string
-  requested_consumption: number
+  usage_unit: USAGE_UNITS
+  requested_consumption?: number
 }
 
 interface Env {
@@ -45,7 +47,7 @@ interface Response {
 }
 
 export const authorizeConsumption = Service<Data, Env, Response[]>(
-  ({ participant_id, requested_consumption }) =>
+  ({ participant_id, usage_unit, requested_consumption = 0 }) =>
     async ({ repository }) => {
       const participant = await repository.methods.get(participant_id)
 
@@ -93,9 +95,14 @@ export const authorizeConsumption = Service<Data, Env, Response[]>(
         ? await repository.methods.query(
             QueryBuilder()
               .filterBy(
-                'id',
-                'in',
-                entitlementPolicies.map(p => p.props.target_id),
+                Filter.and(
+                  Filter.where(
+                    'id',
+                    'in',
+                    entitlementPolicies.map(p => p.props.target_id),
+                  ),
+                  Filter.where('unit', '==', usage_unit),
+                ),
               )
               .build(),
             UsagePolicyURI,
@@ -142,7 +149,20 @@ export const authorizeConsumption = Service<Data, Env, Response[]>(
             consumption + requested_consumption >=
             policy.props.maxConsumption
           )
-            return Left()
+            return Left({
+              policy: {
+                aggregation: policy.props.aggregation,
+                maxConsumption: policy.props.maxConsumption,
+                unit: policy.props.unit,
+              },
+              consumption: {
+                value: consumption,
+                estimatedAfterRequest: consumption + requested_consumption,
+              },
+              error: {
+                message: `No remaining consumption available. The maximum ${policy.props.aggregation} consumption is ${policy.props.maxConsumption} ${policy.props.unit}, but the estimated total consumption after this request would be ${consumption + requested_consumption} ${policy.props.unit}.`,
+              },
+            })
 
           return Right({
             policy: {
@@ -152,6 +172,7 @@ export const authorizeConsumption = Service<Data, Env, Response[]>(
             },
             consumption: {
               value: consumption,
+              estimatedAfterRequest: consumption + requested_consumption,
             },
           })
         }),

@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './derived.content'
-export * from './download.audio.dto'
-export * from './upload.audio.dto'
+export enum TIME_UNITS {
+  MS = 'miliseconds',
+  SEC = 'seconds',
+}
+
+export interface Duration {
+  value: number
+  unit: TIME_UNITS
+}

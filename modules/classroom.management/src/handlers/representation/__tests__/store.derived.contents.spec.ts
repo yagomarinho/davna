@@ -2,10 +2,12 @@ import { Request } from '@davna/core'
 import { storeDerivedContentsHandler } from '../store.derived.contents.handler'
 import {
   AudioURI,
+  COUNT_UNITS,
   REPRESENTATION_KIND,
   REPRESENTATION_TYPE,
   TextURI,
 } from '../../../entities'
+import { DerivedContent } from '../../../dtos'
 
 describe('store derived contents handler', () => {
   const repository = {
@@ -21,7 +23,7 @@ describe('store derived contents handler', () => {
   it('should store derived contents and return 203', async () => {
     const participant_id = 'participant-1'
 
-    const contents = [
+    const contents: DerivedContent[] = [
       {
         kind: REPRESENTATION_KIND.TRANSFORMATION,
         type: REPRESENTATION_TYPE.TRANSCRIPTION,
@@ -29,6 +31,13 @@ describe('store derived contents handler', () => {
         target_id: 'audio-1',
         content: 'transcribed text',
         metadata: { language: 'en' },
+        consumption: {
+          value: 20,
+          raw_value: 20,
+          unit: COUNT_UNITS.TKS,
+          normalization_factor: 1,
+          precision: 0,
+        },
       },
       {
         kind: REPRESENTATION_KIND.TRANSFORMATION,
@@ -37,6 +46,13 @@ describe('store derived contents handler', () => {
         target_id: 'audio-2',
         content: 'translated text',
         metadata: { language: 'pt-BR' },
+        consumption: {
+          value: 20,
+          raw_value: 20,
+          unit: COUNT_UNITS.TKS,
+          normalization_factor: 1,
+          precision: 0,
+        },
       },
     ]
 
@@ -92,6 +108,13 @@ describe('store derived contents handler', () => {
         target_id: 'audio-1',
         content: 'text',
         metadata: {},
+        consumption: {
+          value: 20,
+          raw_value: 20,
+          unit: COUNT_UNITS.TKS,
+          normalization_factor: 1,
+          precision: 0,
+        },
       },
     ]
 
