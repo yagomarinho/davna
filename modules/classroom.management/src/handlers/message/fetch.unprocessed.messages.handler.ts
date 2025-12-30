@@ -6,16 +6,15 @@
  */
 
 import { AuthContext, Handler, isLeft, Response } from '@davna/core'
+
 import { ClassroomFedRepository } from '../../repositories'
 import {
   fetchUnprocessedMessages,
   UnprocessedMessage,
-} from '../../services/message/fetch.unprocessed.messages'
-import { messageDTOFromGraph } from '../../dtos'
-import {
   ensureClassroomParticipation,
   getParticipantBySubjectId,
 } from '../../services'
+import { messageDTOFromGraph } from '../../dtos'
 
 interface Metadata {
   auth: AuthContext

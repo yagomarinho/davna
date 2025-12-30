@@ -8,8 +8,7 @@
 import { AuthContext, Handler, isLeft, Response } from '@davna/core'
 
 import { ClassroomFedRepository } from '../../repositories'
-import { showClassroom } from '../../services/classroom/show.classroom'
-import { getParticipantBySubjectId } from '../../services/participant/get.participant.by.subject.id'
+import { showClassroom, getParticipantBySubjectId } from '../../services'
 import { classroomDTOfromGraph } from '../../dtos'
 
 interface Metadata {

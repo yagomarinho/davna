@@ -18,10 +18,13 @@ import { Duration } from '@davna/kernel'
 
 import { ClassroomFedRepository } from '../../repositories'
 import { CONFIDENCE, SUPPORTED_MIME_TYPE } from '../../entities'
-import { authorizeConsumption } from '../../services/usage/authorize.consumption'
-import { createPresignedAudio } from '../../services/audio/create.presigned.audio'
+import {
+  authorizeConsumption,
+  createPresignedAudio,
+  getParticipantBySubjectId,
+} from '../../services'
+
 import { audioDTOfromGraph } from '../../dtos'
-import { getParticipantBySubjectId } from '../../services'
 import { ensureDurationInSeconds } from '../../utils'
 import { Scheduler } from '../../providers'
 

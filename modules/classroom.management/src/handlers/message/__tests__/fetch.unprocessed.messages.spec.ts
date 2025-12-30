@@ -10,9 +10,6 @@ import { fetchUnprocessedMessagesHandler } from '../fetch.unprocessed.messages.h
 import {
   fetchUnprocessedMessages,
   UnprocessedMessage,
-} from '../../../services/message/fetch.unprocessed.messages'
-
-import {
   ensureClassroomParticipation,
   getParticipantBySubjectId,
 } from '../../../services'
@@ -29,7 +26,6 @@ import {
 import { STORAGE_TYPE } from '@davna/infra'
 
 jest.mock('../../../services')
-jest.mock('../../../services/message/fetch.unprocessed.messages')
 
 describe('fetch unprocessed messages handler', () => {
   const repository = {
@@ -225,57 +221,75 @@ describe('fetch unprocessed messages handler', () => {
     const msg1 = {
       classroom_id: 'classroom-1',
       message: createMessage({}, entityMeta('message-1')),
-      messageOwnership: createOwnership({
-        source_id: participant.meta.id,
-        target_id: 'message-1',
-        target_type: 'message',
-      }),
-      audio: createAudio({
-        status: AUDIO_STATUS.PERSISTENT,
-        filename: 'audio1.mp3',
-        mime_type: SUPPORTED_MIME_TYPE.MP3,
-        duration: 10,
-        url: '',
-        metadata: {},
-        storage: {
-          bucket: 'bucket',
-          internal_id: '1',
-          type: STORAGE_TYPE.AWS_S3,
+      messageOwnership: createOwnership(
+        {
+          source_id: participant.meta.id,
+          target_id: 'message-1',
+          target_type: 'message',
         },
-      }),
-      audioOwnership: createOwnership({
-        source_id: participant.meta.id,
-        target_id: 'audio-1',
-        target_type: 'audio',
-      }),
+        entityMeta('ownership-1'),
+      ),
+      audio: createAudio(
+        {
+          status: AUDIO_STATUS.PERSISTENT,
+          filename: 'audio1.mp3',
+          mime_type: SUPPORTED_MIME_TYPE.MP3,
+          duration: 10,
+          url: '',
+          metadata: {},
+          storage: {
+            bucket: 'bucket',
+            internal_id: '1',
+            type: STORAGE_TYPE.AWS_S3,
+          },
+        },
+        entityMeta('audio-1'),
+      ),
+      audioOwnership: createOwnership(
+        {
+          source_id: participant.meta.id,
+          target_id: 'audio-1',
+          target_type: 'audio',
+        },
+        entityMeta('ownership-2'),
+      ),
     }
 
     const msg2 = {
       classroom_id: 'classroom-1',
       message: createMessage({}, entityMeta('message-2')),
-      messageOwnership: createOwnership({
-        source_id: participant.meta.id,
-        target_id: 'message-2',
-        target_type: 'message',
-      }),
-      audio: createAudio({
-        status: AUDIO_STATUS.PERSISTENT,
-        filename: 'audio2.mp3',
-        mime_type: SUPPORTED_MIME_TYPE.MP3,
-        duration: 10,
-        url: '',
-        metadata: {},
-        storage: {
-          bucket: 'bucket',
-          internal_id: '2',
-          type: STORAGE_TYPE.AWS_S3,
+      messageOwnership: createOwnership(
+        {
+          source_id: participant.meta.id,
+          target_id: 'message-2',
+          target_type: 'message',
         },
-      }),
-      audioOwnership: createOwnership({
-        source_id: participant.meta.id,
-        target_id: 'audio-2',
-        target_type: 'audio',
-      }),
+        entityMeta('ownership-3'),
+      ),
+      audio: createAudio(
+        {
+          status: AUDIO_STATUS.PERSISTENT,
+          filename: 'audio2.mp3',
+          mime_type: SUPPORTED_MIME_TYPE.MP3,
+          duration: 10,
+          url: '',
+          metadata: {},
+          storage: {
+            bucket: 'bucket',
+            internal_id: '2',
+            type: STORAGE_TYPE.AWS_S3,
+          },
+        },
+        entityMeta('audio-2'),
+      ),
+      audioOwnership: createOwnership(
+        {
+          source_id: participant.meta.id,
+          target_id: 'audio-2',
+          target_type: 'audio',
+        },
+        entityMeta('ownership-4'),
+      ),
     }
 
     ;(fetchUnprocessedMessages as any as jest.Mock)

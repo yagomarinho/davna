@@ -268,9 +268,6 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
 
         const { message, messageOwnership } = appendMessageResult.value
 
-        // chamar o classroom interactions guidance
-        // classroomInteractionsGuidance(classroom_id)
-
         return Response.data({
           message: messageDTOFromGraph({
             classroom_id,

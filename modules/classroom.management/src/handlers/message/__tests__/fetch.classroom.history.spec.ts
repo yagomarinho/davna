@@ -1,226 +1,212 @@
 import {
-  createAuthContext,
-  createMeta,
-  Left,
   Request,
+  Left,
   Right,
+  createMeta,
+  createAuthContext,
 } from '@davna/core'
+
+import { ClassroomFedRepository } from '../../../repositories'
 import { fetchClassroomHistoryHandler } from '../fetch.classroom.history.handler'
-import { ensureClassroomParticipation } from '../../../services'
+
 import {
-  AUDIO_STATUS,
-  createAudio,
+  createParticipant,
   createMessage,
-  createRepresentation,
+  createOccursIn,
   createSource,
+  createAudio,
   createText,
+  createRepresentation,
+  AUDIO_STATUS,
   REPRESENTATION_KIND,
   REPRESENTATION_TYPE,
 } from '../../../entities'
 
+import {
+  getParticipantBySubjectId,
+  ensureClassroomParticipation,
+} from '../../../services'
+import { ClassroomFedFake } from '../../../services/__fakes__/classroom.fed.fake'
+import { STORAGE_TYPE } from '@davna/infra'
+
 jest.mock('../../../services')
 
 describe('fetch classroom history handler', () => {
-  const repository = {
-    methods: {
-      query: jest.fn(),
-      get: jest.fn(),
-    },
-  }
+  let repository: ClassroomFedRepository
 
   beforeEach(() => {
+    repository = ClassroomFedFake()
     jest.clearAllMocks()
   })
 
-  it('should return 401 when participant is not part of classroom', async () => {
-    ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
-      Promise.resolve(
-        Left({
-          status: 'error',
-          message: 'Not allowed',
-        }),
+  function request(overrides?: Partial<any>) {
+    return Request.metadata({
+      auth: createAuthContext(
+        { id: 'account-1' },
+        { type: 'agent', subject_id: 'agent-1' },
       ),
+      params: { id: 'classroom-1' },
+      ...overrides,
+    })
+  }
+
+  function entityMeta(id: string) {
+    const now = new Date()
+    return createMeta({
+      id,
+      created_at: now,
+      updated_at: now,
+      _idempotency_key: '',
+    })
+  }
+
+  it('should return 400 when participant is invalid', async () => {
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Left({ message: 'invalid participant' })),
     )
 
-    const result = await fetchClassroomHistoryHandler(
-      Request.metadata({
-        params: { id: 'classroom-1' },
-        auth: createAuthContext({ id: 'participant-1' }),
-      }),
-    )({ repository } as any)
+    const result = await fetchClassroomHistoryHandler(request())({
+      repository,
+    })
 
-    expect(result.metadata?.headers?.status).toBe(401)
+    expect(result.metadata?.headers?.status).toBe(400)
     expect(result.data).toEqual({
-      message: 'Not allowed',
+      message: 'invalid participant',
     })
   })
 
-  it('should return classroom history with audio message', async () => {
+  it('should return 401 when participant is not part of classroom', async () => {
+    const participant = createParticipant(
+      { subject_id: 'agent-1', type: 'agent' },
+      entityMeta('participant-1'),
+    )
+
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(participant)),
+    )
+    ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Left({ message: 'not allowed' })),
+    )
+
+    const result = await fetchClassroomHistoryHandler(request())({
+      repository,
+    })
+
+    expect(result.metadata?.headers?.status).toBe(401)
+    expect(result.data).toEqual({
+      message: 'not allowed',
+    })
+  })
+
+  it('should return classroom history with audio and text messages', async () => {
+    const participant = createParticipant(
+      { subject_id: 'agent-1', type: 'agent' },
+      entityMeta('participant-1'),
+    )
+
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(participant)),
+    )
     ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
       Promise.resolve(Right(true)),
     )
 
-    const message = createMessage(
-      {},
-      createMeta({
-        id: 'message-1',
-        created_at: new Date(),
-        updated_at: new Date(),
-        _idempotency_key: '',
+    const message1 = await repository.methods.set(createMessage({}))
+    const message2 = await repository.methods.set(createMessage({}))
+
+    await repository.methods.set(
+      createOccursIn({
+        source_id: message1.meta.id,
+        target_id: 'classroom-1',
       }),
     )
-    const audio = createAudio(
-      {
-        status: AUDIO_STATUS.PERSISTENT,
+
+    await repository.methods.set(
+      createOccursIn({
+        source_id: message2.meta.id,
+        target_id: 'classroom-1',
+      }),
+    )
+
+    const audio = await repository.methods.set(
+      createAudio({
         filename: 'audio.mp3',
         mime_type: 'audio/mpeg',
         duration: 10,
         url: 'url',
         metadata: {},
-        storage: {} as any,
-      },
-      createMeta({
-        id: 'audio-1',
-        created_at: new Date(),
-        updated_at: new Date(),
-        _idempotency_key: '',
+        status: AUDIO_STATUS.PERSISTENT,
+        storage: {
+          bucket: 'bucket',
+          internal_id: 'internal_id',
+          type: STORAGE_TYPE.AWS_S3,
+        },
       }),
     )
 
-    const occursIn = {
-      props: { source_id: message.meta.id },
-    }
+    await repository.methods.set(
+      createSource({
+        source_id: audio.meta.id,
+        source_type: 'audio',
+        target_id: message1.meta.id,
+      }),
+    )
 
-    const source = createSource({
-      source_type: 'audio',
-      source_id: audio.meta.id,
-      target_id: message.meta.id,
-    })
+    const audioText = await repository.methods.set(
+      createText({ content: 'transcription', metadata: {} }),
+    )
 
-    const representation = createRepresentation({
-      source_id: 'text-1',
-      target_id: audio.meta.id,
-      target_type: 'audio',
-      type: REPRESENTATION_TYPE.TRANSCRIPTION,
-      kind: REPRESENTATION_KIND.TRANSFORMATION,
-    })
+    await repository.methods.set(
+      createRepresentation({
+        kind: REPRESENTATION_KIND.TRANSFORMATION,
+        type: REPRESENTATION_TYPE.TRANSCRIPTION,
+        target_type: 'audio',
+        target_id: audio.meta.id,
+        source_id: audioText.meta.id,
+      }),
+    )
 
-    repository.methods.query
-      // OccursIn
-      .mockResolvedValueOnce({ data: [occursIn] })
-      // Messages
-      .mockResolvedValueOnce({ data: [message] })
-      // Source
-      .mockResolvedValueOnce({ data: [source] })
-      // Representation
-      .mockResolvedValueOnce({ data: [representation] })
+    const text = await repository.methods.set(
+      createText({ content: 'hello', metadata: {} }),
+    )
 
-    repository.methods.get
-      // audio
-      .mockResolvedValueOnce(audio)
-      // representation content
-      .mockResolvedValueOnce({ content: 'hello' })
+    await repository.methods.set(
+      createSource({
+        source_id: text.meta.id,
+        source_type: 'text',
+        target_id: message2.meta.id,
+      }),
+    )
 
     const result = await fetchClassroomHistoryHandler(
-      Request.metadata({
-        params: { id: 'classroom-1' },
-        auth: createAuthContext({ id: 'participant-1' }),
-      }),
-    )({ repository } as any)
+      request({ query: { batch_size: 10 } }),
+    )({ repository })
 
-    expect(result.data).toEqual(
+    expect(result.data.history).toHaveLength(2)
+
+    expect(result.data.history[0]).toEqual(
       expect.objectContaining({
-        history: [
-          expect.objectContaining({
-            id: message.meta.id,
-            source: expect.objectContaining({
-              type: 'audio',
-              data: expect.objectContaining({
-                id: audio.meta.id,
-                filename: 'audio.mp3',
-                contents: [
-                  expect.objectContaining({
-                    type: REPRESENTATION_TYPE.TRANSCRIPTION,
-                  }),
-                ],
+        source: expect.objectContaining({
+          type: 'audio',
+          data: expect.objectContaining({
+            contents: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'transcription',
               }),
-            }),
+            ]),
           }),
-        ],
-      }),
-    )
-  })
-
-  it('should return classroom history with text message', async () => {
-    ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
-      Promise.resolve(Right(true)),
-    )
-
-    const message = createMessage(
-      {},
-      createMeta({
-        id: 'message-1',
-        created_at: new Date(),
-        updated_at: new Date(),
-        _idempotency_key: '',
-      }),
-    )
-    const text = createText(
-      {
-        content: 'hello world',
-        metadata: {},
-      },
-      createMeta({
-        id: 'text-1',
-        created_at: new Date(),
-        updated_at: new Date(),
-        _idempotency_key: '',
+        }),
       }),
     )
 
-    const occursIn = {
-      props: { source_id: message.meta.id },
-    }
-
-    const source = createSource({
-      source_type: 'text',
-      source_id: text.meta.id,
-      target_id: message.meta.id,
-    })
-
-    repository.methods.query
-      // OccursIn
-      .mockResolvedValueOnce({ data: [occursIn] })
-      // Messages
-      .mockResolvedValueOnce({ data: [message] })
-      // Source
-      .mockResolvedValueOnce({ data: [source] })
-      // Representation (empty)
-      .mockResolvedValueOnce({ data: [] })
-
-    repository.methods.get.mockResolvedValueOnce(text)
-
-    const result = await fetchClassroomHistoryHandler(
-      Request.metadata({
-        params: { id: 'classroom-1' },
-        auth: createAuthContext({ id: 'participant-1' }),
-      }),
-    )({ repository } as any)
-
-    expect(result.data).toEqual(
+    expect(result.data.history[1]).toEqual(
       expect.objectContaining({
-        history: [
-          expect.objectContaining({
-            id: message.meta.id,
-            source: {
-              type: 'text',
-              data: expect.objectContaining({
-                id: text.meta.id,
-                content: 'hello world',
-              }),
-            },
+        source: expect.objectContaining({
+          type: 'text',
+          data: expect.objectContaining({
+            content: 'hello',
           }),
-        ],
+        }),
       }),
     )
   })

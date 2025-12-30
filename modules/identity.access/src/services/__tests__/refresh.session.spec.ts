@@ -152,7 +152,7 @@ describe('refresh session service', () => {
       }),
     )
 
-    expect(result.value.refresh_token.expiresIn).toBe(
+    expect(result.value.refresh_token.expires_at).toBe(
       session.props.expires_at.getTime(),
     )
 

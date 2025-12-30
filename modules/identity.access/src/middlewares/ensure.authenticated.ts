@@ -7,6 +7,7 @@
 
 import type { Signer } from '@davna/infra'
 import {
+  createAuthContext,
   isLeft,
   Middleware,
   Next,
@@ -83,15 +84,15 @@ export const ensureAuthenticated = Middleware<Env>(
           },
         })
 
-      const { session, account } = result.value
+      const { session } = result.value
+      const { actor, principal } = session.props.metadata.props
 
       return Next({
         request: Request({
           data: request.data,
           metadata: {
             ...request.metadata,
-            account,
-            session,
+            auth: createAuthContext(principal.account, actor),
           },
         }),
       })

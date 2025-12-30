@@ -51,7 +51,11 @@ export const refreshSession = Service<Request, Env, TokenResponse>(
           QueryBuilder().filterBy('refresh_token', '==', signature).build(),
         )
 
-        if (!session || session.props.kind === SESSION_KIND.DELEGATED) {
+        if (
+          !session ||
+          session.props.kind === SESSION_KIND.DELEGATED ||
+          session.props.expires_at < new Date()
+        ) {
           if (session && session.props.expires_at < new Date())
             await sessions.methods.remove(session.meta.id)
           return Left({ status: 'error', message: 'Invalid Signature' })

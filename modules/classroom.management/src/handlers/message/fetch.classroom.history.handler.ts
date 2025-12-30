@@ -92,7 +92,7 @@ async function toHistoryDTO(
   const { data: occursIn } = await repository.methods.query(
     QueryBuilder()
       .orderBy([{ property: 'created_at', direction: 'desc' }])
-      .filterBy('target', '==', classroom_id)
+      .filterBy('target_id', '==', classroom_id)
       .limit(batch_size)
       .cursor(cursor_ref)
       .build(),

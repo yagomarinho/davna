@@ -5,14 +5,13 @@ import {
   Request,
   Right,
 } from '@davna/core'
+
 import { classroomDTOfromGraph } from '../../../dtos'
 import { ClassroomURI, ParticipantURI } from '../../../entities'
-import { showClassroom } from '../../../services/classroom/show.classroom'
-import { getParticipantBySubjectId } from '../../../services/participant/get.participant.by.subject.id'
+import { showClassroom, getParticipantBySubjectId } from '../../../services'
 import { showClassroomHandler } from '../show.classroom.handler'
 
-jest.mock('../../../services/participant/get.participant.by.subject.id')
-jest.mock('../../../services/classroom/show.classroom')
+jest.mock('../../../services')
 jest.mock('../../../dtos')
 
 describe('show classroom handler', () => {

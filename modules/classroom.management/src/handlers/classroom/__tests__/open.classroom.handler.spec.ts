@@ -7,13 +7,12 @@ import {
   Right,
 } from '@davna/core'
 
+import { openClassroom, getParticipantBySubjectId } from '../../../services'
+
 import { openClassroomHandler } from '../open.classroom.handler'
 import { createParticipant, ParticipantURI } from '../../../entities'
-import { openClassroom } from '../../../services/classroom/open.classroom'
-import { getParticipantBySubjectId } from '../../../services'
 
-jest.mock('../../../services/participant/get.participant')
-jest.mock('../../../services/classroom/open.classroom')
+jest.mock('../../../services')
 
 describe('open classroom handler', () => {
   const repository = {

@@ -14,8 +14,7 @@ import {
   UnitOfWorkSaga,
 } from '@davna/core'
 import { ClassroomFedRepository } from '../../repositories'
-import { openClassroom } from '../../services/classroom/open.classroom'
-import { getParticipantBySubjectId } from '../../services'
+import { openClassroom, getParticipantBySubjectId } from '../../services'
 
 interface Metadata {
   auth: AuthContext

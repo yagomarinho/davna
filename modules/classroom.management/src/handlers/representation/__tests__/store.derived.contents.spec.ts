@@ -1,142 +1,198 @@
-import { createAuthContext, Request } from '@davna/core'
-import { storeDerivedContentsHandler } from '../store.derived.contents.handler'
 import {
-  AudioURI,
-  COUNT_UNITS,
+  createAuthContext,
+  createMeta,
+  Left,
+  Request,
+  Right,
+} from '@davna/core'
+
+import { storeDerivedContentsHandler } from '../store.derived.contents.handler'
+
+import {
+  createParticipant,
   REPRESENTATION_KIND,
   REPRESENTATION_TYPE,
   TextURI,
+  USAGE_STATUS,
 } from '../../../entities'
-import { DerivedContent } from '../../../dtos'
+
+import { ClassroomFedFake } from '../../../services/__fakes__/classroom.fed.fake'
+import { getParticipantBySubjectId } from '../../../services'
+
+jest.mock('../../../services')
 
 describe('store derived contents handler', () => {
-  const repository = {
-    methods: {
-      set: jest.fn(),
-    },
-  }
+  let repository: any
 
   beforeEach(() => {
+    repository = ClassroomFedFake()
     jest.clearAllMocks()
   })
 
-  it('should store derived contents and return 203', async () => {
-    const participant_id = 'participant-1'
+  function entityMeta(id: string) {
+    const now = new Date()
+    return createMeta({
+      id,
+      created_at: now,
+      updated_at: now,
+      _idempotency_key: '',
+    })
+  }
 
-    const contents: DerivedContent[] = [
-      {
-        kind: REPRESENTATION_KIND.TRANSFORMATION,
-        type: REPRESENTATION_TYPE.TRANSCRIPTION,
-        target_type: AudioURI as AudioURI,
-        target_id: 'audio-1',
-        content: 'transcribed text',
-        metadata: { language: 'en' },
-        consumption: {
-          value: 20,
-          raw_value: 20,
-          unit: COUNT_UNITS.TKS,
-          normalization_factor: 1,
-          precision: 0,
-        },
+  function authRequest(overrides?: Partial<any>) {
+    return Request({
+      metadata: {
+        auth: createAuthContext(
+          { id: 'account-1' },
+          { type: 'agent', subject_id: 'agent-1' },
+        ),
       },
-      {
-        kind: REPRESENTATION_KIND.TRANSFORMATION,
-        type: REPRESENTATION_TYPE.TRANSLATION,
-        target_type: AudioURI as AudioURI,
-        target_id: 'audio-2',
-        content: 'translated text',
-        metadata: { language: 'pt-BR' },
-        consumption: {
-          value: 20,
-          raw_value: 20,
-          unit: COUNT_UNITS.TKS,
-          normalization_factor: 1,
-          precision: 0,
-        },
+      data: {
+        contents: [],
       },
-    ]
+      ...overrides,
+    })
+  }
 
-    repository.methods.set.mockImplementation(async entity => ({
-      ...entity,
-      meta: {
-        id: 'generated-id',
-        created_at: new Date(),
-        updated_at: new Date(),
-        _idempotency_key: '',
-      },
-    }))
+  it('should be able to return 401 when account participant is invalid', async () => {
+    ;(getParticipantBySubjectId as any as jest.Mock)
+      .mockReturnValueOnce(() =>
+        Promise.resolve(Left({ message: 'invalid account' })),
+      )
+      .mockReturnValueOnce(() =>
+        Promise.resolve(
+          Right(
+            createParticipant(
+              { subject_id: 'agent-1', type: 'agent' },
+              entityMeta('participant-2'),
+            ),
+          ),
+        ),
+      )
+
+    const result = await storeDerivedContentsHandler(authRequest())({
+      repository,
+    })
+
+    expect(result.metadata?.headers?.status).toBe(401)
+    expect(result.data).toEqual({
+      message: 'Invalid account id',
+    })
+  })
+
+  it('should be able to return 401 when actor participant is invalid', async () => {
+    ;(getParticipantBySubjectId as any as jest.Mock)
+      .mockReturnValueOnce(() =>
+        Promise.resolve(
+          Right(
+            createParticipant(
+              { subject_id: 'account-1', type: 'costumer' },
+              entityMeta('participant-1'),
+            ),
+          ),
+        ),
+      )
+      .mockReturnValueOnce(() =>
+        Promise.resolve(Left({ message: 'invalid actor' })),
+      )
+
+    const result = await storeDerivedContentsHandler(authRequest())({
+      repository,
+    })
+
+    expect(result.metadata?.headers?.status).toBe(401)
+    expect(result.data).toEqual({
+      message: 'Invalid account id',
+    })
+  })
+
+  it('should be able to store derived contents and return 203', async () => {
+    const accountParticipant = createParticipant(
+      { subject_id: 'account-1', type: 'costumer' },
+      entityMeta('participant-account'),
+    )
+
+    const actorParticipant = createParticipant(
+      { subject_id: 'agent-1', type: 'agent' },
+      entityMeta('participant-actor'),
+    )
+
+    ;(getParticipantBySubjectId as any as jest.Mock)
+      .mockReturnValueOnce(() => Promise.resolve(Right(accountParticipant)))
+      .mockReturnValueOnce(() => Promise.resolve(Right(actorParticipant)))
+
+    const setSpy = jest.spyOn(repository.methods, 'set')
 
     const result = await storeDerivedContentsHandler(
-      Request({
+      authRequest({
         data: {
-          contents,
-        },
-        metadata: {
-          auth: createAuthContext(
-            { id: 'account_id' },
+          contents: [
             {
-              type: 'agent',
-              subject_id: participant_id,
+              kind: REPRESENTATION_KIND.TRANSFORMATION,
+              type: REPRESENTATION_TYPE.SUMMARY,
+              target_type: 'audio',
+              target_id: 'audio-1',
+              content: 'derived text',
+              metadata: { lang: 'en' },
+              consumption: {
+                unit: 'token',
+                value: 10,
+                raw_value: 12,
+                normalization_factor: 1,
+                precision: 0,
+              },
             },
-          ),
+          ],
         },
       }),
-    )({ repository } as any)
+    )({ repository })
 
     expect(result.metadata?.headers?.status).toBe(203)
-    expect(result.data).toEqual({ message: 'Accepted' })
+    expect(result.data).toEqual({
+      message: 'Accepted',
+    })
 
-    expect(repository.methods.set).toHaveBeenCalledTimes(contents.length * 3)
+    expect(setSpy).toHaveBeenCalledTimes(4)
 
-    expect(repository.methods.set).toHaveBeenCalledWith(
+    expect(setSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _t: TextURI,
+      }),
+    )
+
+    expect(setSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         props: expect.objectContaining({
-          source_id: participant_id,
+          source_id: actorParticipant.meta.id,
           target_type: TextURI,
         }),
       }),
     )
 
-    expect(repository.methods.set).toHaveBeenCalledWith(
+    expect(setSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         props: expect.objectContaining({
+          kind: REPRESENTATION_KIND.TRANSFORMATION,
+          type: REPRESENTATION_TYPE.SUMMARY,
           target_id: 'audio-1',
-          type: REPRESENTATION_TYPE.TRANSCRIPTION,
+          target_type: 'audio',
         }),
       }),
     )
-  })
 
-  it('should rollback and throw if any persistence fails', async () => {
-    const participant_id = 'participant-1'
-
-    const contents = [
-      {
-        kind: REPRESENTATION_KIND.TRANSFORMATION,
-        type: REPRESENTATION_TYPE.TRANSCRIPTION,
-        target_type: AudioURI as AudioURI,
-        target_id: 'audio-1',
-        content: 'text',
-        metadata: {},
-        consumption: {
-          value: 20,
-          raw_value: 20,
-          unit: COUNT_UNITS.TKS,
-          normalization_factor: 1,
-          precision: 0,
-        },
-      },
-    ]
-
-    repository.methods.set.mockRejectedValueOnce(new Error('database error'))
-
-    await expect(
-      storeDerivedContentsHandler(
-        Request.data({
-          participant_id,
-          contents,
+    expect(setSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        props: expect.objectContaining({
+          status: USAGE_STATUS.CONFIRMED,
+          source_id: accountParticipant.meta.id,
+          target_type: TextURI,
+          metadata: expect.objectContaining({
+            props: expect.objectContaining({
+              text_owner_id: actorParticipant.meta.id,
+            }),
+          }),
         }),
-      )({ repository } as any),
-    ).rejects.toThrow('database error')
+      }),
+    )
   })
 })
