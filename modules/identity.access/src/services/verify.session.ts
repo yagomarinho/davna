@@ -6,14 +6,20 @@
  */
 
 import type { Signer } from '@davna/infra'
-import { Left, Repository, Right, Service } from '@davna/core'
+import {
+  createAuthContext,
+  Left,
+  Repository,
+  Right,
+  Service,
+} from '@davna/core'
 
-import { Account, createSession, Session } from '../entities'
+import { Account, createSession, Session, SESSION_KIND } from '../entities'
 import { ConfigDTO } from '../dtos/config'
 
 interface Token {
   value: string
-  expiresIn: number
+  expires_at: number
 }
 
 interface TokenResponse {
@@ -50,12 +56,15 @@ export const verifySession = Service<Request, Env, TokenResponse>(
 
         let session = await sessions.methods.get(payload.subject)
 
-        if (!session || session.props.expiresIn < new Date()) {
-          if (session) await sessions.methods.remove(session.meta.id)
+        if (!session || session.props.kind === SESSION_KIND.DELEGATED) {
+          if (session && session.props.expires_at < new Date())
+            await sessions.methods.remove(session.meta.id)
           return Left({ status: 'error', message: 'Invalid Signature' })
         }
 
-        const account = await accounts.methods.get(session.props.account_id)
+        const account = await accounts.methods.get(
+          session.props.metadata.props.actor.subject_id,
+        )
         if (!account) {
           if (session) await sessions.methods.remove(session.meta.id)
           return Left({ status: 'error', message: 'Invalid Account Session' })
@@ -64,27 +73,28 @@ export const verifySession = Service<Request, Env, TokenResponse>(
         let token: string = signature
         let refresh_token: string = session.props.refresh_token
 
-        let tokenExpiresIn = payload.expiresIn
-        let refreshTokenExpiresIn = session.props.expiresIn.getTime()
+        let tokenExpiresAt = payload.expiresIn
+        let refreshtokenExpiresAt = session.props.expires_at.getTime()
 
         const { token: tokenConfig, refresh_token: refreshTokenConfig } =
           config.auth.jwt
 
         if (refresh_strategy === REFRESH_STRATEGY.FORCE) {
-          tokenExpiresIn = now.getTime() + tokenConfig.expiresIn
-          refreshTokenExpiresIn = now.getTime() + refreshTokenConfig.expiresIn
+          tokenExpiresAt = now.getTime() + tokenConfig.expiresIn
+          refreshtokenExpiresAt = now.getTime() + refreshTokenConfig.expiresIn
 
           refresh_token = signer.sign({
-            subject: session.props.account_id,
+            subject: session.props.metadata.props.actor.subject_id,
             expiresIn: refreshTokenConfig.expiresIn,
           })
 
           session = createSession(
             {
-              account_id: session.props.account_id,
+              kind: SESSION_KIND.GENERATED,
+              metadata: createAuthContext({ id: account.meta.id }),
               user_agent,
               refresh_token,
-              expiresIn: new Date(refreshTokenExpiresIn),
+              expires_at: new Date(refreshtokenExpiresAt),
             },
             session.meta,
           )
@@ -96,25 +106,26 @@ export const verifySession = Service<Request, Env, TokenResponse>(
             expiresIn: tokenConfig.expiresIn,
           })
         } else if (refresh_strategy === REFRESH_STRATEGY.LAX) {
-          tokenExpiresIn = now.getTime() + tokenConfig.expiresIn
+          tokenExpiresAt = now.getTime() + tokenConfig.expiresIn
 
           if (
-            session.props.expiresIn <
+            session.props.expires_at <
             new Date(now.getTime() + 24 * 60 * 60 * 1000)
           ) {
-            refreshTokenExpiresIn = now.getTime() + refreshTokenConfig.expiresIn
+            refreshtokenExpiresAt = now.getTime() + refreshTokenConfig.expiresIn
 
             refresh_token = signer.sign({
-              subject: session.props.account_id,
+              subject: account.meta.id,
               expiresIn: refreshTokenConfig.expiresIn,
             })
 
             session = createSession(
               {
-                account_id: session.props.account_id,
+                kind: SESSION_KIND.GENERATED,
+                metadata: createAuthContext({ id: account.meta.id }),
                 user_agent,
                 refresh_token,
-                expiresIn: new Date(refreshTokenExpiresIn),
+                expires_at: new Date(refreshtokenExpiresAt),
               },
               session.meta,
             )
@@ -132,11 +143,11 @@ export const verifySession = Service<Request, Env, TokenResponse>(
           account,
           token: {
             value: token,
-            expiresIn: tokenExpiresIn,
+            expires_at: tokenExpiresAt,
           },
           refresh_token: {
             value: refresh_token,
-            expiresIn: refreshTokenExpiresIn,
+            expires_at: refreshtokenExpiresAt,
           },
         }
 

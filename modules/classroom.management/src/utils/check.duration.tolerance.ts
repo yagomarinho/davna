@@ -6,8 +6,7 @@
  */
 
 import { Duration, TIME_UNITS } from '@davna/kernel'
-import { Usage, USAGE_UNITS } from '../entities'
-import { CONFIDENCE } from '../services'
+import { CONFIDENCE, Usage, USAGE_UNITS } from '../entities'
 
 const ESTIMATED_DURATION_FACTOR = 1.15
 

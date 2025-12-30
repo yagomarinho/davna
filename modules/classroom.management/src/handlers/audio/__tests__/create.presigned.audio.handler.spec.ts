@@ -1,4 +1,4 @@
-import { Left, Request, Right } from '@davna/core'
+import { createAuthContext, Left, Request, Right } from '@davna/core'
 
 import { createPresignedAudioHandler } from '../create.presigned.audio.handler'
 import { authorizeConsumption } from '../../../services/usage/authorize.consumption'
@@ -35,12 +35,16 @@ describe('create presigned audio handler', () => {
     )
 
     const result = await createPresignedAudioHandler(
-      Request.data({
-        participant_id: participant.id,
-        mime_type: SUPPORTED_MIME_TYPE.MP3,
-        duration: {
-          unit: TIME_UNITS.SEC,
-          value: 60,
+      Request({
+        metadata: {
+          auth: createAuthContext(participant),
+        },
+        data: {
+          mime_type: SUPPORTED_MIME_TYPE.MP3,
+          duration: {
+            unit: TIME_UNITS.SEC,
+            value: 60,
+          },
         },
       }),
     )({ repository, storage } as any)
@@ -89,12 +93,16 @@ describe('create presigned audio handler', () => {
     )
 
     const result = await createPresignedAudioHandler(
-      Request.data({
-        participant_id: participant.id,
-        mime_type: SUPPORTED_MIME_TYPE.MP3,
-        duration: {
-          unit: TIME_UNITS.SEC,
-          value: 120,
+      Request({
+        metadata: {
+          auth: createAuthContext(participant),
+        },
+        data: {
+          mime_type: SUPPORTED_MIME_TYPE.MP3,
+          duration: {
+            unit: TIME_UNITS.SEC,
+            value: 120,
+          },
         },
       }),
     )({ repository, storage } as any)
@@ -125,12 +133,16 @@ describe('create presigned audio handler', () => {
 
     await expect(
       createPresignedAudioHandler(
-        Request.data({
-          participant_id: participant.id,
-          mime_type: SUPPORTED_MIME_TYPE.MP3,
-          duration: {
-            unit: TIME_UNITS.SEC,
-            value: 10,
+        Request({
+          metadata: {
+            auth: createAuthContext(participant),
+          },
+          data: {
+            mime_type: SUPPORTED_MIME_TYPE.MP3,
+            duration: {
+              unit: TIME_UNITS.SEC,
+              value: 10,
+            },
           },
         }),
       )({ repository, storage } as any),

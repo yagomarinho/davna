@@ -1,4 +1,4 @@
-import { Request } from '@davna/core'
+import { createAuthContext, Request } from '@davna/core'
 import { storeDerivedContentsHandler } from '../store.derived.contents.handler'
 import {
   AudioURI,
@@ -67,9 +67,19 @@ describe('store derived contents handler', () => {
     }))
 
     const result = await storeDerivedContentsHandler(
-      Request.data({
-        participant_id,
-        contents,
+      Request({
+        data: {
+          contents,
+        },
+        metadata: {
+          auth: createAuthContext(
+            { id: 'account_id' },
+            {
+              type: 'agent',
+              subject_id: participant_id,
+            },
+          ),
+        },
       }),
     )({ repository } as any)
 

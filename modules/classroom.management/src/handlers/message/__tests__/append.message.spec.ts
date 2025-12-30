@@ -1,4 +1,10 @@
-import { createMeta, Left, Request, Right } from '@davna/core'
+import {
+  createAuthContext,
+  createMeta,
+  Left,
+  Request,
+  Right,
+} from '@davna/core'
 
 import { appendMessageHandler } from '../append.message.handler'
 
@@ -8,6 +14,7 @@ import {
   createMessage,
   createOwnership,
   createAudio,
+  AUDIO_STATUS,
 } from '../../../entities'
 import {
   appendMessageToClassroom,
@@ -62,7 +69,7 @@ describe('append message handler', () => {
 
     const audio = createAudio(
       {
-        status: 'presigned',
+        status: AUDIO_STATUS.PRESIGNED,
         filename: 'temp',
         mime_type: '',
         duration: 10,
@@ -128,7 +135,7 @@ describe('append message handler', () => {
 
     const persistedAudio = createAudio(
       concatenate(audio.props, {
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         metadata: {},
         storage: audio.props.storage.props,
       }),
@@ -171,12 +178,18 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request.data({
-        participant_id: participant.meta.id,
-        classroom_id,
-        resource: {
-          id: audio_id,
-          metadata: { presigned_url },
+      Request({
+        data: {
+          resource: {
+            id: audio_id,
+            metadata: { presigned_url },
+          },
+        },
+        metadata: {
+          auth: createAuthContext({ id: participant.meta.id }),
+          params: {
+            id: classroom_id,
+          },
         },
       }),
     )({ repository, multimedia, storage } as any)
@@ -199,12 +212,18 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request.data({
-        participant_id: 'not-participant',
-        classroom_id: 'classroom-1',
-        resource: {
-          id: 'audio-1',
-          metadata: { presigned_url: 'url' },
+      Request({
+        data: {
+          resource: {
+            id: 'audio-1',
+            metadata: { presigned_url: 'url' },
+          },
+        },
+        metadata: {
+          auth: createAuthContext({ id: 'not-participant' }),
+          params: {
+            id: 'classroom-1',
+          },
         },
       }),
     )({ repository } as any)
@@ -231,12 +250,18 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request.data({
-        participant_id: 'participant-1',
-        classroom_id: 'classroom-1',
-        resource: {
-          id: 'audio-1',
-          metadata: { presigned_url: 'expected-url' },
+      Request({
+        metadata: {
+          auth: createAuthContext({ id: 'participant-1' }),
+          params: {
+            id: 'classroom-1',
+          },
+        },
+        data: {
+          resource: {
+            id: 'audio-1',
+            metadata: { presigned_url: 'expected-url' },
+          },
         },
       }),
     )({ repository } as any)
@@ -281,12 +306,18 @@ describe('append message handler', () => {
     )
 
     const result = await appendMessageHandler(
-      Request.data({
-        participant_id: 'p1',
-        classroom_id: 'classroom',
-        resource: {
-          id: 'audio',
-          metadata: { presigned_url: 'url' },
+      Request({
+        data: {
+          resource: {
+            id: 'audio',
+            metadata: { presigned_url: 'url' },
+          },
+        },
+        metadata: {
+          auth: createAuthContext({ id: 'p1' }),
+          params: {
+            id: 'classroom',
+          },
         },
       }),
     )({ repository } as any)

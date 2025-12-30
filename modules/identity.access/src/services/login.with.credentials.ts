@@ -6,9 +6,16 @@
  */
 
 import type { Auth, Signer } from '@davna/infra'
-import { Left, QueryBuilder, Repository, Right, Service } from '@davna/core'
+import {
+  createAuthContext,
+  Left,
+  QueryBuilder,
+  Repository,
+  Right,
+  Service,
+} from '@davna/core'
 
-import { createSession, Session } from '../entities/session'
+import { createSession, Session, SESSION_KIND } from '../entities/session'
 import { Account, createAccount } from '../entities/account'
 import { ConfigDTO } from '../dtos/config'
 
@@ -70,10 +77,11 @@ export const loginWithCredentials = Service<Request, Env, TokenResponse>(
 
         const session = await sessions.methods.set(
           createSession({
-            account_id: account.meta.id,
+            kind: SESSION_KIND.GENERATED,
+            metadata: createAuthContext({ id: account.meta.id }),
             user_agent,
             refresh_token,
-            expiresIn: new Date(Date.now() + refreshTokenConfig.expiresIn),
+            expires_at: new Date(Date.now() + refreshTokenConfig.expiresIn),
           }),
         )
 

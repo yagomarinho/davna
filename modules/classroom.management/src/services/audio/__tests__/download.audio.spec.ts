@@ -1,11 +1,15 @@
+import { isLeft, isRight } from '@davna/core'
 import { STORAGE_TYPE } from '@davna/infra'
 
 import { downloadAudio } from '../download.audio'
-import { isLeft, isRight } from '@davna/core'
-
 import { StorageConstructor } from '../../../utils/storage'
-import { createAudio, SUPPORTED_MIME_TYPE } from '../../../entities'
+import {
+  AUDIO_STATUS,
+  createAudio,
+  SUPPORTED_MIME_TYPE,
+} from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
+
 import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
 import { IDContextFake } from '../../__fakes__/id.context.fake'
 
@@ -44,7 +48,7 @@ describe('downloadAudio Service', () => {
 
     const audio = await repository.methods.set(
       createAudio({
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'test-audio',
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         url: 'https://example.com/audio.mp3',
@@ -83,7 +87,7 @@ describe('downloadAudio Service', () => {
 
     const audio = await repository.methods.set(
       createAudio({
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'lesson-audio',
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         url: 'https://example.com/lesson.mp3',
@@ -117,7 +121,7 @@ describe('downloadAudio Service', () => {
 
     const audio = await repository.methods.set(
       createAudio({
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'practice-audio',
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         metadata: {},

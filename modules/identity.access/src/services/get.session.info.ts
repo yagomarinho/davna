@@ -8,7 +8,7 @@
 import type { Signer } from '@davna/infra'
 import { Left, Readable, Repository, Right, Service } from '@davna/core'
 
-import { Account, Session } from '../entities'
+import { Account, Session, SESSION_KIND } from '../entities'
 
 interface Env {
   signer: Signer
@@ -24,9 +24,12 @@ export const getSessionInfo = Service(
 
         const session = await sessions.methods.get(session_id)
 
-        if (!session) throw new Error('No session founded')
+        if (!session || session.props.kind === SESSION_KIND.DELEGATED)
+          throw new Error('No session founded')
 
-        const account = await accounts.methods.get(session.props.account_id)
+        const account = await accounts.methods.get(
+          session.props.metadata.props.actor.subject_id,
+        )
 
         if (!account) throw new Error('No account founded')
 

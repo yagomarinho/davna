@@ -1,7 +1,7 @@
-import { isLeft, isRight, Repository } from '@davna/core'
+import { createAuthContext, isLeft, isRight, Repository } from '@davna/core'
 import { InMemoryRepository } from '@davna/infra'
 
-import { createSession, Session } from '../../entities/session'
+import { createSession, Session, SESSION_KIND } from '../../entities/session'
 import { revokeSession } from '../revoke.session'
 
 const dayTime = 24 * 60 * 60 * 1000
@@ -30,10 +30,11 @@ describe('revoke session service', () => {
 
   it('should return Left and remove when the session is expired', async () => {
     let expired = createSession({
-      account_id: 'acc-1',
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: 'acc-1' }),
       user_agent: 'UA',
       refresh_token: 'refresh',
-      expiresIn: new Date(Date.now() - dayTime),
+      expires_at: new Date(Date.now() - dayTime),
     })
 
     expired = await sessions.methods.set(expired)
@@ -52,10 +53,11 @@ describe('revoke session service', () => {
 
   it('should remove an active session and return Right', async () => {
     let active = createSession({
-      account_id: 'acc-1',
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: 'acc-1' }),
       user_agent: 'UA',
       refresh_token: 'refresh',
-      expiresIn: new Date(Date.now() + 3 * dayTime),
+      expires_at: new Date(Date.now() + 3 * dayTime),
     })
 
     active = await sessions.methods.set(active)
@@ -75,10 +77,11 @@ describe('revoke session service', () => {
 
   it('should be idempotent: subsequent calls on same session return Left', async () => {
     let session = createSession({
-      account_id: 'acc-1',
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: 'acc-1' }),
       user_agent: 'UA',
       refresh_token: 'refresh',
-      expiresIn: new Date(Date.now() + dayTime),
+      expires_at: new Date(Date.now() + dayTime),
     })
     session = await sessions.methods.set(session)
 

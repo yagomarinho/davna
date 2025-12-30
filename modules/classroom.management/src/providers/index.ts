@@ -6,3 +6,4 @@
  */
 
 export * from './multimedia'
+export * from './scheduler'

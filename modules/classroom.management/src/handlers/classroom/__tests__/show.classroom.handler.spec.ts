@@ -1,4 +1,10 @@
-import { Left, Request, Right } from '@davna/core'
+import {
+  AuthContext,
+  createAuthContext,
+  Left,
+  Request,
+  Right,
+} from '@davna/core'
 import { classroomDTOfromGraph } from '../../../dtos'
 import { ClassroomURI, ParticipantURI } from '../../../entities'
 import { showClassroom } from '../../../services/classroom/show.classroom'
@@ -21,6 +27,10 @@ describe('show classroom handler', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
+
+  function authContext(subject_id: string): AuthContext {
+    return createAuthContext({ id: subject_id })
+  }
 
   it('should be able to show classroom when subject is authorized participant', async () => {
     const classroom_id = 'classroom-1'
@@ -55,9 +65,9 @@ describe('show classroom handler', () => {
     })
 
     const result = await showClassroomHandler(
-      Request({
-        data: { classroom_id },
-        metadata: { account },
+      Request.metadata({
+        auth: authContext(account.id),
+        params: { id: classroom_id },
       }),
     )({ repository } as any)
 
@@ -76,9 +86,9 @@ describe('show classroom handler', () => {
     )
 
     const result = await showClassroomHandler(
-      Request({
-        data: { classroom_id },
-        metadata: { account },
+      Request.metadata({
+        params: { id: classroom_id },
+        auth: authContext(account.id),
       }),
     )({ repository } as any)
 
@@ -109,9 +119,9 @@ describe('show classroom handler', () => {
     )
 
     const result = await showClassroomHandler(
-      Request({
-        data: { classroom_id },
-        metadata: { account },
+      Request.metadata({
+        params: { id: classroom_id },
+        auth: authContext(account.id),
       }),
     )({ repository } as any)
 

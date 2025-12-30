@@ -5,7 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Handler, isLeft, QueryBuilder, Response } from '@davna/core'
+import {
+  AuthContext,
+  Handler,
+  isLeft,
+  QueryBuilder,
+  Response,
+} from '@davna/core'
 import { ClassroomFedRepository } from '../../repositories'
 import {
   Audio,
@@ -18,27 +24,51 @@ import {
   SourceURI,
   Text,
 } from '../../entities'
-import { ensureClassroomParticipation } from '../../services'
+import {
+  ensureClassroomParticipation,
+  getParticipantBySubjectId,
+} from '../../services'
 
-interface Data {
-  participant_id: string
-  classroom_id: string
-  batch_size?: number
-  cursor_ref?: string
+interface Metadata {
+  query?: {
+    batch_size?: number
+    cursor_ref?: string
+  }
+  params: {
+    id: string
+  }
+  auth: AuthContext
 }
 
 interface Env {
   repository: ClassroomFedRepository
 }
 
-export const fetchClassroomHistoryHandler = Handler<Env, Data>(
+export const fetchClassroomHistoryHandler = Handler<Env, any, Metadata>(
   ({
-    data: { classroom_id, participant_id, batch_size = 10, cursor_ref = '0' },
+    metadata: {
+      query: { batch_size = 10, cursor_ref = '0' } = {},
+      params: { id: classroom_id },
+      auth: {
+        actor: { subject_id },
+      },
+    },
   }) =>
     async ({ repository }) => {
+      const participantResult = await getParticipantBySubjectId({ subject_id })(
+        { repository },
+      )
+      if (isLeft(participantResult))
+        return Response({
+          metadata: { headers: { status: 400 } },
+          data: { message: participantResult.value.message },
+        })
+
+      const participant = participantResult.value
+
       const ensureParticipationResult = await ensureClassroomParticipation({
         classroom_id,
-        participant_id,
+        participant_id: participant.meta.id,
       })({ repository })
 
       if (isLeft(ensureParticipationResult))

@@ -22,8 +22,8 @@ import { Metadata } from '@davna/kernel'
 export const UsageURI = 'usage'
 export type UsageURI = typeof UsageURI
 
-export const ConsumptionURI = 'usage.consumption'
-export type ConsumptionURI = typeof ConsumptionURI
+export const UsageConsumptionURI = 'usage.consumption'
+export type UsageConsumptionURI = typeof UsageConsumptionURI
 
 export const UsageMetadataURI = 'usage.metadata'
 export type UsageMetadataURI = typeof UsageMetadataURI
@@ -39,13 +39,24 @@ export interface Consumption {
   precision: number // digitos após a vírgula
 }
 
+export enum CONFIDENCE {
+  DETERMINISTIC = 'deterministic',
+  ESTIMATED = 'estimated',
+}
+
+export enum USAGE_STATUS {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+}
+
 // in usage
 // participant.id is source_id
 // resource.id is target_id
 export interface UsageProps extends EdgeProps {
   target_type: AudioURI | TextURI
-  consumption: ValueObject<Consumption>
-  metadata: Metadata
+  status: USAGE_STATUS
+  consumption: ValueObject<Consumption, UsageConsumptionURI>
+  metadata: ValueObject<Metadata, UsageMetadataURI>
 }
 
 export interface Usage extends Edge<UsageProps, UsageURI, UsageVersion> {}
@@ -72,6 +83,7 @@ export function createUsage(
     source_id,
     target_id,
     target_type,
+    status,
     consumption,
     metadata,
   }: RawProps<UsageProps>,
@@ -83,6 +95,7 @@ export function createUsage(
       source_id,
       target_id,
       target_type,
+      status,
       consumption: _createUsageConsumption(consumption, meta),
       metadata: _createUsageMetadata(metadata, meta),
     },
@@ -103,7 +116,14 @@ export function _createUsage(
   _version?: UsageVersion,
 ): Usage
 export function _createUsage(
-  { source_id, target_id, target_type, consumption, metadata }: UsageProps,
+  {
+    source_id,
+    target_id,
+    target_type,
+    status,
+    consumption,
+    metadata,
+  }: UsageProps,
   meta?: EntityMeta,
   _version: UsageVersion = UsageVersion,
 ): DraftEntity<Usage> | Usage {
@@ -111,7 +131,7 @@ export function _createUsage(
     UsageURI,
     _version,
     _createUsage,
-    { source_id, target_id, target_type, consumption, metadata },
+    { source_id, target_id, target_type, status, consumption, metadata },
     meta as any,
   )
 }
@@ -119,14 +139,14 @@ export function _createUsage(
 export function _createUsageConsumption(
   props: Consumption,
   meta?: EntityMeta,
-): ValueObject<Consumption, ConsumptionURI> {
-  return ValueObject(props, meta?._idempotency_key ?? '', ConsumptionURI)
+): ValueObject<Consumption, UsageConsumptionURI> {
+  return ValueObject(props, meta?._idempotency_key ?? '', UsageConsumptionURI)
 }
 
 export function _createUsageMetadata(
   props: Metadata,
   meta?: EntityMeta,
-): ValueObject<Metadata> {
+): ValueObject<Metadata, UsageMetadataURI> {
   return ValueObject(props, meta?._idempotency_key ?? '', UsageMetadataURI)
 }
 
@@ -135,13 +155,14 @@ const converter: MongoConverter<Usage> = {
     _v,
     _t,
     meta: { id, created_at, updated_at, _idempotency_key },
-    props: { source_id, target_id, target_type, consumption, metadata },
+    props: { source_id, target_id, target_type, status, consumption, metadata },
   }) => ({
     id,
     data: {
       source_id,
       target_id,
       target_type,
+      status,
       consumption: consumption.props,
       metadata: metadata.props,
       created_at,
@@ -157,6 +178,7 @@ const converter: MongoConverter<Usage> = {
       source_id,
       target_id,
       target_type,
+      status,
       consumption,
       metadata,
       created_at,
@@ -170,6 +192,7 @@ const converter: MongoConverter<Usage> = {
         source_id,
         target_id,
         target_type,
+        status,
         consumption,
         metadata,
       },

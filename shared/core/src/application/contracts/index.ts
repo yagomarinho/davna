@@ -5,5 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export * from './auth.context'
 export * from './operation.result'
 export * from './resolvable'

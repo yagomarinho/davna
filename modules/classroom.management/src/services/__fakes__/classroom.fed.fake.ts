@@ -15,6 +15,7 @@ import {
   Agent,
   AgentURI,
   Audio,
+  AUDIO_STATUS,
   AudioURI,
   Classroom,
   ClassroomURI,
@@ -172,7 +173,7 @@ export async function fillRepository(repo: ClassroomFedRepository) {
     repo.methods.set(createMessage()),
     repo.methods.set(
       createAudio({
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'audio1',
         duration: 100,
         mime_type: 'audio/mp4',
@@ -187,7 +188,7 @@ export async function fillRepository(repo: ClassroomFedRepository) {
     ),
     repo.methods.set(
       createAudio({
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'audio2',
         duration: 100,
         mime_type: 'audio/mp4',

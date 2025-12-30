@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Handler, Identifiable, isLeft, Response } from '@davna/core'
+import { AuthContext, Handler, isLeft, Response } from '@davna/core'
 import { ClassroomFedRepository } from '../../repositories'
 import { authorizeConsumption, getParticipantBySubjectId } from '../../services'
 import { USAGE_UNITS } from '../../entities'
@@ -14,7 +14,7 @@ interface Data {
   usage_unit: USAGE_UNITS
 }
 interface Metadata {
-  account: Identifiable
+  auth: AuthContext
 }
 
 interface Env {
@@ -25,7 +25,7 @@ export const checkMaxEstimatedConsumptionHandler = Handler<Env, Data, Metadata>(
   ({ data, metadata }) =>
     async ({ repository }) => {
       const { usage_unit } = data
-      const { id: account_id } = metadata.account
+      const { id: account_id } = metadata.auth.principal.account
 
       const accountParticipantResult = await getParticipantBySubjectId({
         subject_id: account_id,

@@ -5,19 +5,37 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { createEntity, DraftEntity, Entity, EntityMeta } from '@davna/core'
+import {
+  AuthContext,
+  createEntity,
+  DraftEntity,
+  Entity,
+  EntityMeta,
+  RawProps,
+  ValueObject,
+} from '@davna/core'
+import { Metadata } from '@davna/kernel'
 
 export const SessionURI = 'session'
 export type SessionURI = typeof SessionURI
 
+export const SessionMetadataURI = 'session.metadata'
+export type SessionMetadataURI = typeof SessionMetadataURI
+
 export const SessionVersion = 'v1'
 export type SessionVersion = typeof SessionVersion
 
+export enum SESSION_KIND {
+  GENERATED = 'generated',
+  DELEGATED = 'delegated',
+}
+
 export interface SessionProps {
-  account_id: string
-  user_agent: string
+  kind: SESSION_KIND
   refresh_token: string
-  expiresIn: Date
+  user_agent: string
+  expires_at: Date
+  metadata: ValueObject<Metadata<AuthContext>, SessionMetadataURI>
 }
 
 export interface Session extends Entity<
@@ -32,27 +50,71 @@ declare module '@davna/core' {
   }
 }
 
-export function createSession(props: SessionProps): DraftEntity<Session>
 export function createSession(
-  props: SessionProps,
+  props: RawProps<SessionProps>,
+): DraftEntity<Session>
+export function createSession(
+  props: RawProps<SessionProps>,
   meta: undefined,
   _version: SessionVersion,
 ): DraftEntity<Session>
 export function createSession(
-  props: SessionProps,
+  props: RawProps<SessionProps>,
   meta: EntityMeta,
   _version?: SessionVersion,
 ): Session
 export function createSession(
-  { account_id, expiresIn, refresh_token, user_agent }: SessionProps,
+  {
+    kind,
+    expires_at,
+    refresh_token,
+    user_agent,
+    metadata,
+  }: RawProps<SessionProps>,
   meta?: EntityMeta,
   _version: SessionVersion = SessionVersion,
-): Session {
+): DraftEntity<Session> | Session {
+  return _createSession(
+    {
+      kind,
+      expires_at,
+      refresh_token,
+      user_agent,
+      metadata: _createSessionMetadata(metadata, meta),
+    },
+    meta as any,
+    _version,
+  )
+}
+
+export function _createSession(props: SessionProps): DraftEntity<Session>
+export function _createSession(
+  props: SessionProps,
+  meta: undefined,
+  _version: SessionVersion,
+): DraftEntity<Session>
+export function _createSession(
+  props: SessionProps,
+  meta: EntityMeta,
+  _version?: SessionVersion,
+): Session
+export function _createSession(
+  { kind, expires_at, refresh_token, user_agent, metadata }: SessionProps,
+  meta?: EntityMeta,
+  _version: SessionVersion = SessionVersion,
+): DraftEntity<Session> | Session {
   return createEntity(
     SessionURI,
     _version,
-    createSession,
-    { account_id, expiresIn, refresh_token, user_agent },
+    _createSession,
+    { kind, expires_at, refresh_token, user_agent, metadata },
     meta as any,
   )
+}
+
+export function _createSessionMetadata(
+  props: Metadata<AuthContext>,
+  meta?: EntityMeta,
+): ValueObject<Metadata<AuthContext>, SessionMetadataURI> {
+  return ValueObject(props, meta?._idempotency_key ?? '', SessionMetadataURI)
 }

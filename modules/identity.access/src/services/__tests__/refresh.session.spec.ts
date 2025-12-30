@@ -1,7 +1,13 @@
-import { isLeft, isRight, QueryBuilder, Repository } from '@davna/core'
+import {
+  createAuthContext,
+  isLeft,
+  isRight,
+  QueryBuilder,
+  Repository,
+} from '@davna/core'
 import { InMemoryRepository, type Signer } from '@davna/infra'
 
-import { createSession, Session } from '../../entities/session'
+import { createSession, Session, SESSION_KIND } from '../../entities/session'
 import { refreshSession } from '../refresh.session'
 
 import { makeConfig } from '../../fakes/make.config'
@@ -47,10 +53,11 @@ describe('refresh session service', () => {
 
   it('should return Left and remove the session when the matched session is expired', async () => {
     let expired = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       user_agent,
       refresh_token: refresh_signature,
-      expiresIn: new Date(Date.now() - dayTime),
+      expires_at: new Date(Date.now() - dayTime),
     })
 
     expired = await sessions.methods.set(expired)
@@ -69,10 +76,11 @@ describe('refresh session service', () => {
 
   it('should return Left and remove the session when the matched account with session account.id', async () => {
     let expired = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       user_agent,
       refresh_token: refresh_signature,
-      expiresIn: new Date(Date.now() + 2000),
+      expires_at: new Date(Date.now() + 2000),
     })
 
     expired = await sessions.methods.set(expired)
@@ -92,10 +100,11 @@ describe('refresh session service', () => {
   it('should reuse the existing refresh token when more than 24h remains (no session update)', async () => {
     const stable_refresh = refresh_signature
     let session = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       user_agent: 'Old-UA',
       refresh_token: stable_refresh,
-      expiresIn: new Date(Date.now() + 3 * dayTime),
+      expires_at: new Date(Date.now() + 3 * dayTime),
     })
     session = await sessions.methods.set(session)
 
@@ -144,7 +153,7 @@ describe('refresh session service', () => {
     )
 
     expect(result.value.refresh_token.expiresIn).toBe(
-      session.props.expiresIn.getTime(),
+      session.props.expires_at.getTime(),
     )
 
     expect(signer.sign).toHaveBeenCalledTimes(1)
@@ -159,10 +168,11 @@ describe('refresh session service', () => {
   it('should renew the refresh token when less than 24h remains (and update the session)', async () => {
     const expSoon = new Date(Date.now() + dayTime / 2)
     let session = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       user_agent: 'Old-UA',
       refresh_token: 'old.refresh',
-      expiresIn: expSoon,
+      expires_at: expSoon,
     })
 
     session = await sessions.methods.set(session)

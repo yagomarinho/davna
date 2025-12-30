@@ -1,18 +1,34 @@
-import { createMeta, Left, Request, Right } from '@davna/core'
-
+import {
+  createAuthContext,
+  createMeta,
+  Left,
+  Request,
+  Right,
+} from '@davna/core'
 import { fetchUnprocessedMessagesHandler } from '../fetch.unprocessed.messages.handler'
+
 import {
   fetchUnprocessedMessages,
   UnprocessedMessage,
 } from '../../../services/message/fetch.unprocessed.messages'
+
 import {
+  ensureClassroomParticipation,
+  getParticipantBySubjectId,
+} from '../../../services'
+
+import {
+  AUDIO_STATUS,
   createAudio,
   createMessage,
   createOwnership,
+  createParticipant,
   SUPPORTED_MIME_TYPE,
 } from '../../../entities'
+
 import { STORAGE_TYPE } from '@davna/infra'
 
+jest.mock('../../../services')
 jest.mock('../../../services/message/fetch.unprocessed.messages')
 
 describe('fetch unprocessed messages handler', () => {
@@ -24,7 +40,90 @@ describe('fetch unprocessed messages handler', () => {
     jest.clearAllMocks()
   })
 
+  const participant = createParticipant(
+    {
+      subject_id: 'subject-1',
+      type: 'costumer',
+    },
+    createMeta({
+      id: 'participant-1',
+      created_at: new Date(),
+      updated_at: new Date(),
+      _idempotency_key: '',
+    }),
+  )
+
+  function entityMeta(id: string) {
+    const now = new Date()
+    return createMeta({
+      id,
+      created_at: now,
+      updated_at: now,
+      _idempotency_key: '',
+    })
+  }
+
+  function authRequest(overrides?: Partial<any>) {
+    return Request.metadata({
+      auth: createAuthContext(
+        { id: 'account-1' },
+        { type: 'agent', subject_id: 'subject-1' },
+      ),
+      params: { id: 'classroom-1' },
+      ...overrides,
+    })
+  }
+
+  it('should return 400 when participant is not found', async () => {
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(
+        Left({
+          status: 'error',
+          message: 'Participant not found',
+        }),
+      ),
+    )
+
+    const result = await fetchUnprocessedMessagesHandler(authRequest())({
+      repository,
+    } as any)
+
+    expect(result.metadata?.headers?.status).toBe(400)
+    expect(result.data).toEqual({
+      message: 'Participant not found',
+    })
+  })
+
+  it('should return 401 when participant is not part of classroom', async () => {
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(participant)),
+    )
+    ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(
+        Left({
+          status: 'error',
+          message: 'Not allowed',
+        }),
+      ),
+    )
+
+    const result = await fetchUnprocessedMessagesHandler(authRequest())({
+      repository,
+    } as any)
+
+    expect(result.metadata?.headers?.status).toBe(401)
+    expect(result.data).toEqual({
+      message: 'Not allowed',
+    })
+  })
+
   it('should return 400 when service returns error', async () => {
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(participant)),
+    )
+    ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(true)),
+    )
     ;(fetchUnprocessedMessages as any as jest.Mock).mockReturnValue(() =>
       Promise.resolve(
         Left({
@@ -34,11 +133,9 @@ describe('fetch unprocessed messages handler', () => {
       ),
     )
 
-    const result = await fetchUnprocessedMessagesHandler(
-      Request.data({
-        classroom_id: 'classroom-1',
-      }),
-    )({ repository } as any)
+    const result = await fetchUnprocessedMessagesHandler(authRequest())({
+      repository,
+    } as any)
 
     expect(result.metadata?.headers?.status).toBe(400)
     expect(result.data).toEqual({
@@ -47,63 +144,47 @@ describe('fetch unprocessed messages handler', () => {
   })
 
   it('should fetch a single page of unprocessed messages', async () => {
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(participant)),
+    )
+    ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(true)),
+    )
+
     const message: UnprocessedMessage = {
       classroom_id: 'classroom-1',
-      message: createMessage(
-        {},
-        createMeta({
-          id: 'message-1',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
+      message: createMessage({}, entityMeta('message-1')),
       messageOwnership: createOwnership(
         {
-          target_type: 'message',
+          source_id: participant.meta.id,
           target_id: 'message-1',
-          source_id: 'participant-1',
+          target_type: 'message',
         },
-        createMeta({
-          id: 'ownership-1',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
+        entityMeta('ownership-1'),
       ),
       audio: createAudio(
         {
-          status: 'persistent',
-          filename: 'name',
+          status: AUDIO_STATUS.PERSISTENT,
+          filename: 'audio.mp3',
           mime_type: SUPPORTED_MIME_TYPE.MP3,
-          url: '',
           duration: 10,
+          url: '',
           metadata: {},
           storage: {
             bucket: 'bucket',
-            internal_id: 'internal_id',
+            internal_id: 'id',
             type: STORAGE_TYPE.AWS_S3,
           },
         },
-        createMeta({
-          id: 'audio-1',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
+        entityMeta('audio-1'),
       ),
       audioOwnership: createOwnership(
         {
-          target_type: 'audio',
+          source_id: participant.meta.id,
           target_id: 'audio-1',
-          source_id: 'participant-1',
+          target_type: 'audio',
         },
-        createMeta({
-          id: 'ownership-2',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
+        entityMeta('audio-ownership'),
       ),
     }
 
@@ -116,11 +197,9 @@ describe('fetch unprocessed messages handler', () => {
       ),
     )
 
-    const result = await fetchUnprocessedMessagesHandler(
-      Request.data({
-        classroom_id: 'classroom-1',
-      }),
-    )({ repository } as any)
+    const result = await fetchUnprocessedMessagesHandler(authRequest())({
+      repository,
+    } as any)
 
     expect(result.data).toEqual(
       expect.objectContaining({
@@ -131,127 +210,72 @@ describe('fetch unprocessed messages handler', () => {
         ],
       }),
     )
+
+    expect(fetchUnprocessedMessages).toHaveBeenCalledTimes(1)
   })
 
   it('should fetch multiple pages until batch is completed', async () => {
-    const msg1: UnprocessedMessage = {
+    ;(getParticipantBySubjectId as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(participant)),
+    )
+    ;(ensureClassroomParticipation as any as jest.Mock).mockReturnValue(() =>
+      Promise.resolve(Right(true)),
+    )
+
+    const msg1 = {
       classroom_id: 'classroom-1',
-      message: createMessage(
-        {},
-        createMeta({
-          id: 'message-1',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
-      messageOwnership: createOwnership(
-        {
-          target_type: 'message',
-          target_id: 'message-1',
-          source_id: 'participant-1',
+      message: createMessage({}, entityMeta('message-1')),
+      messageOwnership: createOwnership({
+        source_id: participant.meta.id,
+        target_id: 'message-1',
+        target_type: 'message',
+      }),
+      audio: createAudio({
+        status: AUDIO_STATUS.PERSISTENT,
+        filename: 'audio1.mp3',
+        mime_type: SUPPORTED_MIME_TYPE.MP3,
+        duration: 10,
+        url: '',
+        metadata: {},
+        storage: {
+          bucket: 'bucket',
+          internal_id: '1',
+          type: STORAGE_TYPE.AWS_S3,
         },
-        createMeta({
-          id: 'ownership-1',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
-      audio: createAudio(
-        {
-          status: 'persistent',
-          filename: 'name',
-          mime_type: SUPPORTED_MIME_TYPE.MP3,
-          url: '',
-          duration: 10,
-          metadata: {},
-          storage: {
-            bucket: 'bucket',
-            internal_id: 'internal_id',
-            type: STORAGE_TYPE.AWS_S3,
-          },
-        },
-        createMeta({
-          id: 'audio-1',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
-      audioOwnership: createOwnership(
-        {
-          target_type: 'audio',
-          target_id: 'audio-1',
-          source_id: 'participant-1',
-        },
-        createMeta({
-          id: 'ownership-2',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
+      }),
+      audioOwnership: createOwnership({
+        source_id: participant.meta.id,
+        target_id: 'audio-1',
+        target_type: 'audio',
+      }),
     }
 
-    const msg2: UnprocessedMessage = {
+    const msg2 = {
       classroom_id: 'classroom-1',
-      message: createMessage(
-        {},
-        createMeta({
-          id: 'message-2',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
-      messageOwnership: createOwnership(
-        {
-          target_type: 'message',
-          target_id: 'message-2',
-          source_id: 'participant-1',
+      message: createMessage({}, entityMeta('message-2')),
+      messageOwnership: createOwnership({
+        source_id: participant.meta.id,
+        target_id: 'message-2',
+        target_type: 'message',
+      }),
+      audio: createAudio({
+        status: AUDIO_STATUS.PERSISTENT,
+        filename: 'audio2.mp3',
+        mime_type: SUPPORTED_MIME_TYPE.MP3,
+        duration: 10,
+        url: '',
+        metadata: {},
+        storage: {
+          bucket: 'bucket',
+          internal_id: '2',
+          type: STORAGE_TYPE.AWS_S3,
         },
-        createMeta({
-          id: 'ownership-3',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
-      audio: createAudio(
-        {
-          status: 'persistent',
-          filename: 'name',
-          mime_type: SUPPORTED_MIME_TYPE.MP3,
-          url: '',
-          duration: 10,
-          metadata: {},
-          storage: {
-            bucket: 'bucket',
-            internal_id: 'internal_id',
-            type: STORAGE_TYPE.AWS_S3,
-          },
-        },
-        createMeta({
-          id: 'audio-2',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
-      audioOwnership: createOwnership(
-        {
-          target_type: 'audio',
-          target_id: 'audio-2',
-          source_id: 'participant-1',
-        },
-        createMeta({
-          id: 'ownership-4',
-          created_at: new Date(),
-          updated_at: new Date(),
-          _idempotency_key: '',
-        }),
-      ),
+      }),
+      audioOwnership: createOwnership({
+        source_id: participant.meta.id,
+        target_id: 'audio-2',
+        target_type: 'audio',
+      }),
     }
 
     ;(fetchUnprocessedMessages as any as jest.Mock)
@@ -273,160 +297,10 @@ describe('fetch unprocessed messages handler', () => {
       )
 
     const result = await fetchUnprocessedMessagesHandler(
-      Request.data({
-        classroom_id: 'classroom-1',
-        batch_size: 1,
-      }),
-    )({ repository } as any)
-
-    expect(result.data).toEqual({
-      unprocessed_messages: [
-        expect.objectContaining({ id: 'message-1' }),
-        expect.objectContaining({ id: 'message-2' }),
-      ],
-    })
-
-    expect(fetchUnprocessedMessages).toHaveBeenCalledTimes(2)
-  })
-
-  it('should stop fetching when page size is smaller than batch size', async () => {
-    const messages: UnprocessedMessage[] = [
-      {
-        classroom_id: 'classroom-1',
-        message: createMessage(
-          {},
-          createMeta({
-            id: 'message-1',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-        messageOwnership: createOwnership(
-          {
-            target_type: 'message',
-            target_id: 'message-1',
-            source_id: 'participant-1',
-          },
-          createMeta({
-            id: 'ownership-1',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-        audio: createAudio(
-          {
-            status: 'persistent',
-            filename: 'name',
-            mime_type: SUPPORTED_MIME_TYPE.MP3,
-            url: '',
-            duration: 10,
-            metadata: {},
-            storage: {
-              bucket: 'bucket',
-              internal_id: 'internal_id',
-              type: STORAGE_TYPE.AWS_S3,
-            },
-          },
-          createMeta({
-            id: 'audio-1',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-        audioOwnership: createOwnership(
-          {
-            target_type: 'audio',
-            target_id: 'audio-1',
-            source_id: 'participant-1',
-          },
-          createMeta({
-            id: 'ownership-2',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-      },
-      {
-        classroom_id: 'classroom-1',
-        message: createMessage(
-          {},
-          createMeta({
-            id: 'message-2',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-        messageOwnership: createOwnership(
-          {
-            target_type: 'message',
-            target_id: 'message-2',
-            source_id: 'participant-1',
-          },
-          createMeta({
-            id: 'ownership-3',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-        audio: createAudio(
-          {
-            status: 'persistent',
-            filename: 'name',
-            mime_type: SUPPORTED_MIME_TYPE.MP3,
-            url: '',
-            duration: 10,
-            metadata: {},
-            storage: {
-              bucket: 'bucket',
-              internal_id: 'internal_id',
-              type: STORAGE_TYPE.AWS_S3,
-            },
-          },
-          createMeta({
-            id: 'audio-2',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-        audioOwnership: createOwnership(
-          {
-            target_type: 'audio',
-            target_id: 'audio-2',
-            source_id: 'participant-1',
-          },
-          createMeta({
-            id: 'ownership-4',
-            created_at: new Date(),
-            updated_at: new Date(),
-            _idempotency_key: '',
-          }),
-        ),
-      },
-    ]
-
-    ;(fetchUnprocessedMessages as any as jest.Mock).mockReturnValueOnce(() =>
-      Promise.resolve(
-        Right({
-          unprocessed_messages: messages,
-          next_cursor: 'cursor-should-be-ignored',
-        }),
-      ),
-    )
-
-    const result = await fetchUnprocessedMessagesHandler(
-      Request.data({
-        classroom_id: 'classroom-1',
-      }),
+      authRequest({ query: { batch_size: 1 } }),
     )({ repository } as any)
 
     expect(result.data?.unprocessed_messages).toHaveLength(2)
-    expect(fetchUnprocessedMessages).toHaveBeenCalledTimes(1)
+    expect(fetchUnprocessedMessages).toHaveBeenCalledTimes(2)
   })
 })

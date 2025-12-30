@@ -1,5 +1,5 @@
 import { getResourceUsages } from '../get.resource.usages'
-import { createUsage } from '../../../entities'
+import { createUsage, USAGE_STATUS } from '../../../entities'
 import { TIME_UNITS } from '@davna/kernel'
 import { isLeft, isRight } from '@davna/core'
 
@@ -16,6 +16,7 @@ describe('get resource usage service', () => {
 
   it('should return usage when it exists', async () => {
     const usage = createUsage({
+      status: USAGE_STATUS.CONFIRMED,
       source_id: 'participant-1',
       target_id: 'resource-1',
       target_type: 'audio',

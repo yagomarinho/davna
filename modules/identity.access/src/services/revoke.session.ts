@@ -22,7 +22,7 @@ export const revokeSession = Service<Request, Env, void>(
     async ({ sessions }) => {
       const session = await sessions.methods.get(session_id)
 
-      if (!session || session.props.expiresIn < new Date()) {
+      if (!session || session.props.expires_at < new Date()) {
         if (session) await sessions.methods.remove(session.meta.id)
         return Left({ status: 'error', message: 'Session already revoked' })
       }

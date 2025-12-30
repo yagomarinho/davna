@@ -1,7 +1,7 @@
-import { isLeft, isRight, Repository } from '@davna/core'
+import { createAuthContext, isLeft, isRight, Repository } from '@davna/core'
 import { InMemoryRepository, type Signer } from '@davna/infra'
 
-import { createSession, Session } from '../../entities/session'
+import { createSession, Session, SESSION_KIND } from '../../entities/session'
 import { REFRESH_STRATEGY, verifySession } from '../verify.session'
 
 import { makeConfig } from '../../fakes/make.config'
@@ -64,10 +64,11 @@ describe('verify session service', () => {
 
   it('should return Left and remove expired session', async () => {
     let expired = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       refresh_token: signature,
       user_agent,
-      expiresIn: new Date(Date.now() - dayTime),
+      expires_at: new Date(Date.now() - dayTime),
     })
 
     expired = await sessions.methods.set(expired)
@@ -76,7 +77,7 @@ describe('verify session service', () => {
 
     signer.decode.mockReturnValue({
       subject: expired.meta!.id,
-      expiresIn: expired.props.expiresIn.getTime(),
+      expiresIn: expired.props.expires_at.getTime(),
     })
 
     const result = await verifySession({
@@ -91,10 +92,11 @@ describe('verify session service', () => {
 
   it('should return Left and remove session with no related account', async () => {
     let expired = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       refresh_token: signature,
       user_agent,
-      expiresIn: new Date(Date.now() + dayTime),
+      expires_at: new Date(Date.now() + dayTime),
     })
 
     expired = await sessions.methods.set(expired)
@@ -103,7 +105,7 @@ describe('verify session service', () => {
 
     signer.decode.mockReturnValue({
       subject: expired.meta!.id,
-      expiresIn: expired.props.expiresIn.getTime(),
+      expiresIn: expired.props.expires_at.getTime(),
     })
 
     const result = await verifySession({
@@ -121,9 +123,10 @@ describe('verify session service', () => {
     const refresh_stable = 'refresh-stable'
 
     let session = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       user_agent,
-      expiresIn: new Date(Date.now() + 3 * dayTime),
+      expires_at: new Date(Date.now() + 3 * dayTime),
       refresh_token: refresh_stable,
     })
 
@@ -150,7 +153,7 @@ describe('verify session service', () => {
 
     signer.decode.mockReturnValue({
       subject: session.meta!.id,
-      expiresIn: session.props.expiresIn.getTime(),
+      expiresIn: session.props.expires_at.getTime(),
     })
 
     signer.sign.mockReturnValue(new_token)
@@ -180,9 +183,10 @@ describe('verify session service', () => {
     const lessThan24h = new Date(Date.now() + dayTime / 2) // +12h
 
     let session = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       user_agent,
-      expiresIn: lessThan24h,
+      expires_at: lessThan24h,
       refresh_token: 'refresh-old',
     })
 
@@ -209,7 +213,7 @@ describe('verify session service', () => {
 
     signer.decode.mockReturnValue({
       subject: session.meta!.id,
-      expiresIn: session.props.expiresIn.getTime(),
+      expiresIn: session.props.expires_at.getTime(),
     })
 
     signer.sign.mockReturnValueOnce(new_refresh)
@@ -238,10 +242,11 @@ describe('verify session service', () => {
     const new_refresh = 'new_refresh'
 
     let session = createSession({
-      account_id,
+      kind: SESSION_KIND.GENERATED,
+      metadata: createAuthContext({ id: account_id }),
       user_agent,
       refresh_token: 'refresh-old',
-      expiresIn: new Date(Date.now() + 5 * dayTime),
+      expires_at: new Date(Date.now() + 5 * dayTime),
     })
 
     session = await sessions.methods.set(session)
@@ -267,7 +272,7 @@ describe('verify session service', () => {
 
     signer.decode.mockReturnValue({
       subject: session.meta!.id,
-      expiresIn: session.props.expiresIn.getTime(),
+      expiresIn: session.props.expires_at.getTime(),
     })
 
     signer.sign.mockReturnValueOnce(new_refresh)

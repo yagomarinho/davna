@@ -6,8 +6,8 @@
  */
 
 import {
+  AuthContext,
   Handler,
-  Identifiable,
   isLeft,
   Response,
   SagaRepositoryProxy,
@@ -15,24 +15,30 @@ import {
 } from '@davna/core'
 import { ClassroomFedRepository } from '../../repositories'
 import { openClassroom } from '../../services/classroom/open.classroom'
-import { getParticipant } from '../../services/participant/get.participant'
+import { getParticipantBySubjectId } from '../../services'
 
 interface Metadata {
-  account: Identifiable
-  agent_participant_id: string
+  auth: AuthContext
+}
+
+interface Data {
+  agent_id: string
 }
 
 interface Env {
   repository: ClassroomFedRepository
 }
 
-export const openClassroomHandler = Handler<Env, any, Metadata>(
-  ({ metadata }) =>
+export const openClassroomHandler = Handler<Env, Data, Metadata>(
+  ({ data, metadata }) =>
     async env => {
-      const { account, agent_participant_id } = metadata
+      const {
+        actor: { subject_id },
+      } = metadata.auth
+      const { agent_id } = data
 
-      const participantResult = await getParticipant({
-        participant_id: agent_participant_id,
+      const participantResult = await getParticipantBySubjectId({
+        subject_id: agent_id,
       })({
         repository: env.repository,
       })
@@ -40,7 +46,7 @@ export const openClassroomHandler = Handler<Env, any, Metadata>(
       if (isLeft(participantResult))
         return Response({
           metadata: { headers: { status: 400 } },
-          data: { message: `Invalid agent id: ${agent_participant_id}` },
+          data: { message: `Invalid agent id: ${agent_id}` },
         })
 
       const participant = participantResult.value
@@ -50,7 +56,7 @@ export const openClassroomHandler = Handler<Env, any, Metadata>(
         const repository = SagaRepositoryProxy(env.repository, uow)
 
         const result = await openClassroom({
-          owner_id: account.id,
+          owner_id: subject_id,
           participant_ids: [participant.meta.id],
         })({ repository })
 

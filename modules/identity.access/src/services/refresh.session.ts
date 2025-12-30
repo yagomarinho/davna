@@ -6,10 +6,17 @@
  */
 
 import type { Signer } from '@davna/infra'
-import { Left, QueryBuilder, Repository, Right, Service } from '@davna/core'
+import {
+  createAuthContext,
+  Left,
+  QueryBuilder,
+  Repository,
+  Right,
+  Service,
+} from '@davna/core'
 
 import { ConfigDTO } from '../dtos/config'
-import { Account, createSession, Session } from '../entities'
+import { Account, createSession, Session, SESSION_KIND } from '../entities'
 
 interface Request {
   signature: string
@@ -18,7 +25,7 @@ interface Request {
 
 interface Token {
   value: string
-  expiresIn: number
+  expires_at: number
 }
 
 interface TokenResponse {
@@ -44,12 +51,15 @@ export const refreshSession = Service<Request, Env, TokenResponse>(
           QueryBuilder().filterBy('refresh_token', '==', signature).build(),
         )
 
-        if (!session || session.props.expiresIn < new Date()) {
-          if (session) await sessions.methods.remove(session.meta.id)
+        if (!session || session.props.kind === SESSION_KIND.DELEGATED) {
+          if (session && session.props.expires_at < new Date())
+            await sessions.methods.remove(session.meta.id)
           return Left({ status: 'error', message: 'Invalid Signature' })
         }
 
-        const account = await accounts.methods.get(session.props.account_id)
+        const account = await accounts.methods.get(
+          session.props.metadata.props.actor.subject_id,
+        )
 
         if (!account) {
           if (session) await sessions.methods.remove(session.meta.id)
@@ -62,26 +72,29 @@ export const refreshSession = Service<Request, Env, TokenResponse>(
         const { token: tokenConfig, refresh_token: refreshTokenConfig } =
           config.auth.jwt
 
-        const tokenExpiresIn = now.getTime() + tokenConfig.expiresIn
-        let refreshTokenExpiresIn = session.props.expiresIn.getTime()
+        const tokenExpiresAt = now.getTime() + tokenConfig.expiresIn
+        let refreshtokenExpiresAt = session.props.expires_at.getTime()
 
         if (
-          session.props.expiresIn <
+          session.props.expires_at <
           new Date(now.getTime() + 24 * 60 * 60 * 1000)
         ) {
-          refreshTokenExpiresIn = now.getTime() + refreshTokenConfig.expiresIn
+          refreshtokenExpiresAt = now.getTime() + refreshTokenConfig.expiresIn
 
           refresh_token = signer.sign({
-            subject: session.props.account_id,
+            subject: session.props.metadata.props.actor.subject_id,
             expiresIn: refreshTokenConfig.expiresIn,
           })
 
           session = createSession(
             {
-              account_id: session.props.account_id,
+              kind: SESSION_KIND.GENERATED,
+              metadata: createAuthContext({ id: account.meta.id }),
               user_agent,
               refresh_token,
-              expiresIn: new Date(now.getTime() + refreshTokenConfig.expiresIn),
+              expires_at: new Date(
+                now.getTime() + refreshTokenConfig.expiresIn,
+              ),
             },
             session.meta,
           )
@@ -98,11 +111,11 @@ export const refreshSession = Service<Request, Env, TokenResponse>(
           account,
           token: {
             value: token,
-            expiresIn: tokenExpiresIn,
+            expires_at: tokenExpiresAt,
           },
           refresh_token: {
             value: refresh_token,
-            expiresIn: refreshTokenExpiresIn,
+            expires_at: refreshtokenExpiresAt,
           },
         }
 

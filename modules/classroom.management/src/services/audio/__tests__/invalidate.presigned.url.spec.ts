@@ -1,10 +1,16 @@
 import { isRight } from '@davna/core'
+import { IDContext, STORAGE_TYPE } from '@davna/infra'
 
 import { invalidatePresignedURL } from '../invalidate.presigned.url'
-import { Audio, SUPPORTED_MIME_TYPE, createAudio } from '../../../entities'
+import {
+  AUDIO_STATUS,
+  Audio,
+  SUPPORTED_MIME_TYPE,
+  createAudio,
+} from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
+
 import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
-import { IDContext, STORAGE_TYPE } from '@davna/infra'
 import { IDContextFake } from '../../__fakes__/id.context.fake'
 
 describe('invalidate presigned url service', () => {
@@ -21,7 +27,7 @@ describe('invalidate presigned url service', () => {
   it('should invalidate presigned url and expires_at metadata keeping same audio identity', async () => {
     const audio = await repository.methods.set(
       createAudio({
-        status: 'presigned',
+        status: AUDIO_STATUS.PRESIGNED,
         filename: 'tmp-audio',
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         duration: 10,
@@ -62,7 +68,7 @@ describe('invalidate presigned url service', () => {
   it('should persist audio even when presigned metadata does not exist', async () => {
     const audio = await repository.methods.set(
       createAudio({
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'audio',
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         duration: 5,

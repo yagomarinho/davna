@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Handler, Identifiable, isLeft, Response } from '@davna/core'
+import { AuthContext, Handler, isLeft, Response } from '@davna/core'
 
 import { ClassroomFedRepository } from '../../repositories'
 import { showClassroom } from '../../services/classroom/show.classroom'
@@ -13,22 +13,23 @@ import { getParticipantBySubjectId } from '../../services/participant/get.partic
 import { classroomDTOfromGraph } from '../../dtos'
 
 interface Metadata {
-  account: Identifiable
-}
-
-interface Data {
-  classroom_id: string
+  params: { id: string }
+  auth: AuthContext
 }
 
 interface Env {
   repository: ClassroomFedRepository
 }
 
-export const showClassroomHandler = Handler<Env, Data, Metadata>(
-  ({ data, metadata }) =>
+export const showClassroomHandler = Handler<Env, any, Metadata>(
+  ({ metadata }) =>
     async ({ repository }) => {
-      const { classroom_id } = data
-      const { id: subject_id } = metadata.account
+      const {
+        params: { id: classroom_id },
+        auth: {
+          actor: { subject_id },
+        },
+      } = metadata
 
       const getParticipantResult = await getParticipantBySubjectId({
         subject_id,

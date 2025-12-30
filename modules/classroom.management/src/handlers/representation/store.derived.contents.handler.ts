@@ -6,8 +6,8 @@
  */
 
 import {
+  AuthContext,
   Handler,
-  Identifiable,
   isLeft,
   Response,
   SagaRepositoryProxy,
@@ -21,18 +21,18 @@ import {
   createText,
   createUsage,
   TextURI,
+  USAGE_STATUS,
 } from '../../entities'
 
 import { getParticipantBySubjectId } from '../../services'
 import { DerivedContent } from '../../dtos'
 
 interface Data {
-  participant_id: string
   contents: DerivedContent[]
 }
 
 interface Metadata {
-  account: Identifiable
+  auth: AuthContext
 }
 
 interface Env {
@@ -42,20 +42,30 @@ interface Env {
 export const storeDerivedContentsHandler = Handler<Env, Data, Metadata>(
   ({ data, metadata }) =>
     async env => {
-      const { id: account_id } = metadata.account
-      const { contents, participant_id } = data
+      const {
+        actor: { subject_id },
+        principal: {
+          account: { id: account_id },
+        },
+      } = metadata.auth
+      const { contents } = data
 
       const accountParticipantResult = await getParticipantBySubjectId({
         subject_id: account_id,
       })({ repository: env.repository })
 
-      if (isLeft(accountParticipantResult))
+      const actorParticipantResult = await getParticipantBySubjectId({
+        subject_id,
+      })({ repository: env.repository })
+
+      if (isLeft(accountParticipantResult) || isLeft(actorParticipantResult))
         return Response({
           metadata: { headers: { status: 401 } },
           data: { message: 'Invalid account id' },
         })
 
       const account_participant = accountParticipantResult.value
+      const actor_participant = actorParticipantResult.value
 
       const uow = UnitOfWorkSaga()
       try {
@@ -79,7 +89,7 @@ export const storeDerivedContentsHandler = Handler<Env, Data, Metadata>(
               await Promise.all([
                 repository.methods.set(
                   createOwnership({
-                    source_id: participant_id,
+                    source_id: actor_participant.meta.id,
                     target_id: text.meta.id,
                     target_type: TextURI,
                   }),
@@ -95,6 +105,7 @@ export const storeDerivedContentsHandler = Handler<Env, Data, Metadata>(
                 ),
                 repository.methods.set(
                   createUsage({
+                    status: USAGE_STATUS.CONFIRMED,
                     target_type: TextURI,
                     target_id: text.meta.id,
                     source_id: account_participant.meta.id,
@@ -106,7 +117,7 @@ export const storeDerivedContentsHandler = Handler<Env, Data, Metadata>(
                       precision: consumption.precision,
                     },
                     metadata: {
-                      text_owner_id: participant_id,
+                      text_owner_id: actor_participant.meta.id,
                     },
                   }),
                 ),

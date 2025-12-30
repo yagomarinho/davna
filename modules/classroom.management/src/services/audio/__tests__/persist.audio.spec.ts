@@ -1,15 +1,17 @@
 import { isRight } from '@davna/core'
+import { IDContext, STORAGE_TYPE } from '@davna/infra'
 
 import { persistAudio } from '../persist.audio'
 import {
   Audio,
+  AUDIO_STATUS,
   AudioURI,
   createAudio,
   SUPPORTED_MIME_TYPE,
 } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
+
 import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
-import { IDContext, STORAGE_TYPE } from '@davna/infra'
 import { IDContextFake } from '../../__fakes__/id.context.fake'
 
 describe('persist audio service', () => {
@@ -28,7 +30,7 @@ describe('persist audio service', () => {
 
     const audio = await repository.methods.set(
       createAudio({
-        status: 'presigned',
+        status: AUDIO_STATUS.PRESIGNED,
         filename: 'tmp-file',
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         duration: 10,
@@ -91,7 +93,7 @@ describe('persist audio service', () => {
 
     const audio = await repository.methods.set(
       createAudio({
-        status: 'presigned',
+        status: AUDIO_STATUS.PRESIGNED,
         filename: 'tmp',
         mime_type: SUPPORTED_MIME_TYPE.MP3,
         duration: 5,

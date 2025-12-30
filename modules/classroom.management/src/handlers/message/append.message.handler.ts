@@ -6,6 +6,7 @@
  */
 
 import {
+  AuthContext,
   Handler,
   isLeft,
   Response,
@@ -26,24 +27,25 @@ import {
   ensureClassroomParticipation,
   ensureOwnershipToTargetResource,
   getAudio,
-  getParticipant,
+  getParticipantBySubjectId,
   getResourceUsages,
   invalidatePresignedURL,
   persistAudio,
   updateUsage,
 } from '../../services'
-import { Participant } from '../../entities'
 import { Readable } from 'node:stream'
-
-interface AudioInfo {
-  id: string
-  metadata: { presigned_url: string }
-}
+import { USAGE_STATUS } from '../../entities'
 
 interface Data {
-  participant_id: string
-  classroom_id: string
-  resource: AudioInfo // | TextDTO (future implementation)
+  resource: {
+    id: string
+    metadata: { presigned_url: string }
+  } // | TextDTO (future implementation)
+}
+
+interface Metadata {
+  params: { id: string }
+  auth: AuthContext
 }
 
 interface Env {
@@ -52,22 +54,37 @@ interface Env {
   storage: StorageConstructor
 }
 
-export const appendMessageHandler = Handler<Env, Data>(
-  ({ data }) =>
+export const appendMessageHandler = Handler<Env, Data, Metadata>(
+  ({ data, metadata }) =>
     async env => {
       const { multimedia, storage } = env
       const {
-        participant_id,
-        resource: {
-          id: audio_id,
-          metadata: { presigned_url },
+        id: audio_id,
+        metadata: { presigned_url },
+      } = data.resource
+
+      const {
+        auth: {
+          actor: { subject_id },
         },
-        classroom_id,
-      } = data
+        params: { id: classroom_id },
+      } = metadata
+
+      const participantResult = await getParticipantBySubjectId({
+        subject_id,
+      })({ repository: env.repository })
+
+      if (isLeft(participantResult))
+        return Response({
+          metadata: { headers: { status: 400 } },
+          data: { message: participantResult.value.message },
+        })
+
+      const participant = participantResult.value
 
       const ensureParticipation = await ensureClassroomParticipation({
         classroom_id,
-        participant_id,
+        participant_id: participant.meta.id,
       })({ repository: env.repository })
 
       if (isLeft(ensureParticipation))
@@ -75,12 +92,6 @@ export const appendMessageHandler = Handler<Env, Data>(
           metadata: { headers: { status: 401 } },
           data: { message: ensureParticipation.value.message },
         })
-
-      const participantResult = await getParticipant({
-        participant_id,
-      })({ repository: env.repository })
-
-      const participant: Participant = participantResult.value as any
 
       const audioResult = await getAudio({ audio_id })({
         repository: env.repository,
@@ -99,7 +110,7 @@ export const appendMessageHandler = Handler<Env, Data>(
 
       const ensureAudioOnwershipResult = await ensureOwnershipToTargetResource({
         target: audio,
-        owner_id: participant_id,
+        owner_id: participant.meta.id,
       })({ repository: env.repository })
 
       if (isLeft(ensureAudioOnwershipResult)) {
@@ -187,6 +198,7 @@ export const appendMessageHandler = Handler<Env, Data>(
         await updateUsage({
           usage,
           props: {
+            status: USAGE_STATUS.CONFIRMED,
             consumption: concatenate(usage.props.consumption.props, {
               value: duration.value,
             }),

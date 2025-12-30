@@ -7,20 +7,21 @@
 
 import { MongoConverter, MongoRepository } from '@davna/infra'
 import { createSession, Session, SessionURI } from '../entities/session'
-import { EntityContext } from '@davna/core'
+import { createMeta, EntityContext } from '@davna/core'
 
 const converter: MongoConverter<Session> = {
   to: ({
     _v,
     meta: { id, created_at, updated_at, _idempotency_key },
-    props: { account_id, expiresIn, refresh_token, user_agent },
+    props: { kind, metadata, expires_at, refresh_token, user_agent },
   }) => ({
     id,
     data: {
-      account_id,
-      expiresIn,
+      kind,
       refresh_token,
       user_agent,
+      expires_at,
+      metadata: metadata.props,
       created_at,
       updated_at,
       _idempotency_key,
@@ -30,10 +31,11 @@ const converter: MongoConverter<Session> = {
   from: ({
     id,
     data: {
-      account_id,
-      expiresIn,
+      kind,
       refresh_token,
       user_agent,
+      expires_at,
+      metadata,
       created_at,
       updated_at,
       _idempotency_key,
@@ -42,18 +44,18 @@ const converter: MongoConverter<Session> = {
   }) =>
     createSession(
       {
-        account_id,
-        expiresIn,
+        kind,
+        metadata,
+        expires_at,
         refresh_token,
         user_agent,
       },
-      {
+      createMeta({
         id,
-        _r: 'entity',
         created_at,
         updated_at,
         _idempotency_key,
-      },
+      }),
       __version,
     ),
 }

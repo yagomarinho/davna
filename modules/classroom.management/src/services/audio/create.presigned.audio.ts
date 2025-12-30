@@ -8,22 +8,21 @@
 import { Right, Service } from '@davna/core'
 import {
   Audio,
+  AUDIO_STATUS,
   AudioURI,
+  CONFIDENCE,
   createAudio,
   createOwnership,
   createUsage,
   Ownership,
   SUPPORTED_MIME_TYPE,
   Usage,
+  USAGE_STATUS,
 } from '../../entities'
 import { ClassroomFedRepository } from '../../repositories'
 import { Storage } from '@davna/infra'
 import { Duration } from '@davna/kernel'
 
-export enum CONFIDENCE {
-  DETERMINISTIC = 'deterministic',
-  ESTIMATED = 'estimated',
-}
 interface Request {
   usage_participant_id: string
   owner_id: string
@@ -49,7 +48,7 @@ export const createPresignedAudio = Service<Request, Env, Response>(
 
       const audio = await repository.methods.set(
         createAudio({
-          status: 'presigned',
+          status: AUDIO_STATUS.PRESIGNED,
           filename: `tmp-${new Date().toISOString()}`, // Política de nomes deve ser atualizada para fora do handler porque pode mudar no futuro
           mime_type,
           duration: duration.value,
@@ -71,6 +70,7 @@ export const createPresignedAudio = Service<Request, Env, Response>(
       const [usage, ownership] = await Promise.all([
         repository.methods.set(
           createUsage({
+            status: USAGE_STATUS.PENDING,
             source_id: usage_participant_id,
             target_id: audio.meta.id,
             target_type: AudioURI,
@@ -86,6 +86,7 @@ export const createPresignedAudio = Service<Request, Env, Response>(
               expires_at,
               audio_owner_id: owner_id,
               confidence,
+              status: USAGE_STATUS.PENDING,
             },
           }),
         ),

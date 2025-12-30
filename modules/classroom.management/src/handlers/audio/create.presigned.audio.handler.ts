@@ -6,8 +6,8 @@
  */
 
 import {
+  AuthContext,
   Handler,
-  Identifiable,
   isLeft,
   Response,
   SagaRepositoryProxy,
@@ -17,49 +17,49 @@ import { Storage } from '@davna/infra'
 import { Duration } from '@davna/kernel'
 
 import { ClassroomFedRepository } from '../../repositories'
-import { SUPPORTED_MIME_TYPE } from '../../entities'
+import { CONFIDENCE, SUPPORTED_MIME_TYPE } from '../../entities'
 import { authorizeConsumption } from '../../services/usage/authorize.consumption'
-import {
-  CONFIDENCE,
-  createPresignedAudio,
-} from '../../services/audio/create.presigned.audio'
+import { createPresignedAudio } from '../../services/audio/create.presigned.audio'
 import { audioDTOfromGraph } from '../../dtos'
 import { getParticipantBySubjectId } from '../../services'
 import { ensureDurationInSeconds } from '../../utils'
+import { Scheduler } from '../../providers'
 
 interface Data {
-  participant_id: string
   mime_type: SUPPORTED_MIME_TYPE
   duration: Duration
-  confidence?: CONFIDENCE
 }
 
 interface Metadata {
-  account: Identifiable
+  query?: { confidence?: CONFIDENCE }
+  auth: AuthContext
 }
 
 interface Env {
   repository: ClassroomFedRepository
   storage: Storage
+  scheduler: Scheduler
 }
 
 export const createPresignedAudioHandler = Handler<Env, Data, Metadata>(
   ({ data, metadata }) =>
     async env => {
+      const { duration, mime_type } = data
+      const { storage, scheduler } = env
       const {
-        participant_id,
-        duration,
-        mime_type,
-        confidence = CONFIDENCE.DETERMINISTIC,
-      } = data
-      const { storage } = env
-      const { id: account_id } = metadata.account
+        auth: { actor, principal },
+        query: { confidence = CONFIDENCE.DETERMINISTIC } = {},
+      } = metadata
 
       const accountParticipantResult = await getParticipantBySubjectId({
-        subject_id: account_id,
+        subject_id: principal.account.id,
       })({ repository: env.repository })
 
-      if (isLeft(accountParticipantResult))
+      const actorParticipantResult = await getParticipantBySubjectId({
+        subject_id: actor.subject_id,
+      })({ repository: env.repository })
+
+      if (isLeft(accountParticipantResult) || isLeft(actorParticipantResult))
         return Response({
           metadata: { headers: { status: 401 } },
           data: { message: 'Invalid account id' },
@@ -87,7 +87,7 @@ export const createPresignedAudioHandler = Handler<Env, Data, Metadata>(
           usage_participant_id: accountParticipantResult.value.meta.id,
           duration: { value: time_duration, unit },
           mime_type,
-          owner_id: participant_id,
+          owner_id: actorParticipantResult.value.meta.id,
           confidence,
         })({
           repository,
@@ -97,6 +97,12 @@ export const createPresignedAudioHandler = Handler<Env, Data, Metadata>(
         if (isLeft(createAudioResult)) throw new Error('Invalid result')
 
         const { audio, ownership } = createAudioResult.value
+
+        await scheduler.schedule({
+          type: 'handle_expired_audio',
+          run_at: audio.props.metadata.props.expires_at,
+          payload: { audio_id: audio.meta.id },
+        })
 
         return Response.data({
           audio: audioDTOfromGraph({ audio, ownership }),

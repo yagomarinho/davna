@@ -36,6 +36,11 @@ export enum SUPPORTED_MIME_TYPE {
   MP3 = 'audio/mpeg',
   MP4 = 'audio/mp4',
 }
+
+export enum AUDIO_STATUS {
+  PRESIGNED = 'presigned',
+  PERSISTENT = 'persistent',
+}
 interface StorageRef {
   type: STORAGE_TYPE
   internal_id: string
@@ -43,13 +48,13 @@ interface StorageRef {
 }
 
 export interface AudioProps {
-  status: 'presigned' | 'persistent'
+  status: AUDIO_STATUS
   filename: string
   mime_type: string
   url: string
   duration: number // in secs
-  storage: ValueObject<StorageRef>
-  metadata: ValueObject<Metadata>
+  storage: ValueObject<StorageRef, AudioStorageURI>
+  metadata: ValueObject<Metadata, AudioMetadataURI>
 }
 
 export interface Audio extends Entity<AudioProps, AudioURI, AudioVersion> {}

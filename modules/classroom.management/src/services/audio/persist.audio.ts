@@ -8,7 +8,7 @@
 import { RawProps, Right, Service } from '@davna/core'
 import { concatenate } from '@davna/kernel'
 
-import { Audio, AudioProps, createAudio } from '../../entities'
+import { Audio, AUDIO_STATUS, AudioProps, createAudio } from '../../entities'
 import { ClassroomFedRepository } from '../../repositories'
 
 interface Request {
@@ -25,7 +25,7 @@ export const persistAudio = Service<Request, Env, Audio>(
       const persistedAudio = await repository.methods.set<Audio>(
         createAudio(
           {
-            status: 'persistent',
+            status: AUDIO_STATUS.PERSISTENT,
             filename,
             mime_type,
             duration,

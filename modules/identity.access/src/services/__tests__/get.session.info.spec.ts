@@ -1,7 +1,19 @@
-import { isLeft, isRight, Left, Repository } from '@davna/core'
+import {
+  createAuthContext,
+  isLeft,
+  isRight,
+  Left,
+  Repository,
+} from '@davna/core'
 import { InMemoryRepository, type Signer } from '@davna/infra'
 
-import { Account, createAccount, createSession, Session } from '../../entities'
+import {
+  Account,
+  createAccount,
+  createSession,
+  Session,
+  SESSION_KIND,
+} from '../../entities'
 import { getSessionInfo } from '../../services/get.session.info'
 
 describe('getSessionInfo service', () => {
@@ -28,10 +40,11 @@ describe('getSessionInfo service', () => {
   it('should return Right with account and session when session and account exist', async () => {
     const session = createSession(
       {
-        account_id,
-        expiresIn: new Date(Date.now() + 1000 * 60 * 60),
+        kind: SESSION_KIND.GENERATED,
+        metadata: createAuthContext({ id: account_id }),
         refresh_token: 'refresh-token-value',
         user_agent: 'unit-test-agent',
+        expires_at: new Date(Date.now() + 1000 * 60 * 60),
       },
       {
         id: session_id,
@@ -86,10 +99,11 @@ describe('getSessionInfo service', () => {
   it('should return Left when account is not found', async () => {
     const session = createSession(
       {
-        account_id,
-        expiresIn: new Date(Date.now() + 1000 * 60 * 60),
+        kind: SESSION_KIND.GENERATED,
+        metadata: createAuthContext({ id: account_id }),
         refresh_token: 'refresh-token-value',
         user_agent: 'unit-test-agent',
+        expires_at: new Date(Date.now() + 1000 * 60 * 60),
       },
       {
         id: session_id,

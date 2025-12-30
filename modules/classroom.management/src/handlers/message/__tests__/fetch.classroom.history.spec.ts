@@ -1,7 +1,14 @@
-import { createMeta, Left, Request, Right } from '@davna/core'
+import {
+  createAuthContext,
+  createMeta,
+  Left,
+  Request,
+  Right,
+} from '@davna/core'
 import { fetchClassroomHistoryHandler } from '../fetch.classroom.history.handler'
 import { ensureClassroomParticipation } from '../../../services'
 import {
+  AUDIO_STATUS,
   createAudio,
   createMessage,
   createRepresentation,
@@ -36,9 +43,9 @@ describe('fetch classroom history handler', () => {
     )
 
     const result = await fetchClassroomHistoryHandler(
-      Request.data({
-        classroom_id: 'classroom-1',
-        participant_id: 'participant-1',
+      Request.metadata({
+        params: { id: 'classroom-1' },
+        auth: createAuthContext({ id: 'participant-1' }),
       }),
     )({ repository } as any)
 
@@ -64,7 +71,7 @@ describe('fetch classroom history handler', () => {
     )
     const audio = createAudio(
       {
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'audio.mp3',
         mime_type: 'audio/mpeg',
         duration: 10,
@@ -115,9 +122,9 @@ describe('fetch classroom history handler', () => {
       .mockResolvedValueOnce({ content: 'hello' })
 
     const result = await fetchClassroomHistoryHandler(
-      Request.data({
-        classroom_id: 'classroom-1',
-        participant_id: 'participant-1',
+      Request.metadata({
+        params: { id: 'classroom-1' },
+        auth: createAuthContext({ id: 'participant-1' }),
       }),
     )({ repository } as any)
 
@@ -194,9 +201,9 @@ describe('fetch classroom history handler', () => {
     repository.methods.get.mockResolvedValueOnce(text)
 
     const result = await fetchClassroomHistoryHandler(
-      Request.data({
-        classroom_id: 'classroom-1',
-        participant_id: 'participant-1',
+      Request.metadata({
+        params: { id: 'classroom-1' },
+        auth: createAuthContext({ id: 'participant-1' }),
       }),
     )({ repository } as any)
 

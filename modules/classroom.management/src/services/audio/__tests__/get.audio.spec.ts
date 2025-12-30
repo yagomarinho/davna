@@ -1,11 +1,12 @@
 import { isLeft, isRight } from '@davna/core'
+import { IDContext, STORAGE_TYPE } from '@davna/infra'
 
 import { getAudio } from '../get.audio'
-import { createAudio, createMessage } from '../../../entities'
+import { AUDIO_STATUS, createAudio, createMessage } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
+
 import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
 import { IDContextFake } from '../../__fakes__/id.context.fake'
-import { IDContext, STORAGE_TYPE } from '@davna/infra'
 
 describe('get audio service', () => {
   let repository: ClassroomFedRepository
@@ -21,7 +22,7 @@ describe('get audio service', () => {
   it('should be able to get audio by id', async () => {
     const audio = await repository.methods.set(
       createAudio({
-        status: 'persistent',
+        status: AUDIO_STATUS.PERSISTENT,
         filename: 'audio.mp3',
         mime_type: 'audio/mpeg',
         duration: 60,

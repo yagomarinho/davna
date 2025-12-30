@@ -13,6 +13,7 @@ import {
   createPolicyAggregate,
   createUsage,
   createUsagePolicy,
+  USAGE_STATUS,
 } from '../../../entities'
 import { ClassroomFedRepository } from '../../../repositories'
 import { ClassroomFedFake } from '../../__fakes__/classroom.fed.fake'
@@ -65,6 +66,7 @@ describe('authorize consumption service', () => {
 
     await repository.methods.set(
       createUsage({
+        status: USAGE_STATUS.CONFIRMED,
         source_id: participant.meta.id,
         target_id: 'audio-1',
         target_type: AudioURI,
@@ -136,6 +138,7 @@ describe('authorize consumption service', () => {
 
     await repository.methods.set(
       createUsage({
+        status: USAGE_STATUS.CONFIRMED,
         source_id: participant.meta.id,
         target_id: 'audio-1',
         target_type: AudioURI,
