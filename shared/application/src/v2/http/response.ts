@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from './application'
-export * from './express.handler.adapter'
-export * from './request.adapter'
+export interface HttpResponse {
+  status: number
+  headers: Record<string, string>
+  body: unknown
+  bodyStream: WritableStream
+}

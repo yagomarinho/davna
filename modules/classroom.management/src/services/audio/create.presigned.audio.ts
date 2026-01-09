@@ -65,8 +65,6 @@ export const createPresignedAudio = Service<Request, Env, Response>(
         }),
       )
 
-      const normalization_factor = 1000
-
       const [usage, ownership] = await Promise.all([
         repository.methods.set(
           createUsage({
@@ -77,8 +75,8 @@ export const createPresignedAudio = Service<Request, Env, Response>(
             consumption: {
               unit: duration.unit,
               value: duration.value,
-              raw_value: duration.value * normalization_factor,
-              normalization_factor,
+              raw_value: duration.value,
+              normalization_factor: 1,
               precision: 0,
             },
             metadata: {

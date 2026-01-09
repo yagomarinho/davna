@@ -70,6 +70,7 @@ describe('append message handler', () => {
         resource: {
           id: 'audio-1',
           metadata: { presigned_url: 'signed-url' },
+          contents: [],
         },
       },
       ...overrides,

@@ -5,5 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { Application, Route } from './v1/app'
-export * from './v1/helpers'
+export interface ExecutionContext {
+  idempotency_key: string
+  request_id: string
+  correlation_id?: string
+  timestamp: number
+  origin: 'http' | 'ws' | 'emitter'
+}

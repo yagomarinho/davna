@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Route } from '@davna/core'
-import { handlerPipe, PostprocessorsPipe } from '@davna/application'
+import { handlerPipe, PostprocessorsPipe, Route } from '@davna/application'
 import { apiKeyAuthorization, guardian } from '@davna/infra'
 
 import {
@@ -25,14 +24,14 @@ import {
   downloadValidation,
   uploadAudioHandler,
   uploadValidation,
-} from '@davna/classroom'
+} from '@davna/classroom.management'
 import { healthCheckHandler } from '@davna/system.monitoring'
 import {
   appendLeadHandler,
   appendSuggestionHandler,
   leadValidate,
   suggestionValidate,
-} from '@davna/feedback'
+} from '@davna/costumers.insights'
 
 import { Env } from './env'
 import { resolveAccountRoleNames } from './resolve.account.role.names'

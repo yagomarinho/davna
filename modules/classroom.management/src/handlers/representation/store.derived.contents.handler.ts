@@ -15,16 +15,8 @@ import {
 } from '@davna/core'
 
 import { ClassroomFedRepository } from '../../repositories'
-import {
-  createOwnership,
-  createRepresentation,
-  createText,
-  createUsage,
-  TextURI,
-  USAGE_STATUS,
-} from '../../entities'
 
-import { getParticipantBySubjectId } from '../../services'
+import { getParticipantBySubjectId, storeDerivedContents } from '../../services'
 import { DerivedContent } from '../../dtos'
 
 interface Data {
@@ -71,60 +63,17 @@ export const storeDerivedContentsHandler = Handler<Env, Data, Metadata>(
       try {
         const repository = SagaRepositoryProxy(env.repository, uow)
 
-        await Promise.all(
-          contents.map(
-            async ({
-              kind,
-              type,
-              target_id,
-              target_type,
-              content,
-              metadata,
-              consumption,
-            }) => {
-              const text = await repository.methods.set(
-                createText({ content, metadata }),
-              )
+        const storeResult = await storeDerivedContents({
+          contents,
+          owner_id: actor_participant.meta.id,
+          usage_participant_id: account_participant.meta.id,
+        })({ repository })
 
-              await Promise.all([
-                repository.methods.set(
-                  createOwnership({
-                    source_id: actor_participant.meta.id,
-                    target_id: text.meta.id,
-                    target_type: TextURI,
-                  }),
-                ),
-                repository.methods.set(
-                  createRepresentation({
-                    kind,
-                    type,
-                    target_type,
-                    target_id,
-                    source_id: text.meta.id,
-                  }),
-                ),
-                repository.methods.set(
-                  createUsage({
-                    status: USAGE_STATUS.CONFIRMED,
-                    target_type: TextURI,
-                    target_id: text.meta.id,
-                    source_id: account_participant.meta.id,
-                    consumption: {
-                      unit: consumption.unit,
-                      value: consumption.value,
-                      raw_value: consumption.raw_value,
-                      normalization_factor: consumption.normalization_factor,
-                      precision: consumption.precision,
-                    },
-                    metadata: {
-                      text_owner_id: actor_participant.meta.id,
-                    },
-                  }),
-                ),
-              ])
-            },
-          ),
-        )
+        if (isLeft(storeResult))
+          return Response({
+            metadata: { headers: { status: 500 } },
+            data: { message: 'Internal server error' },
+          })
 
         return Response({
           metadata: { headers: { status: 203 } },

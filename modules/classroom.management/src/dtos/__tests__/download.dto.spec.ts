@@ -1,5 +1,5 @@
 import { isLeft, isRight } from '@davna/core'
-import { downloadValidation } from '../download.audio.dto'
+import { downloadValidation } from '../input'
 
 describe('downloadValidation', () => {
   it('should return Right and preserve params.id when provided', async () => {

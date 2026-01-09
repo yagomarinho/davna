@@ -14,7 +14,7 @@ import {
   UnitOfWorkSaga,
 } from '@davna/core'
 import { concatenate } from '@davna/kernel'
-import { messageDTOFromGraph } from '../../dtos'
+import { DerivedContent, messageDTOFromGraph } from '../../dtos'
 import { ClassroomFedRepository } from '../../repositories'
 import { MultimediaProvider } from '../../providers'
 import {
@@ -31,6 +31,7 @@ import {
   getResourceUsages,
   invalidatePresignedURL,
   persistAudio,
+  storeDerivedContents,
   updateUsage,
 } from '../../services'
 import { Readable } from 'node:stream'
@@ -40,6 +41,7 @@ interface Data {
   resource: {
     id: string
     metadata: { presigned_url: string }
+    contents: DerivedContent[]
   } // | TextDTO (future implementation)
 }
 
@@ -61,11 +63,15 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
       const {
         id: audio_id,
         metadata: { presigned_url },
+        contents,
       } = data.resource
 
       const {
         auth: {
           actor: { subject_id },
+          principal: {
+            account: { id: account_id },
+          },
         },
         params: { id: classroom_id },
       } = metadata
@@ -74,13 +80,18 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
         subject_id,
       })({ repository: env.repository })
 
-      if (isLeft(participantResult))
+      const accountParticipantResult = await getParticipantBySubjectId({
+        subject_id: account_id,
+      })({ repository: env.repository })
+
+      if (isLeft(participantResult) || isLeft(accountParticipantResult))
         return Response({
           metadata: { headers: { status: 400 } },
-          data: { message: participantResult.value.message },
+          data: { message: (participantResult.value as any).message },
         })
 
       const participant = participantResult.value
+      const accountParticipant = accountParticipantResult.value
 
       const ensureParticipation = await ensureClassroomParticipation({
         classroom_id,
@@ -267,6 +278,22 @@ export const appendMessageHandler = Handler<Env, Data, Metadata>(
         }
 
         const { message, messageOwnership } = appendMessageResult.value
+
+        if (contents.length) {
+          const storeResult = await storeDerivedContents({
+            contents,
+            owner_id: participant.meta.id,
+            usage_participant_id: accountParticipant.meta.id,
+          })({ repository })
+
+          if (isLeft(storeResult)) {
+            await uow.rollback()
+            return Response({
+              metadata: { headers: { status: 500 } },
+              data: { message: 'Internal server error' },
+            })
+          }
+        }
 
         return Response.data({
           message: messageDTOFromGraph({

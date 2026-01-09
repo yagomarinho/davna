@@ -1,6 +1,7 @@
 import { isLeft, isRight } from '@davna/core'
-import { uploadValidation } from '../upload.audio.dto'
+
 import { SUPPORTED_MIME_TYPE } from '../../entities'
+import { uploadValidation } from '../input'
 
 describe('uploadValidation', () => {
   const validMime = SUPPORTED_MIME_TYPE.MP4
