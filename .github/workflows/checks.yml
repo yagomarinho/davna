@@ -1,0 +1,87 @@
+# The conformance checks of the code, on every pull request into main and on
+# main after each merge (docs/process/pull-requests.md). davna's CI only
+# checks: it uses no secrets and deploys nothing. The required checks of the
+# branch rules are the jobs scripts and license-header here, and pr-body in
+# pr-body.yml (a workflow of its own, so that editing a PR's body never
+# re-runs or cancels these). There is no workflow-level path filter on
+# purpose: a required check that does not run leaves the pull request waiting
+# forever, and the cheap jobs run on docs-only changes too.
+# __github__example/ is a historical example, not a live workflow.
+
+name: checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scripts:
+    # the node:test specs of scripts/; plain Node, no install needed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Test the repository scripts
+        run: node --test scripts/__tests__/*.spec.js
+
+  license-header:
+    # scripts/add.header.js uses only node:fs and node:path, so it runs
+    # without an install; any src/**/*.ts without the MIT header becomes a
+    # diff and fails the job
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Add the missing license headers
+        run: node scripts/add.header.js
+      - name: Fail if any file lacked the header
+        run: git diff --exit-code
+
+  install-and-verify:
+    # not a required check yet: the code is red on main today (RG01 to RG03
+    # in docs/recommendations.md). The job shows as failed when any
+    # verification fails, so the red state stays visible, but it does not
+    # fail the run or block a merge. Making it blocking once it is green is
+    # RG10.
+    continue-on-error: true # RG01 to RG03 (tracked by RG10)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: yarn
+      # Yarn 1 classic, preinstalled on the GitHub-hosted runners; the lock is
+      # never rewritten in CI
+      - name: Install
+        id: install
+        run: yarn install --frozen-lockfile
+      # each verification runs even when the one before it failed, so one
+      # run reports all of them
+      - name: Typecheck
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: yarn typecheck
+      - name: Unit tests of the modules
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: yarn test:modules
+      - name: Lint
+        # there is no root lint script yet: ESLint with the root
+        # eslint.config.mjs, as the root CLAUDE.md says
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: yarn eslint .

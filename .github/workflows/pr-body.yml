@@ -1,0 +1,67 @@
+# The record of a pull request into main (docs/process/pull-requests.md): its
+# body, filled from .github/pull_request_template.md. A workflow of its own,
+# so that editing the title or the body re-runs only this check and never
+# touches the code's checks in checks.yml. pr-body is a required check of the
+# branch rules. No secrets, nothing deployed.
+
+name: pr-body
+
+on:
+  pull_request:
+    branches: [main]
+    # edited: a fix to the title or body re-runs the check
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-body-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-body:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # the rule comes from main, never from the PR's own branch: a PR cannot
+      # loosen the check that judges it (a PR that changes the rule is judged
+      # by the rule already merged)
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      # bootstrap only: when main has no rule yet (the PR that brings this
+      # flow, whose base has no .github/workflows/), that PR's own rule judges
+      # it. Once this workflow is on main the bootstrap never runs again: a
+      # later rename or removal of the rule fails the job instead of falling
+      # back to the PR's own rule.
+      - name: Does main have workflows yet?
+        id: base
+        run: |
+          if [ -d .github/workflows ]; then
+            echo "bootstrap=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "bootstrap=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check out the PR's rule when main has no workflows yet
+        if: steps.base.outputs.bootstrap == 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: bootstrap
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      # the body is untrusted text: it reaches the shell only through an
+      # environment variable, never interpolated into the script
+      - name: Check the pull request body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          rule=scripts/pr-review.js
+          if [ -d bootstrap ]; then
+            rule=bootstrap/scripts/pr-review.js
+            echo "::notice::main has no workflows yet: this PR's own rule judges it"
+          fi
+          printf '%s\n' "$PR_BODY" > "$RUNNER_TEMP/pr-body.md"
+          node "$rule" check-body "$RUNNER_TEMP/pr-body.md"

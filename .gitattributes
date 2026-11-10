@@ -1,0 +1,4 @@
+# Hooks and shell scripts run under sh: keep them LF on every checkout,
+# whatever core.autocrlf says.
+.githooks/* text eol=lf
+*.sh text eol=lf
