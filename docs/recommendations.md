@@ -255,7 +255,7 @@ Items are never deleted: accepted, discarded or taken, each keeps its outcome. A
 - **Type:** need
 - **Status:** open (2026-11-10)
 - **Origin:** the pull request flow, decided with the user on 2026-11-10
-- **Trigger:** the first pull request that `.github/workflows/checks.yml` runs on, so that the check names exist
+- **Trigger:** the first pull request that `.github/workflows/pr-body.yml` and `checks.yml` run on, so that the check names exist
 - **Affects:** the repository settings on GitHub, the `pre-push` hook, [Pull requests](process/pull-requests.md)
 
 **Today:** `main` changes only by merging a pull request, but the only guard is the local `pre-push` hook (`node scripts/pr-review.js pre-push`), which a clone without `core.hooksPath` set, or `--no-verify`, skips.
@@ -263,3 +263,17 @@ Items are never deleted: accepted, discarded or taken, each keeps its outcome. A
 **Problem:** without a ruleset, GitHub accepts a direct push to `main`, a force push, the deletion of `main`, a squash or rebase merge, and a merge with red checks or unresolved conversations.
 
 **Proposal:** the user applies the settings of [Pull requests](process/pull-requests.md), section 6, with the prepared `gh api` commands: merge commits only, the merge commit titled by the PR, and a ruleset on the default branch requiring a pull request (no required approvals, conversations resolved, merge method `merge`), the status checks `pr-body`, `scripts` and `license-header` with the branch up to date, and blocking force pushes and deletion. The repository is public, so this costs nothing. Then the section's "Not exercised" mark goes, with the output that proved it.
+
+## RG19. `add:header` duplicates the header on a CRLF checkout
+
+- **Type:** flow break
+- **Status:** open (2026-11-10)
+- **Origin:** the review of the first pull request, 2026-11-10
+- **Trigger:** the next change to `scripts/add.header.js`, or the first time `yarn add:header` runs on a Windows checkout
+- **Affects:** `scripts/add.header.js`, `docs/license.header.txt`, every `src/**/*.ts` file
+
+**Today:** `scripts/add.header.js` compares the start of each file with the text of `docs/license.header.txt` exactly. On a Windows checkout with `core.autocrlf=true`, the files are CRLF, and the comparison fails whenever the header file and the source file differ in line endings.
+
+**Problem:** run on such a checkout, `yarn add:header` prefixes a second header to hundreds of files that already have one, and the diff goes unnoticed until review. CI (LF) is not affected, so the `license-header` check stays right.
+
+**Proposal:** compare with the line endings normalized (CRLF taken as LF in both texts), in a pure function tested with `node:test` on LF and CRLF inputs, and write the header with the file's own line ending.

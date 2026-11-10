@@ -70,7 +70,7 @@ From the code:
 - the `Dockerfile` and `build.js` of each backend app (`apps/monolith.api`, `apps/multimedia.processing`, `apps/interaction.conductor`): the base image, what is copied, the tests the build stage runs, the entrypoint;
 - `docker-compose.prod.yml` (the production containers, images and tags, ports, volumes, health checks, the `wait-for` entrypoint) and `docker-compose.yml` (the local stack);
 - `scripts/wait-for*.sh`;
-- `.github/workflows/` with its triggers and path filters ([path-filtered pipelines](../../../../docs/patterns/ci-triggers.md)): today only `checks.yml`, the conformance checks, which build and deploy nothing; `__github__example/` is a historical, commented example; and the ruleset on `main` (`gh api repos/{owner}/{repo}/rulesets`), when the user shares it;
+- `.github/workflows/` with its triggers and path filters ([path-filtered pipelines](../../../../docs/patterns/ci-triggers.md)): today only `pr-body.yml` and `checks.yml`, the conformance checks, which build and deploy nothing; `__github__example/` is a historical, commented example; and the ruleset on `main` (`gh api repos/{owner}/{repo}/rulesets`), when the user shares it;
 - `apps/client.app/next.config.ts` and a `vercel.json`, when there is one;
 - the variable names of `.env.example` and `apps/client.app/.env.example`, and the configuration modules that read them.
 

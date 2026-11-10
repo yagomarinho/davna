@@ -19,9 +19,18 @@ const ZERO_SHA = /^0+$/
 const PROCESS_DOC = 'docs/process/pull-requests.md'
 const USAGE = 'usage: node scripts/pr-review.js check-body <file|-> | pre-push'
 
-// what a body may cite as the work it advances
-const CITATION =
-  /\b(Feature|Refactoring|Improvement) \d{3}\b|\bR[A-Z]+\d{2,}\b|\bfix: \S|#\d+\b|\bProduction picture up to [0-9a-f]{7,40}\b|\bProcess: \S/i
+// what a body may cite as the work it advances: the keywords in any case, a
+// register item (RGnn, RAnn) only in capitals, so a word like "rev10" is not
+// taken for one
+const CITATIONS = [
+  /\b(Feature|Refactoring|Improvement) \d{3}\b/i,
+  /\bR[A-Z]+\d{2,}\b/,
+  /\bfix: \S/i,
+  /#\d+\b/,
+  /\bProduction picture up to [0-9a-f]{7,40}\b/i,
+  /\bProcess: \S/i,
+]
+const cites = text => CITATIONS.some(citation => citation.test(text))
 const MISSING_ADVANCES =
   'missing the **Advances:** line (Feature NNN, stage N; Refactoring NNN; Improvement NNN; an RGnn item; fix: ...; Production picture up to <sha>; Process: <doc>; or Closes #n)'
 
@@ -32,7 +41,11 @@ const TICKED = /^\s*(?:[-*+]|\d+[.)]) \[x\]/i
 // the user's waiver, in full (docs/process/gates.md, section 3)
 const WAIVER = /\*\*Waived\*\* on \d{4}-\d{2}-\d{2} by the user: \S/
 
-const withoutComments = text => text.replace(/<!--[\s\S]*?-->/g, '')
+// HTML comments and fenced code blocks are guidance or quotes, never items
+const withoutComments = text =>
+  text
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^ {0,3}(```|~~~)[^\n]*\n[\s\S]*?^ {0,3}\1[^\n]*$/gm, '')
 
 // the cited work, with the template's <placeholders> taken out
 const advancesOf = lines => {
@@ -70,7 +83,7 @@ const problemsOf = body => {
   const problems = []
   const lines = withoutComments(body).split(/\r?\n/)
 
-  if (!CITATION.test(advancesOf(lines))) problems.push(MISSING_ADVANCES)
+  if (!cites(advancesOf(lines))) problems.push(MISSING_ADVANCES)
 
   const sections = sectionsOf(lines)
 
@@ -165,6 +178,7 @@ module.exports = {
   SECTIONS,
   PROCESS_DOC,
   problemsOf,
+  withoutComments,
   refusedRefs,
   prePush,
   checkBody,

@@ -8,6 +8,7 @@ const {
   SECTIONS,
   PROCESS_DOC,
   problemsOf,
+  withoutComments,
   refusedRefs,
   prePush,
   checkBody,
@@ -224,6 +225,30 @@ describe('problemsOf', () => {
     assert.deepEqual(problemsOf(text), [])
   })
 
+  it('keeps the register form case-sensitive', () => {
+    for (const advances of ['rev10 cleanup', 'rg01', 'Rg01'])
+      assert.equal(problemsOf(complete(advances)).length, 1, advances)
+  })
+
+  it('keeps the keywords case-insensitive', () => {
+    for (const advances of ['feature 004, stage 3', 'Fix: the refresh', 'process: docs/process/gates.md'])
+      assert.deepEqual(problemsOf(complete(advances)), [], advances)
+  })
+
+  it('ignores items quoted inside fenced code blocks', () => {
+    const text = `${complete()}\n\`\`\`md\n- [ ] DNS and certificates\n- [x] no result\n\`\`\`\n`
+
+    assert.deepEqual(problemsOf(text), [])
+  })
+
+  it('still judges the items after a fenced code block', () => {
+    const text = `${complete()}\n\`\`\`\nquoted\n\`\`\`\n- [ ] never answered\n`
+
+    assert.deepEqual(problemsOf(text), [
+      'item without an answer: - [ ] never answered',
+    ])
+  })
+
   it('refuses a waiver without its date, the user and the reason', () => {
     for (const item of [
       '- [ ] x **Waived**',
@@ -256,6 +281,17 @@ describe('the pull request template', () => {
 
   it('passes the check once filled', () => {
     assert.deepEqual(problemsOf(fill(template)), [])
+  })
+
+  // the em dash separates an item from its result: an item worded with one
+  // would pass as answered without a result
+  it('words no item with the em dash that separates the result', () => {
+    const items = withoutComments(template)
+      .split('\n')
+      .filter(text => /^\s*(?:[-*+]|\d+[.)]) \[[ x]\]/i.test(text))
+
+    assert.ok(items.length > 0)
+    for (const item of items) assert.doesNotMatch(item, / — /, item)
   })
 })
 

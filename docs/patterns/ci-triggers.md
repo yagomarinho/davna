@@ -1,6 +1,6 @@
 # Path-filtered pipelines
 
-**Status:** Proposed on 2026-11-10, brought from the author's pattern catalog. davna's only live workflow is the conformance one, `.github/workflows/checks.yml`, which builds and deploys nothing; this pattern says how a build or deploy pipeline is born, and why the conformance checks are not filtered.
+**Status:** Proposed on 2026-11-10, brought from the author's pattern catalog. davna's only live workflows are the conformance ones, `.github/workflows/pr-body.yml` and `checks.yml`, which build and deploy nothing; this pattern says how a build or deploy pipeline is born, and why the conformance checks are not filtered.
 
 Each build or deploy pipeline runs only when some file it uses changes. A docs-only pull request, and its merge, build and deploy nothing. The conformance checks that a pull request must pass are the exception: they always run, and keep cheap instead.
 
@@ -16,7 +16,7 @@ Each build or deploy pipeline runs only when some file it uses changes. A docs-o
 - **A negative list** for the pipeline that depends on almost everything (the backend images, which bundle `shared/*`, `modules/*`, `services/*` and the root workspace files): it runs on everything **except** when every file is documentation. A positive list there would forget a new path and skip a needed deploy in silence.
 - **A positive list** for the pipeline that depends on few paths (a single app whose dependencies are known): it runs **only** when what it reads changes.
 - **Documentation is, by definition,** `docs/**`, `**/*.md` and `.claude/**`. **Nothing a build reads may be `.md` or live in `docs/` or `.claude/`.**
-- **Required checks are not filtered at the workflow level.** A ruleset that requires a check makes every pull request wait for it; a workflow skipped by `paths-ignore` never reports, and the PR waits forever. So the conformance workflow (`checks.yml`: `pr-body`, `scripts`, `license-header`, `install-and-verify`) runs on every pull request to `main` and every push to `main`, and stays cheap; a job that is expensive and only matters for some paths skips its steps inside the job, never the job itself.
+- **Required checks are not filtered at the workflow level.** A ruleset that requires a check makes every pull request wait for it; a workflow skipped by `paths-ignore` never reports, and the PR waits forever. So the conformance workflows (`pr-body.yml`: `pr-body`; `checks.yml`: `scripts`, `license-header`, `install-and-verify`) run on every pull request to `main` and every push to `main`, and stay cheap; a job that is expensive and only matters for some paths skips its steps inside the job, never the job itself.
 
 ### In GitHub Actions
 
@@ -71,7 +71,7 @@ The project's "Ignored Build Step" (or `ignoreCommand` in a `vercel.json` of the
 
 ## Limits
 
-- **A required check on a PR:** if `main` requires the check of a workflow with `paths-ignore`, a docs-only PR keeps the check pending forever, because the workflow does not run. That is why `checks.yml` has no path filter ("Decision"); a build or deploy pipeline with a filter is never a required check.
+- **A required check on a PR:** if `main` requires the check of a workflow with `paths-ignore`, a docs-only PR keeps the check pending forever, because the workflow does not run. That is why `pr-body.yml` and `checks.yml` have no path filter ("Decision"); a build or deploy pipeline with a filter is never a required check.
 - **Time-dependent tests** in a filtered pipeline do not run on a docs-only PR; they show up on the next PR with code.
 - **Environment variables changed in the Vercel panel** change no file, so they trigger no build. After changing one, ask for a redeploy by hand.
 
@@ -85,12 +85,12 @@ The project's "Ignored Build Step" (or `ignoreCommand` in a `vercel.json` of the
 
 | Pipeline                                   | Filter                                                                                                    | Form                      |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------- |
-| Conformance checks (`.github/workflows/checks.yml`) | none at the workflow level: its jobs are required checks; `pr-body` runs only on `pull_request`  | always runs, builds and deploys nothing |
+| Conformance checks (`.github/workflows/pr-body.yml` and `checks.yml`) | none at the workflow level: their jobs are required checks; `pr-body.yml` runs only on `pull_request`, also when the body is edited | always run, build and deploy nothing |
 | Backend images (historical example only)   | `__github__example/__workflows__example/deploy.api.yml`, entirely commented, uses `dorny/paths-filter` jobs | per-job positive filters  |
 | `apps/client.app` on Vercel                | not in the repository: whatever the Vercel project's settings hold, confirmed by the user                | unknown                   |
 
 ## Known deviations
 
-- **No build or deploy pipeline.** The live workflow, `.github/workflows/checks.yml`, only checks conformance. `__github__example/` is historical: a commented example kept untouched, not a pipeline, so nothing builds or deploys on a merge into `main`.
+- **No build or deploy pipeline.** The live workflows, `.github/workflows/pr-body.yml` and `checks.yml`, only check conformance. `__github__example/` is historical: a commented example kept untouched, not a pipeline, so nothing builds or deploys on a merge into `main`.
 - **Stale paths in the example.** It filters `apps/api/**` and `apps/ffmpeg/**`, which no longer exist (today `apps/monolith.api` and `apps/multimedia.processing`), and it would not see changes in `shared/*`, `modules/*` or `services/*` that the images bundle.
 - **Infrastructure of one deployment in the example.** The example publishes to a specific image registry account and deploys to a self-hosted runner from a base64 `.env` in the repository's secrets; a pipeline activated in davna takes its registry, host and secrets from configuration, not from the file.

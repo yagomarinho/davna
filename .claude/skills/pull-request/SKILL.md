@@ -78,7 +78,7 @@ The count is the answer to the body's item "the production picture" (step 6).
 - **The body:** copy `.github/pull_request_template.md` to a temporary file outside the repository (the session's scratch folder, or `"$(mktemp)"` in Git Bash), and fill it: the line citing what the PR advances (`Feature NNN, stage N`, `Feature NNN`, `Refactoring NNN`, `Improvement NNN`, `RGnn`, `fix: <what>`, or, when it advances none of them, `Production picture up to <short sha>` or `Process: <doc>`; `Closes #n` when it closes an issue), and every item of the seven sections with its result after ` — `. An item that doesn't apply says why. Only the user waives an item, and only one at a time, with the **Waived** note of `docs/process/gates.md`, section 3.
 - **The title** is a Conventional Commit in English: `feat: <what>`, `fix: <what>`, `refactor: <what>`, `chore: <what>`, or `docs: accept stage N of feature NNN (<name>)`. It becomes the merge commit's message, with `(#<n>)`.
 - **A blocking finding** (a red test the change adds, a missing variable, an image that doesn't build or start, a provider limit too low) stops the skill here: tell the user what it is, the fix and who does it. Don't open the PR around it.
-- **Check the body:** `node scripts/pr-review.js check-body <file>` (or `yarn pr-review:check <file>`) prints `pr-review: ok`. The `pr-body` job of `.github/workflows/checks.yml` runs the same check on GitHub.
+- **Check the body:** `node scripts/pr-review.js check-body <file>` (or `yarn pr-review:check <file>`) prints `pr-review: ok`. The `pr-body` job of `.github/workflows/pr-body.yml` runs the same check on GitHub.
 
 ### 7. Check the docs and ask for their commit
 
@@ -92,7 +92,7 @@ The count is the answer to the body's item "the production picture" (step 6).
 Tell the user, briefly:
 
 - the PR's title and what it advances;
-- what the merge will trigger, from the body's section 1: the jobs of `checks.yml` (`pr-body`, `scripts`, `license-header`, `install-and-verify`), the Vercel build of `apps/client.app` if the user confirmed the project is connected to the repository and its ignored build step doesn't skip it, and the Docker images it affects, which nothing builds by itself;
+- what the merge will trigger, from the body's section 1: the jobs of `pr-body.yml` (`pr-body`) and `checks.yml` (`scripts`, `license-header`, `install-and-verify`), the Vercel build of `apps/client.app` if the user confirmed the project is connected to the repository and its ignored build step doesn't skip it, and the Docker images it affects, which nothing builds by itself;
 - what the deploy will wait on and who does it, any item they waived, and the reminder of step 5 when it fired.
 
 Then ask for the go-ahead to push the branch and open the PR ("Repo: davna"), and stop there.

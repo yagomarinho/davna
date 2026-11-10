@@ -29,7 +29,7 @@ conversation resolution enforces. Editing this body re-runs the checks.
 
 ## 2. The whole change, green
 
-- [ ] the required checks of `checks.yml` green on the PR's head
+- [ ] the required checks (`pr-body`, `scripts`, `license-header`) green on the PR's head
 - [ ] typecheck, tests, lint and build on the exact head
 - [ ] the integration tests against the local stack
 - [ ] the license header with no diff
