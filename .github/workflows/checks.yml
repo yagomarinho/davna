@@ -1,0 +1,119 @@
+# The conformance checks of every pull request into main and of main after
+# each merge (docs/process/pull-requests.md). davna's CI only checks: it uses
+# no secrets and deploys nothing. The required checks of the branch rules are
+# the jobs pr-body, scripts and license-header. There is no workflow-level
+# path filter on purpose: a required check that does not run leaves the pull
+# request waiting forever, and the cheap jobs run on docs-only changes too.
+# __github__example/ is a historical example, not a live workflow.
+
+name: checks
+
+on:
+  pull_request:
+    branches: [main]
+    # edited: a fix to the body re-runs pr-body
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pr-body:
+    # the record of docs/process/pull-requests.md, filled from
+    # .github/pull_request_template.md
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # the rule comes from main, never from the PR's own branch: a PR cannot
+      # loosen the check that judges it (a PR that changes the rule is judged
+      # by the rule already merged)
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      # bootstrap only: while main has no rule yet (the PR that brings this
+      # flow), that PR's own rule judges it
+      - name: Check out the PR's rule when main has none
+        if: hashFiles('scripts/pr-review.js') == ''
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: bootstrap
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # the body is untrusted text: it reaches the shell only through an
+      # environment variable, never interpolated into the script
+      - name: Check the pull request body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          rule=scripts/pr-review.js
+          if [ ! -f "$rule" ]; then
+            rule=bootstrap/scripts/pr-review.js
+            echo "::notice::main has no scripts/pr-review.js yet: this PR's own rule judges it"
+          fi
+          printf '%s\n' "$PR_BODY" > "$RUNNER_TEMP/pr-body.md"
+          node "$rule" check-body "$RUNNER_TEMP/pr-body.md"
+
+  scripts:
+    # the node:test specs of scripts/; plain Node, no install needed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test the repository scripts
+        run: node --test scripts/__tests__/*.spec.js
+
+  license-header:
+    # scripts/add.header.js uses only node:fs and node:path, so it runs
+    # without an install; any src/**/*.ts without the MIT header becomes a
+    # diff and fails the job
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Add the missing license headers
+        run: node scripts/add.header.js
+      - name: Fail if any file lacked the header
+        run: git diff --exit-code
+
+  install-and-verify:
+    # not a required check yet: the code is red on main today (RG01 to RG03
+    # in docs/recommendations.md), so each verification step reports without
+    # blocking. Making these steps blocking once they are green is RG10.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      # Yarn 1 classic, preinstalled on the GitHub-hosted runners; the lock is
+      # never rewritten in CI
+      - name: Install
+        run: yarn install --frozen-lockfile
+      - name: Typecheck
+        continue-on-error: true # RG01, RG02 (tracked by RG10)
+        run: yarn typecheck
+      - name: Unit tests of the modules
+        continue-on-error: true # RG01 to RG03 (tracked by RG10)
+        run: yarn test:modules
+      - name: Lint
+        # there is no root lint script yet: ESLint with the root
+        # eslint.config.mjs, as the root CLAUDE.md says
+        continue-on-error: true # RG01 to RG03 (tracked by RG10)
+        run: yarn eslint .

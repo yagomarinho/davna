@@ -12,3 +12,6 @@ coverage
 # environment variables
 .env*
 !.env.example
+
+# local Claude Code settings
+.claude/settings.local.json

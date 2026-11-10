@@ -1,0 +1,8 @@
+#!/bin/sh
+# Before every git push: refuses a push to main and the deletion of main,
+# because main only changes by merging a pull request on GitHub
+# (docs/process/pull-requests.md). Git passes the pushed refs on stdin. Never
+# skip it with --no-verify.
+node scripts/pr-review.js pre-push || exit 1
+
+exit 0

@@ -15,11 +15,15 @@
     "add:header": "node ./scripts/add.header.js",
     "api:down": "docker compose -f ./docker-compose.yml down",
     "api:up": "docker compose -f ./docker-compose.yml up -d",
+    "pr-review:check": "node ./scripts/pr-review.js check-body",
+    "prepare": "node ./scripts/hooks.js",
     "rm": "node ./scripts/rm.js",
     "test:api-tsc": "node scripts/api.tsc.monitor.js",
     "test:modules": "tsnd --respawn=false --no-watch scripts/run.command.ts modules test",
+    "test:scripts": "node --test scripts/__tests__/*.spec.js",
     "typecheck": "tsc -b --noEmit",
-    "typecheck:only-files": "yarn tsc -b --noEmit --pretty false 2>&1 | grep -E \"^[^ ]+.ts\" | cut -d'(' -f1 | sort -u"
+    "typecheck:only-files": "yarn tsc -b --noEmit --pretty false 2>&1 | grep -E \"^[^ ]+.ts\" | cut -d'(' -f1 | sort -u",
+    "worktree": "node ./scripts/worktree.js"
   },
   "author": {
     "name": "Yago Marinho",
