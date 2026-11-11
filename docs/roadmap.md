@@ -6,10 +6,21 @@ What davna intends to do next, in order, and why. A roadmap item is an intention
 
 ## Goal
 
-1. **Plug and play.** Anyone can `git clone` davna, set a small configuration (an AI connection: a provider, a fake or a local agent) and run it locally, with data that survives a restart and no cloud account.
-2. **Near-zero idle cost.** The same code runs in production on an architecture that costs close to nothing when nobody is using it.
+1. **An app anyone installs.** Anyone downloads davna from the site, installs it on Windows, macOS or Linux and uses it with no terminal, no Docker and no cloud account.
+2. **Plug and play.** Anyone can `git clone` davna, set a small configuration (an AI connection: a provider, a fake or a local agent) and run it locally, with data that survives a restart and no cloud account.
+3. **Near-zero idle cost.** The same code runs in production on an architecture that costs close to nothing when nobody is using it.
 
-The audiences, in order: people who want to use davna (self-hosting), then people who want to contribute.
+The audiences, in order: people who want to use davna (the desktop app, then self-hosting), people who build on its packages, then people who want to contribute.
+
+## Ways to use davna
+
+davna is meant to be used in three ways, and every item below is checked against all three:
+
+1. **Desktop app.** Anyone downloads an installer from the site and runs davna on Windows, macOS or Linux, with no terminal, no Docker and no cloud account (goal 1; RM09).
+2. **Clone and run.** `git clone`, then `pnpm run build && pnpm run start`, with the local configuration (goal 2; RM01, RM03).
+3. **Library and plugins.** An advanced user builds their own instance, local or commercial, from davna's published packages, installed with any package manager, and extends what it can do through plugins (RM10).
+
+The desktop app comes first: davna reaches the public as an app before the cloud production work (RM06 to RM08) and before its packages are published.
 
 ## Principles
 
@@ -33,7 +44,7 @@ These guide every item below. They are recorded here until an item writes them d
 
 ### RM02. Architecture record
 
-- **Outcome:** the principles above become accepted patterns: the hexagonal module layout, the ports and adapters, the functional style, the light-DDD pieces, the configuration module and the contract specs for adapters. It also decides where media conversion (ffmpeg) runs, locally and in production, driven by response time, since that shapes RM03 and RM06.
+- **Outcome:** the principles above become accepted patterns: the hexagonal module layout, the ports and adapters, the functional style, the light-DDD pieces, the configuration module and the contract specs for adapters. It also decides where media conversion (ffmpeg) runs, locally and in production, driven by response time, since that shapes RM03 and RM06. The decision covers the three ways to use davna: the desktop app has no Docker, so there media conversion runs in process or as a binary bundled with the app, even if clone and run uses a local container.
 - **Becomes:** docs change (patterns), then applied by the items below.
 - **Takes:** RG04 (kernel / core cycle), RG05 and RG06 (configuration), as decisions to apply.
 - **Depends on:** —
@@ -43,7 +54,7 @@ These guide every item below. They are recorded here until an item writes them d
 
 ### RM03. Persistent local profile
 
-- **Outcome:** a `local` profile that runs without any cloud account: PGlite repositories, local auth, files in a local folder, media conversion where RM02 decided (in process or in a local container), a demo seed, and a `doctor` command that says what is missing in the configuration. The `cloud` profile requires every value explicitly.
+- **Outcome:** a `local` profile that runs without any cloud account: PGlite repositories, local auth, files in a local folder, media conversion where RM02 decided (in process or in a local container), a demo seed, a `doctor` command that says what is missing in the configuration, and the root `build` and `start` scripts that clone and run uses. The `cloud` profile requires every value explicitly.
 - **Becomes:** refactoring (ports and adapters), with features where behavior is new (local auth, seed).
 - **Takes:** RG01 (the API imports packages that no longer exist, so it neither type-checks nor builds; its first decision is whether the API keeps a minimal reply path until RM05), RG03 (old names in compose and scripts), RG08 (hard-coded deployment values), RG11 (migrations), RG12 (media store).
 - **Depends on:** RM01, RM02.
@@ -66,6 +77,13 @@ These guide every item below. They are recorded here until an item writes them d
 
 ## Later
 
+### RM09. Desktop app
+
+- **Outcome:** an installer for Windows, macOS and Linux that runs the local profile (RM03) with no terminal, no Docker and no cloud account: media conversion bundled with the app, a guided AI connection (RM04) for someone without an API key, and automatic updates. It starts with two decisions: the cross-platform framework (Electron runs the Node backend in its own process; Tauri is lighter but needs Node as a bundled sidecar) and the interface the app ships (today's Next.js client with its server embedded, or a static build of the client, which waits on RM08). It also weighs the cost of signing the installers for macOS and Windows (paid, yearly), the license obligations of the bundled ffmpeg, and where the download page, the binaries (e.g. GitHub Releases) and the update feed live, at near-zero idle cost (goal 3). The app reaches the public before the cloud production work and before the packages are published; plugins reach it with RM10.
+- **Becomes:** decision (the framework and the interface), then feature.
+- **Depends on:** RM03, RM04 (and RM08, if the interface is the static build).
+- **Tracked in:** —
+
 ### RM06. One Lambda behind API Gateway, with jobs and polling
 
 - **Outcome:** the monolith runs as a single Lambda behind API Gateway in production and on Express locally, from the same app. The teacher's reply becomes an asynchronous job (`202` plus polling) instead of a socket; the job queue is a port (in process locally).
@@ -87,6 +105,13 @@ These guide every item below. They are recorded here until an item writes them d
 - **Becomes:** refactoring.
 - **Takes:** RG13 (client app without tests), as far as the migration goes.
 - **Depends on:** RM01, RM06.
+- **Tracked in:** —
+
+### RM10. Published packages and plugins
+
+- **Outcome:** davna's modules and shared packages are published to npm, each with its own build (JavaScript and type declarations), an `exports` map as its public API, semantic versions and a release flow, so they install with any package manager. A versioned plugin contract says how a plugin registers and what it may extend, with the conductor (RM05) and the AI connections (RM04) as its first extension points, and the desktop app (RM09) loads plugins through it.
+- **Becomes:** refactoring (the packages' build and the release), then feature (the plugin contract).
+- **Depends on:** RM02, RM05. It comes after RM09 by priority, not because it needs the app.
 - **Tracked in:** —
 
 ## Done
