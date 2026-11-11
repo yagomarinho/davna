@@ -9,7 +9,17 @@ What davna intends to do next, in order, and why. A roadmap item is an intention
 1. **Plug and play.** Anyone can `git clone` davna, set a small configuration (an AI connection: a provider, a fake or a local agent) and run it locally, with data that survives a restart and no cloud account.
 2. **Near-zero idle cost.** The same code runs in production on an architecture that costs close to nothing when nobody is using it.
 
-The audiences, in order: people who want to use davna (self-hosting), then people who want to contribute.
+The audiences, in order: people who want to use davna (the desktop app, then self-hosting), people who build on its packages, then people who want to contribute.
+
+## Ways to use davna
+
+davna is meant to be used in three ways, and every item below is checked against all three:
+
+1. **Desktop app.** Anyone downloads an installer from the site and runs davna on Windows, macOS or Linux, with no terminal, no Docker and no cloud account (RM09).
+2. **Clone and run.** `git clone`, then `pnpm run build && pnpm run start`, with the local configuration (goal 1; RM01, RM03).
+3. **Library and plugins.** An advanced user builds their own instance, local or commercial, from davna's published packages, installed with any package manager, and extends what it can do through plugins (RM10).
+
+The desktop app comes first: davna reaches the public as an app before its packages are published.
 
 ## Principles
 
@@ -33,7 +43,7 @@ These guide every item below. They are recorded here until an item writes them d
 
 ### RM02. Architecture record
 
-- **Outcome:** the principles above become accepted patterns: the hexagonal module layout, the ports and adapters, the functional style, the light-DDD pieces, the configuration module and the contract specs for adapters. It also decides where media conversion (ffmpeg) runs, locally and in production, driven by response time, since that shapes RM03 and RM06.
+- **Outcome:** the principles above become accepted patterns: the hexagonal module layout, the ports and adapters, the functional style, the light-DDD pieces, the configuration module and the contract specs for adapters. It also decides where media conversion (ffmpeg) runs, locally and in production, driven by response time, since that shapes RM03 and RM06. The decision covers the three ways to use davna: the desktop app has no Docker, so there media conversion runs in process or as a binary bundled with the app, even if clone and run uses a local container.
 - **Becomes:** docs change (patterns), then applied by the items below.
 - **Takes:** RG04 (kernel / core cycle), RG05 and RG06 (configuration), as decisions to apply.
 - **Depends on:** —
@@ -87,6 +97,20 @@ These guide every item below. They are recorded here until an item writes them d
 - **Becomes:** refactoring.
 - **Takes:** RG13 (client app without tests), as far as the migration goes.
 - **Depends on:** RM01, RM06.
+- **Tracked in:** —
+
+### RM09. Desktop app
+
+- **Outcome:** an installer for Windows, macOS and Linux that runs the local profile (RM03) with no terminal, no Docker and no cloud account: media conversion bundled with the app, a guided AI connection (RM04) for someone without an API key, and automatic updates. It starts by choosing the cross-platform framework: Electron runs the Node backend in its own process; Tauri is lighter but needs Node as a bundled sidecar. It also weighs the cost of signing the installers for macOS and Windows (paid, yearly) and the license obligations of the bundled ffmpeg. The app reaches the public before the packages are published; plugins reach it with RM10.
+- **Becomes:** decision (the framework), then feature.
+- **Depends on:** RM03, RM04.
+- **Tracked in:** —
+
+### RM10. Published packages and plugins
+
+- **Outcome:** davna's modules and shared packages are published to npm, each with its own build (JavaScript and type declarations), an `exports` map as its public API, semantic versions and a release flow, so they install with any package manager. A versioned plugin contract says how a plugin registers and what it may extend, with the conductor (RM05) and the AI connections (RM04) as its first extension points, and the desktop app (RM09) loads plugins through it.
+- **Becomes:** refactoring (the packages' build and the release), then feature (the plugin contract).
+- **Depends on:** RM02, RM05, RM09.
 - **Tracked in:** —
 
 ## Done
