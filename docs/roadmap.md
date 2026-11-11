@@ -2,7 +2,7 @@
 
 What davna intends to do next, in order, and why. A roadmap item is an intention, not a specification: each one becomes a feature, a refactoring or an improvement by the process in `docs/process/`, and from then on its state lives in that change's folder, not here. This file only points to it.
 
-> **Draft.** This is the first version of the roadmap, written while its format is still being found. The format may change; ids are never reused and items are never deleted.
+> **Draft.** This is the first version of the roadmap, written while its format is still being found. The format may change; ids are never reused and items are never deleted. Once the format settles, these rules move to a process doc in `docs/process/`; until then, this header is the rule.
 
 ## Goal
 
@@ -25,15 +25,15 @@ These guide every item below. They are recorded here until an item writes them d
 
 ### RM01. Yarn 1 classic to pnpm
 
-- **Outcome:** the repository installs and runs with pnpm workspaces, with the package manager and Node version pinned.
+- **Outcome:** the repository installs and runs with pnpm workspaces, with the package manager and Node version pinned, and everything that calls Yarn today moves too: the `install-and-verify` job of `checks.yml`, the `prepare` hooks setup, the repository scripts (`worktree`, `typecheck:only-files`, `test:modules`), the Dockerfiles and the commands in the `CLAUDE.md` files.
 - **Becomes:** refactoring.
-- **Takes:** RG16 (package manager and Node version not pinned); touches RG09 (stack alignment).
+- **Takes:** RG16 (package manager and Node version not pinned), RG15 (modules use `@davna/core` without declaring it, which pnpm's strict install breaks), RG17 (`typecheck:only-files` is a POSIX pipeline that calls Yarn); touches RG09 (stack alignment).
 - **Depends on:** —
 - **Tracked in:** —
 
 ### RM02. Architecture record
 
-- **Outcome:** the principles above become accepted patterns: the hexagonal module layout, the ports and adapters, the functional style, the light-DDD pieces, the configuration module and the contract specs for adapters.
+- **Outcome:** the principles above become accepted patterns: the hexagonal module layout, the ports and adapters, the functional style, the light-DDD pieces, the configuration module and the contract specs for adapters. It also decides where media conversion (ffmpeg) runs, locally and in production, driven by response time, since that shapes RM03 and RM06.
 - **Becomes:** docs change (patterns), then applied by the items below.
 - **Takes:** RG04 (kernel / core cycle), RG05 and RG06 (configuration), as decisions to apply.
 - **Depends on:** —
@@ -43,9 +43,9 @@ These guide every item below. They are recorded here until an item writes them d
 
 ### RM03. Persistent local profile
 
-- **Outcome:** a `local` profile that runs without any cloud account: PGlite repositories, local auth, files in a local folder, a demo seed, and a `doctor` command that says what is missing in the configuration. The `cloud` profile requires every value explicitly.
+- **Outcome:** a `local` profile that runs without any cloud account: PGlite repositories, local auth, files in a local folder, media conversion where RM02 decided (in process or in a local container), a demo seed, and a `doctor` command that says what is missing in the configuration. The `cloud` profile requires every value explicitly.
 - **Becomes:** refactoring (ports and adapters), with features where behavior is new (local auth, seed).
-- **Takes:** RG03 (old names in compose and scripts), RG08 (hard-coded deployment values), RG11 (migrations), RG12 (media store).
+- **Takes:** RG01 (the API imports packages that no longer exist, so it neither type-checks nor builds; its first decision is whether the API keeps a minimal reply path until RM05), RG03 (old names in compose and scripts), RG08 (hard-coded deployment values), RG11 (migrations), RG12 (media store).
 - **Depends on:** RM01, RM02.
 - **Tracked in:** —
 
@@ -70,15 +70,15 @@ These guide every item below. They are recorded here until an item writes them d
 
 - **Outcome:** the monolith runs as a single Lambda behind API Gateway in production and on Express locally, from the same app. The teacher's reply becomes an asynchronous job (`202` plus polling) instead of a socket; the job queue is a port (in process locally).
 - **Becomes:** refactoring plus infrastructure, with a CI/CD pipeline on GitHub Actions.
-- **Takes:** RG01 (missing imports in the API), RG14 (manual deploy).
+- **Takes:** RG14 (manual deploy).
 - **Depends on:** RM03, RM05.
 - **Tracked in:** —
 
-### RM07. Where ffmpeg runs
+### RM07. Media conversion in production
 
-- **Outcome:** a decision, driven by response time, on how media conversion runs (in process, a separate function, or a worker), and its implementation.
-- **Becomes:** decision inside the architecture refactoring, then a refactoring.
-- **Depends on:** RM06.
+- **Outcome:** media conversion runs in production where RM02 decided (in process, a separate function or a worker), within the response time of the asynchronous job.
+- **Becomes:** refactoring plus infrastructure.
+- **Depends on:** RM02, RM06.
 - **Tracked in:** —
 
 ### RM08. `client.app` to React Router 8 on Netlify
