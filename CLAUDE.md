@@ -144,6 +144,7 @@ The rules are in `docs/process/parallel-features.md`.
 - The pull requests on GitHub: the history of every change to `main`, each with its review in the body. The project skill `pull-request` (`/pull-request`, run only by the user, before every PR) prepares them; it authorizes no commit and no push, brings the change's terms to the glossary and reminds when the picture falls behind (5 or more merged PRs).
 - `docs/process/`: how a change goes from stage 1 to production, one process per document (stages, findings and decisions, gates, production procedures, go-live, closing, parallel features, pull requests, refactoring, improvements).
 - `docs/features/`, `docs/refactorings/`, `docs/improvements/`: one folder per change, each with its README as the index. The project skills `feature-workflow` and `refactoring-workflow` are used by the agent whenever the work moves a feature, an improvement or a refactoring forward; they carry no commit authorization.
+- `docs/roadmap.md`: what davna intends to do next, in order (`RMnn`); each item points to the change that takes it, where its state lives.
 - `docs/recommendations.md`: the repository-level register (`RGnn`), seeded with today's known debts.
 - `docs/patterns/README.md`: solutions the repository reuses, all Proposed today. Follow them in new cases and record new ones there. The ubiquitous language (`ubiquitous-language.md`) keeps one name per concept, with the terms coming from the user.
 - `docs/project/*.drawio`: the original design drawings. `docs/license.header.txt`: the MIT header.
